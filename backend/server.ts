@@ -12,7 +12,7 @@ import {createServer} from 'http';
 
 //custom modules
 import connectDB from './src/config/db'; //database connection
-// import userRoutes from './src/routes/userRoutes'; //user routes
+import userRoutes from './src/routes/userRoutes'; //user routes
 // import doctorRoutes from './src/routes/doctorRoutes'; //doctor routes
 // import adminRoutes from './src/routes/adminRoutes'; //admin routes
 
@@ -66,7 +66,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // -----------------------ROUTES-----------------------
-// app.use('/users', userRoutes); //user routes
+app.use('/users', userRoutes); //user routes
 // app.use('/doctors', doctorRoutes); //doctor routes
 // app.use('/admins', adminRoutes); //admin routes
 
