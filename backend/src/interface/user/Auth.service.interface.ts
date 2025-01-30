@@ -3,11 +3,10 @@
 
 
 export interface IAuthService {
-    signup(userData: {name: string;email: string;phone: string;password: string;confirmpassword: string;}): Promise<{token:string}>;
+    signup(userData: {name: string;email: string;phone: string;password: string; otp: string}): Promise<{token:string}>;
+    sendOtp(email: string): Promise<{token:string}>;
     // otpCheck(otp: string, token: string): Promise<{valid:boolean}>;
     // verifyUser(email: string, password: string): Promise<GetUserData>;
     // resendOtpCheck(userToken: string): Promise<{token:string}>;
-    
-    
     
  };

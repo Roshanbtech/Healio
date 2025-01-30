@@ -66,9 +66,9 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // -----------------------ROUTES-----------------------
-app.use('/users', userRoutes); //user routes
-// app.use('/doctors', doctorRoutes); //doctor routes
-// app.use('/admins', adminRoutes); //admin routes
+app.use('/', userRoutes); //user routes
+// app.use('/doctor', doctorRoutes); //doctor routes
+// app.use('/admin', adminRoutes); //admin routes
 
 //-----------------------SERVER-----------------------
 //set port 

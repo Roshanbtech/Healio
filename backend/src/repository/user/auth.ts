@@ -10,26 +10,21 @@ import { IAuthRepository } from "../../interface/user/Auth.repository.interface"
 export class AuthRepository implements IAuthRepository {
   async existUser(
     email: string,
-    phone: string
-  ): Promise<{ existEmail: boolean; existPhone: boolean }> {
+  ): Promise<{ existEmail: boolean}> {
     try {
 
       console.log(".....");
       
       let existEmail = true;
-      let existPhone = true;
 
       const emailExist = await userModel.findOne({ email: email });
       if (!emailExist) {
         existEmail = false;
       }
 
-      const phoneExist = await userModel.findOne({ phone: phone });
-      if (!phoneExist) {
-        existPhone = false;
-      }
+      
 
-      return { existEmail, existPhone };
+      return { existEmail };
     } catch (error) {
       console.error("Error checking if user exists:", error);
       throw new Error("Error checking if user exists");
@@ -46,32 +41,32 @@ export class AuthRepository implements IAuthRepository {
       throw new Error(`Error creating user : ${error.message}`);
     }
   }
-//   async userCheck(email: string): Promise<UserProfile | null> {
-//     try {
-//       const userData = await userModel.findOne(
-//         { email: email }
-//       ).lean();
+  async userCheck(email: string): Promise<UserProfile | null> {
+    try {
+      const userData = await userModel.findOne(
+        { email: email }
+      ).lean();
       
-//       if (userData) {
+      if (userData) {
         
-//         return {
-//           _id: userData._id as ObjectId,
-//           userId: userData.userId,
-//           name: userData.name,
-//           email: userData.email,
-//           phone: userData.phone,
-//           DOB: userData.DOB,
-//           address: userData.address,
-//           isBlocked: userData.isBlocked,
-//           image: userData.image,
-//           password:userData.password
+        return {
+          _id: userData._id as ObjectId,
+          userId: userData.userId,
+          name: userData.name,
+          email: userData.email,
+          phone: userData.phone,
+          DOB: userData.DOB,
+          address: userData.address,
+          isBlocked: userData.isBlocked,
+          image: userData.image,
+          password:userData.password
          
-//         }; ;
-//       }
-//       throw new Error("User Doesn't exist");
-//     } catch (error: any) {
-//       throw new Error(error.message);
-//     }
-//   }
+        }; ;
+      }
+      throw new Error("User Doesn't exist");
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
   
 }

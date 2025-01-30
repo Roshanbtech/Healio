@@ -18,11 +18,6 @@ export class AuthController {
 
       const response = await this.authService.signup(data);
 
-      // res.cookie('userData', "jxfhvjhfvb", {
-
-      //   path:"/"
-      // });
-
       res.status(HTTP_statusCode.OK).json({ status: true, response });
     } catch (error: any) {
       if (error.message === "Email already in use") {
@@ -38,4 +33,49 @@ export class AuthController {
       }
     }
   }
+
+  async sendOtp(req: Request, res: Response): Promise<void> {
+    try {
+      const { email } = req.body;
+      const response = await this.authService.sendOtp(email);
+      res.status(HTTP_statusCode.OK).json({ status: true, response });
+    } catch (error: any) {
+      if (error.message === "Email not found") {
+        res.status(HTTP_statusCode.NotFound).json({ message: "Email not found" });
+      } else if (error.message === "Otp not send") {
+        res.status(HTTP_statusCode.InternalServerError).json({ message: "OTP not sent" });
+      } else {
+        res
+          .status(HTTP_statusCode.InternalServerError)
+          .json({ message: "Something went wrong, please try again later" });
+      }
+    }
+  }
+
+  // async loginUser(req: Request, res: Response): Promise<void> {
+  //   try {
+  //     const { email, password } = req.body;
+  
+  //     // Validate input
+  //     if (!email || !password) {
+  //       res.status(HTTP_statusCode.BadRequest).json({
+  //         message: "Email and password are required",
+  //       });
+  //     }
+  
+  //     const response = await this.authService.verifyUser(email, password);
+  //     res.status(HTTP_statusCode.OK).json({ status: true, response });
+  //   } catch (error: any) {
+  //     if (error.message === "Email not found") {
+  //       res.status(HTTP_statusCode.NotFound).json({ message: "Email not found" });
+  //     } else if (error.message === "Incorrect password") {
+  //       res.status(HTTP_statusCode.BadRequest).json({ message: "Incorrect password" });
+  //     } else {
+  //       res.status(HTTP_statusCode.InternalServerError).json({
+  //         message: "Something went wrong, please try again later",
+  //       });
+  //     }
+  //   }
+  // }
+  
 }
