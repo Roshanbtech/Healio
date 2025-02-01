@@ -17,6 +17,8 @@ import upload_icon from './upload_icon.png';
 import stripe_logo from './stripe_logo.png';
 import razorpay_logo from './razorpay_logo.png';
 import bg1 from './bgsignup.jpg';
+import bg2 from './bg2.png';
+import google from './google.svg';
 
 
 // Importing Doctor Images
@@ -63,7 +65,9 @@ export const assets = {
   upload_icon,
   stripe_logo,
   razorpay_logo,
-  bg1
+  bg1,
+  bg2,
+  google
 };
 
 // ✅ Define Speciality Type

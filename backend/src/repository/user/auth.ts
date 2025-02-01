@@ -33,7 +33,9 @@ export class AuthRepository implements IAuthRepository {
   async createUser(userData: userType): Promise<Document> {
     try {
         console.log("user data",userData);
-        
+
+      
+      userData.isVerified = true;  
       const newUser = new userModel(userData);
       return await newUser.save();
     } catch (error: any) {
@@ -58,7 +60,8 @@ export class AuthRepository implements IAuthRepository {
           DOB: userData.DOB,
           address: userData.address,
           isBlocked: userData.isBlocked,
-          image: userData.image,
+          isVerified: userData.isVerified,
+          image: userData.image || '',
           password:userData.password
          
         }; ;

@@ -6,7 +6,9 @@ export type userType={
     email:string;
     phone:string;
     password:string;
+    isVerified?: boolean;
 }
+
 // export interface User {
 //     userId: string;
 //     name: string;
@@ -20,10 +22,7 @@ export type userType={
 
 
 export interface UserProfile {
-  image: {
-    url: string;
-    type: string;
-  };
+  
   _id: ObjectId;
   userId: string;
   name: string;
@@ -32,6 +31,7 @@ export interface UserProfile {
   password: string;
   DOB: Date;
   address: string;
+  image:string;
   isBlocked: boolean;
-  
+  isVerified: boolean
 }

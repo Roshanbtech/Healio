@@ -1,9 +1,9 @@
 import { Document, model, Schema } from "mongoose";
 
-interface IImage {
-    url: string;
-    type: string;
-}
+// interface IImage {
+//     url: string;
+//     type: string;
+// }
 
 interface Iuser extends Document {
     userId: string;
@@ -13,15 +13,16 @@ interface Iuser extends Document {
     password: string;
     DOB: Date;
     address: string;
-    image: IImage;
+    image?: string;
     lastLogin: Date;
     isBlocked: boolean;
+    isVerified: boolean;
+    googleId?: string;
 }
 
 const userSchema = new Schema<Iuser>({
     userId: { 
         type: String, 
-        required: true,
         unique: true 
     },
     name: { 
@@ -34,11 +35,9 @@ const userSchema = new Schema<Iuser>({
     },
     phone: { 
         type: String, 
-        required: true 
     },
     password: {
         type: String, 
-        required: true 
     },
     lastLogin: {
         type: Date 
@@ -52,14 +51,20 @@ const userSchema = new Schema<Iuser>({
         default: null
     },
     image: {
-        
-            url: { type: String, default: "" }, 
-            type: { type: String, default: "" },
+        type: String,
+        required: false
     },
     isBlocked: {
         type: Boolean, 
         default: false 
     },
+    isVerified: {
+        type: Boolean,
+        default:false
+    },
+    googleId:{
+        type:String, 
+    }
 }, { timestamps: true });
 
 const userModel = model<Iuser>("User", userSchema);

@@ -12,6 +12,8 @@ const AuthControllerInstance = new AuthController(AuthServiceInstance);
 
 route.post('/signUp', AuthControllerInstance.createUser.bind(AuthControllerInstance));
 route.post('/sendOtp', AuthControllerInstance.sendOtp.bind(AuthControllerInstance));
+route.post("/resendOtp", AuthControllerInstance.resendOtp.bind(AuthControllerInstance));
+route.post('/auth/google', AuthControllerInstance.handleGoogleLogin.bind(AuthControllerInstance));
 // route.post('/login', AuthControllerInstance.loginUser.bind(AuthControllerInstance));
 
 export default route;

@@ -5,40 +5,50 @@ import { userType } from "../../interface/userInterface/interface";
 import { IAuthService } from "../../interface/user/Auth.service.interface";
 import { IAuthRepository } from "../../interface/user/Auth.repository.interface";
 //import user schema
-import userModel from "../../model/userModel";
 import sendMail from "../../config/emailConfig";
-import { otpSetData, getOtpByEmail } from "../../config/redisClient";
+import {
+  otpSetData,
+  getOtpByEmail,
+  resendOtpUtil,
+  resendOtp
+} from "../../config/redisClient";
 
 export class AuthService implements IAuthService {
-    private AuthRepository: IAuthRepository;
-    private OTP: string | null = null;
-    private expiryOTP_time: Date | null = null;
-    private userData: userType | null = null;
-  
-    constructor(AuthRepository: IAuthRepository) {
-      this.AuthRepository = AuthRepository;
-    }
- async signup(userData: {
+  private AuthRepository: IAuthRepository;
+  private OTP: string | null = null;
+  private expiryOTP_time: Date | null = null;
+  private userData: userType | null = null;
+
+  constructor(AuthRepository: IAuthRepository) {
+    this.AuthRepository = AuthRepository;
+  }
+  async signup(userData: {
     name: string;
     email: string;
     phone: string;
     password: string;
     otp: string;
-  }): Promise<any>  {
+  }): Promise<any> {
     try {
-        console.log('starting')
-        const { email, otp } = userData;
-        const storedOtp = await getOtpByEmail(email);
-        if (storedOtp === null || storedOtp.toString() !== otp.toString()) {
-          console.log("OTP does not match or is not found.");
-          return { message: 'OTP does not match or is not found.', status: false };
-        }
-      
+      console.log(" Signup process started...");
+      const { email, otp } = userData;
+
+      const storedOtp = await getOtpByEmail(email);
+      console.log(`Retrieved OTP for ${email}:`, storedOtp);
+
+      if (!storedOtp) {
+        return {
+          status: false,
+          message: "OTP expired or invalid. Request a new one.",
+        };
+      }
+
+      if (storedOtp !== otp) {
+        return { status: false, message: "Incorrect OTP. Please try again." };
+      }
 
       let saltRounds: number = 10;
-
       const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
-
       const userId = uuidv4();
       this.userData = {
         userId: userId,
@@ -46,97 +56,84 @@ export class AuthService implements IAuthService {
         email: userData.email,
         phone: userData.phone,
         password: hashedPassword,
+        isVerified: true,
       };
-     await this.AuthRepository.createUser(this.userData);
-    
 
+      await this.AuthRepository.createUser(this.userData);
 
+      await otpSetData(email, ""); 
 
-     return { status: true, message: "User created successfully" };
-    } catch (error: any) {
-      console.log("Error in creating new User", error);
-      return { status: false, message: error.message };
+      return { status: true, message: "User created successfully" };
+    } catch (error) {
+      console.log(" Error in creating new User", error);
+      return { status: false, message: "Error while creating user" };
     }
   }
-   //   const hashedOTP: string = await bcrypt.hash(Generated_OTP, saltRounds);
 
-    //   this.OTP = hashedOTP;
-
-    //   let text = `Your OTP is ${Generated_OTP}`; 
-    //   let subject = 'OTP Verification';
-
-    //   const sendMailStatus: boolean = await sendMail(
-    //     userData.email,
-    //     subject,text
-    //   );
-
-    //   if (!sendMailStatus) {
-    //     throw new Error("Otp not send");
-    //   }
-    //   const Generated_time = new Date();
-
-    //   this.expiryOTP_time = new Date(Generated_time.getTime() + 60 * 1000);
-
-    //   const token = jwt.sign(
-    //     {
-    //       userData: this.userData,
-    //       OTP: this.OTP,
-    //       expirationTime: this.expiryOTP_time,
-    //     },
-    //     process.env.JWT_SECRET as string,
-    //     {
-    //       expiresIn: "1min",
-    //     }
-    //   );
-  async sendOtp(email: string): Promise<any>  {
+  async sendOtp(email: string): Promise<{ status: boolean; message: string }> {
     try {
-      const response = await this.AuthRepository.existUser(
-        email,
-      );
-      console.log('small work',response)
+      const response = await this.AuthRepository.existUser(email);
       if (response.existEmail) {
-         console.log('email already in use...');
-         return { status: false, message: "Email already in use" };        
+        return { status: false, message: "Email already in use" };
       }
-        const Generated_OTP: string = Math.floor(
-        1000 + Math.random() * 9000
-       ).toString();
-       const subject: string = "OTP Verification";
-       const text: string = `Hello User,\n\nThank you for registering with Healio!, your OTP is ${Generated_OTP}\n\nHave a nice day!!!`;
-       await sendMail(email, subject, text);
-       console.log('.. otp.working ');
-       await otpSetData(email, Generated_OTP);
-       console.log('hurray otp set aahda')
 
-       
+      const otp = await resendOtpUtil(email);
+      console.log(`Generated OTP: ${otp}`);
 
- 
-       return { status: true, message: "Otp send successfully" };    } 
-    catch (error) {
-      throw error;
+      if (!otp) {
+        return { status: false, message: "Failed to generate OTP. Try again." };
+      }
+
+      const subject = "OTP Verification";
+      const text = `Hello,\n\nYour OTP is ${otp}. It is valid for 1 minute.\n\nThank you.`;
+      await sendMail(email, subject, text);
+
+      return { status: true, message: "OTP sent successfully" };
+    } catch (error) {
+      console.error("Error sending OTP:", error);
+      return { status: false, message: "Error while sending OTP" };
     }
   }
 
-  // async verifyUser(email: string, password: string): Promise<GetUserData> {
-  //   // Check if the user exists
-  //   const user = await this.AuthRepository.userCheck(email);
-  //   if (!user) {
-  //     throw new Error("Email not found");
-  //   }
-  
-  //   // Compare the provided password with the hashed password
-  //   const isPasswordValid = await bcrypt.compare(password, user.password);
-  //   if (!isPasswordValid) {
-  //     throw new Error("Incorrect password");
-  //   }
-  
-  //   // Construct response (excluding sensitive data like password)
-  //   return {
-  //     userId: user.id,
-  //     name: user.name,
-  //     email: user.email,
-  //     phone: user.phone,
-  //   };
-  // }
-  
+  async verifyOtp(email: string, otp: string) {
+    try {
+      const storedOtp = await getOtpByEmail(email);
+      console.log(` Verifying OTP for ${email}: Stored: ${storedOtp}, Entered: ${otp}`);
+
+      if (!storedOtp) {
+        return { status: false, message: "OTP expired. Please request a new one." };
+      }
+
+      if (storedOtp !== otp) {
+        return { status: false, message: "Incorrect OTP. Please try again." };
+      }
+
+      // Remove OTP after successful verification
+      await otpSetData(email, "");
+
+      return { status: true, message: "OTP verified successfully" };
+    } catch (error) {
+      console.error(" Error verifying OTP:", error);
+      return { status: false, message: "Error while verifying OTP" };
+    }
+  }
+
+  async resendOtp(email: string) {
+    try {
+     
+      const otp = await resendOtp(email);
+      if (!otp) {
+        return { status: false, message: "Failed to generate OTP. Try again." };
+      }
+
+      const subject = "OTP Verification - Resend";
+      const text = `Hello,\n\nYour new OTP is ${otp}. It is valid for 1 minute.\n\nThank you.`;
+      await sendMail(email, subject, text);
+
+      return { status: true, message: "OTP resent successfully" };
+    } catch (error) {
+      console.error(" Error resending OTP:", error);
+      return { status: false, message: "Error while resending OTP" };
+    }
+  }
 }
