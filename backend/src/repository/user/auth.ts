@@ -4,25 +4,17 @@ import { Document, ObjectId } from "mongoose";
 import mongoose from "mongoose";
 import { IAuthRepository } from "../../interface/user/Auth.repository.interface";
 
-
-// const Objectid = mongoose.Types.ObjectId;
-
 export class AuthRepository implements IAuthRepository {
-  async existUser(
-    email: string,
-  ): Promise<{ existEmail: boolean}> {
+  async existUser(email: string): Promise<{ existEmail: boolean }> {
     try {
-
       console.log(".....");
-      
+
       let existEmail = true;
 
       const emailExist = await userModel.findOne({ email: email });
       if (!emailExist) {
         existEmail = false;
       }
-
-      
 
       return { existEmail };
     } catch (error) {
@@ -32,10 +24,9 @@ export class AuthRepository implements IAuthRepository {
   }
   async createUser(userData: userType): Promise<Document> {
     try {
-        console.log("user data",userData);
+      console.log("user data", userData);
 
-      
-      userData.isVerified = true;  
+      userData.isVerified = true;
       const newUser = new userModel(userData);
       return await newUser.save();
     } catch (error: any) {
@@ -45,31 +36,28 @@ export class AuthRepository implements IAuthRepository {
   }
   async userCheck(email: string): Promise<UserProfile | null> {
     try {
-      const userData = await userModel.findOne(
-        { email: email }
-      ).lean();
-      
-      if (userData) {
-        
-        return {
-          _id: userData._id as ObjectId,
-          userId: userData.userId,
-          name: userData.name,
-          email: userData.email,
-          phone: userData.phone,
-          DOB: userData.DOB,
-          address: userData.address,
-          isBlocked: userData.isBlocked,
-          isVerified: userData.isVerified,
-          image: userData.image || '',
-          password:userData.password
-         
-        }; ;
+      const userData = await userModel.findOne({ email }).lean();
+
+      if (!userData) {
+        return null;
       }
-      throw new Error("User Doesn't exist");
+
+      return {
+        _id: userData._id as ObjectId,
+        userId: userData.userId,
+        name: userData.name,
+        email: userData.email,
+        phone: userData.phone,
+        DOB: userData.DOB,
+        address: userData.address,
+        isBlocked: userData.isBlocked,
+        isVerified: userData.isVerified,
+        image: userData.image || "",
+        password: userData.password,
+      };
     } catch (error: any) {
-      throw new Error(error.message);
+      console.error("Error in userCheck:", error);
+      throw new Error("Database error occurred while checking user.");
     }
   }
-  
 }

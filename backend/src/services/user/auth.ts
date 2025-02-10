@@ -10,13 +10,12 @@ import {
   otpSetData,
   getOtpByEmail,
   resendOtpUtil,
-  resendOtp
+  resendOtp,
 } from "../../config/redisClient";
 
 export class AuthService implements IAuthService {
   private AuthRepository: IAuthRepository;
-  private OTP: string | null = null;
-  private expiryOTP_time: Date | null = null;
+
   private userData: userType | null = null;
 
   constructor(AuthRepository: IAuthRepository) {
@@ -61,7 +60,7 @@ export class AuthService implements IAuthService {
 
       await this.AuthRepository.createUser(this.userData);
 
-      await otpSetData(email, ""); 
+      await otpSetData(email, "");
 
       return { status: true, message: "User created successfully" };
     } catch (error) {
@@ -98,10 +97,15 @@ export class AuthService implements IAuthService {
   async verifyOtp(email: string, otp: string) {
     try {
       const storedOtp = await getOtpByEmail(email);
-      console.log(` Verifying OTP for ${email}: Stored: ${storedOtp}, Entered: ${otp}`);
+      console.log(
+        ` Verifying OTP for ${email}: Stored: ${storedOtp}, Entered: ${otp}`
+      );
 
       if (!storedOtp) {
-        return { status: false, message: "OTP expired. Please request a new one." };
+        return {
+          status: false,
+          message: "OTP expired. Please request a new one.",
+        };
       }
 
       if (storedOtp !== otp) {
@@ -120,7 +124,6 @@ export class AuthService implements IAuthService {
 
   async resendOtp(email: string) {
     try {
-     
       const otp = await resendOtp(email);
       if (!otp) {
         return { status: false, message: "Failed to generate OTP. Try again." };
@@ -134,6 +137,51 @@ export class AuthService implements IAuthService {
     } catch (error) {
       console.error(" Error resending OTP:", error);
       return { status: false, message: "Error while resending OTP" };
+    }
+  }
+  
+  async login(userData: {
+    email: string;
+    password: string;
+  }): Promise<
+    { accessToken: string; refreshToken: string } | { error: string }
+  > {
+    try {
+      const { email, password } = userData;
+      const check = await this.AuthRepository.existUser(email);
+
+      if (!check) {
+        return { error: "Email not found, please sign up!" };
+      }
+
+      const user = await this.AuthRepository.userCheck(email);
+      if (!user) {
+        return { error: "User Not Found." };
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        return { error: "Invalid password." };
+      }
+
+      const accessToken = jwt.sign(
+        { email, role: "user" },
+        process.env.ACCESS_TOKEN_SECRET!,
+        { expiresIn: "15m" }
+      );
+
+      const refreshToken = jwt.sign(
+        { email, role: "user" },
+        process.env.REFRESH_TOKEN_SECRET!,
+        { expiresIn: "30d" }
+      );
+
+      console.log("Role assigned in token:", "user");
+
+      return { accessToken, refreshToken };
+    } catch (error) {
+      console.error("Login error:", error);
+      return { error: "Internal server error." };
     }
   }
 }

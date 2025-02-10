@@ -1,9 +1,10 @@
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import { assets } from "../../assets/assets"
-import { backendUrl } from "../../utils/backendUrl"
 import { toast } from "react-toastify"
 import { useNavigate } from "react-router-dom"
+import axiosUrl from "../../utils/axios"
+import { backendUrl } from "../../utils/backendUrl"
 
 interface OTPProps {
   onSubmit?: (otp: string) => void
@@ -81,80 +82,83 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const otpValue = otp.join("")
+    e.preventDefault();
+    const otpValue = otp.join("");
     if (otpValue.length === 4) {
-      onSubmit?.(otpValue)
+      onSubmit?.(otpValue);
       console.log("OTP submitted:", otpValue);
-      console.log(formData,'values');
+      console.log(formData, "values");
+  
       const formValues = {
         name: formData?.name,
         email: formData?.email,
         password: formData?.password,
         phone: formData?.phone,
-        otp: otpValue
+        otp: otpValue,
+      };
+  
+      try {
+        const response = await axiosUrl.post("/doctor/signUp", formValues, {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+  
+        console.log(response.data, "data");
+  
+        // Check for correct response structure
+        if (response.data?.response?.status === true) {
+          toast.success(response.data.response.message || "Signup successful!");
+          navigate("/doctor/login");
+        } else {
+          if (response.data.response?.message === "OTP does not match or is not found.") {
+            toast.error(response.data.response?.message || "OTP does not match or is not found.");
+          }
+          toast.error(response.data.response?.message || "Signup failed");
+        }
+      } catch (error: any) {
+        console.error("Error Response:", error);
+        toast.error(error.message || "An error occurred during signup");
       }
-
-       try {
-                      const response = await fetch(`${backendUrl}/signUp`, {
-                          method: "POST",
-                          headers: {
-                              "Content-Type": "application/json",
-                          },
-                          body: JSON.stringify(formValues),
-                          credentials: 'include', // Include cookies if your API uses sessions
-                      });
-      
-                      const data = await response.json();
-                      console.log(data,'data')
-                      if (!response.ok) {
-                          throw new Error(data.message || "Signup failed");
-                      }
-                      
-                      // Check for correct response structure
-                      if (data?.response?.status === true) {
-                          toast.success(data.response.message || "Signup successful!");
-                          navigate('/');
-                      } else {
-                        if(data.response?.message === "OTP does not match or is not found."){
-                          toast.error(data.response?.message || "OTP does not match or is not found.");
-                        }
-                          toast.error(data.response?.message || "Signup failed");
-                      }
-
-
-                      
-                      
-                      
-      
-                      // Clear form
-                      // formik.resetForm();
-                      
-                      // Redirect to login page after successful signup
-                      // setTimeout(() => {
-                      //     navigate('/otp');
-                      // }, 1500); // Give time for the success message to be seen
-      
-      
-      
-                  } catch (error: any) {
-                      console.error("Error Response:", error);
-                      toast.error(error.message || "An error occurred during signup");
-                  // } finally {
-                  //     setIsSubmitting(false);
-                  // }
-              }
+    } else {
+      toast.error("Please enter a valid 4-digit OTP");
     }
-  }
-
-  const handleResend = () => {
-    if (canResend) {
-      setTimeLeft(30)
-      setCanResend(false)
-      setOtp(["", "", "", ""])
-      onResend?.()
-    }
-  }
+  };
+  
+  const handleResend = async () => {
+     if (canResend) {
+       setTimeLeft(60);  // Reset timer
+       setCanResend(false);  // Disable the resend button until time is up
+       setOtp(["", "", "", ""]);  // Clear the OTP input fields
+ 
+       // Trigger the resend OTP request
+       if (formData?.email) {
+         try {
+           const response = await fetch(`${backendUrl}/doctor/resendOtp`, {
+             method: "POST",
+             headers: {
+               "Content-Type": "application/json",
+             },
+             body: JSON.stringify({ email: formData.email }),  // Send email to the backend
+           });
+ 
+           const data = await response.json();
+ 
+           if (response.ok) {
+             toast.success(data.message || "OTP resent successfully!");
+           } else {
+             toast.error(data.message || "Failed to resend OTP");
+           }
+         } catch (error) {
+           console.error("Error resending OTP:", error);
+           toast.error("An error occurred while resending OTP");
+         }
+       }
+     }
+   };
+ 
+ 
 
   return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col">
@@ -177,7 +181,7 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
               <p className="text-gray-600 text-sm mb-6">Enter the otp before the timer runs out</p>
 
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="flex gap-2 justify-center">
+              <div className="flex gap-2 justify-center">
                   {otp.map((digit, index) => (
                     <input
                       key={index}

@@ -1,9 +1,13 @@
-import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
+import nodemailer from "nodemailer";
+import dotenv from "dotenv";
 
 dotenv.config();
 
-const sendMail = async (email: string, subject: string, text: string): Promise<boolean> => {
+const sendMail = async (
+  email: string,
+  subject: string,
+  text: string
+): Promise<boolean> => {
   return new Promise((resolve, reject) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
@@ -23,10 +27,10 @@ const sendMail = async (email: string, subject: string, text: string): Promise<b
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
         console.error(error);
-        resolve(false);  
+        resolve(false);
       } else {
         console.log("Email sent: " + info.response);
-        resolve(true); 
+        resolve(true);
       }
     });
   });

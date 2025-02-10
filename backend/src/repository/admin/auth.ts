@@ -1,0 +1,159 @@
+import userModel from "../../model/userModel";
+import doctorModel from "../../model/doctorModel";
+import serviceModel from "../../model/serviceModel";
+
+import { IAuthRepository } from "../../interface/admin/Auth.repository.interface";
+import sendMail from "../../config/emailConfig";
+
+export class AuthRepository implements IAuthRepository {
+  async getAllUsers(): Promise<any> {
+    try {
+      const users = await userModel.find().lean();
+      return users;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+
+  async getAllDoctors(): Promise<any> {
+    try {
+      const doctors = await doctorModel
+        .find()
+        .populate({ path: "speciality", model: "Service", select: "name" })
+        .lean();
+      return doctors;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+
+  async toggleUser(id: string): Promise<any> {
+    try {
+      const user = await userModel.findById(id);
+      if (!user) return null;
+
+      user.isBlocked = !user.isBlocked;
+      await user.save();
+
+      return user;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+
+  async toggleDoctor(id: string): Promise<any> {
+    try {
+      const doctor = await doctorModel.findById(id);
+      if (!doctor) return null;
+
+      doctor.isBlocked = !doctor.isBlocked;
+      await doctor.save();
+
+      return doctor;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+
+  async addService(name: string, isActive: boolean): Promise<any> {
+    const service = new serviceModel({ name, isActive });
+    return await service.save();
+  }
+
+  async editService(id: string, name: string, isActive: boolean): Promise<any> {
+    const service = await serviceModel.findById(id);
+    if (!service) return null;
+
+    service.name = name;
+    service.isActive = isActive;
+    return await service.save();
+  }
+
+  async toggleService(id: string): Promise<any> {
+    try {
+      const service = await serviceModel.findById(id);
+      if (!service) return null;
+
+      service.isActive = !service.isActive;
+      await service.save();
+
+      return service;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+
+  async getAllServices(): Promise<any> {
+    try {
+      const services = await serviceModel.find().lean();
+      return services;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+
+  async findServiceByName(name: string): Promise<any> {
+    try {
+      const service = await serviceModel.findOne({ name });
+      return service;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+
+  async getCertificates(id: string): Promise<any> {
+    try {
+      const doctor = await doctorModel.findById(id);
+      if (!doctor) return null;
+      return doctor.certificate;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+
+  async approveDoctor(id: string): Promise<any> {
+    try {
+      const doctor = await doctorModel.findById(id);
+      if (!doctor) return null;
+      const emailContent = `Hello Dr. ${doctor.name},
+
+Congratulations! Your account has been approved as a doctor in the Healio team.
+
+Thank you,
+Team Healio`;
+      await sendMail(doctor.email, "Account Approved", emailContent);
+      return await doctorModel.findByIdAndUpdate(
+        id,
+        { docStatus: "approved", isDoctor: true },
+        { new: true }
+      );
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+
+  async rejectDoctor(id: string): Promise<any> {
+    try {
+      const doctor = await doctorModel.findById(id);
+      if (!doctor) return null;
+      const emailContent = `Hello Dr. ${doctor.name},
+
+We regret to inform you that your account has been rejected as a doctor in the Healio team.
+
+Thank you,
+Team Healio`;
+      await sendMail(
+        doctor.email,
+        "Account Rejected",
+        emailContent
+      );
+      return await doctorModel.findByIdAndUpdate(
+        id,
+        { docStatus: "rejected", isDoctor: false },
+        { new: true }
+      );
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+}

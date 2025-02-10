@@ -1,16 +1,34 @@
 import { useState } from 'react';
 import { assets } from '../../../assets/assets';
 import { NavLink, useNavigate } from 'react-router-dom';
+import axiosInstance from '../../../utils/axiosInterceptors';
 
 const Navbar = () => {
     const navigate = useNavigate();
     const [token, setToken] = useState(true);
+    const handleLogout = async () => {
+        try {
+          await axiosInstance.post("/logout"); // Backend should handle clearing cookies
+        } catch (error) {
+          console.error("Logout failed:", error);
+        }
+    
+        // Remove auth token and role from localStorage
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("userRole");
+    
+        // Remove refresh token from cookies
+        document.cookie = "refreshToken=; Max-Age=-99999999; path=/";
+    
+        // Redirect to admin login page
+        navigate("/login");
+      };
 
     return (
         <div className='flex items-center justify-between text-sm py-4 mb-5 border-b border-b-gray-400'>
             {/* Logo */}
             <img 
-                onClick={() => navigate('/')} 
+                onClick={() => navigate('/home')} 
                 className='w-44 cursor-pointer' 
                 src={assets.logo} 
                 alt="Logo" 
@@ -18,7 +36,7 @@ const Navbar = () => {
 
             {/* Navigation Links */}
             <ul className='hidden md:flex items-start gap-5 font-medium'>
-                <NavLink to='/'>
+                <NavLink to='/home'>
                     <li className='py-1 text-green-900'>HOME</li>
                     <hr className='border-none outline-none h-0.5 bg-red-700 w-3/5 m-auto hidden' />
                 </NavLink>
@@ -69,7 +87,8 @@ const Navbar = () => {
                                     My Appointments
                                 </p>
                                 <p 
-                                    onClick={() => setToken(false)} 
+                                    // onClick={() => setToken(false)} 
+                                    onClick = {handleLogout}
                                     className='hover:text-red-600 cursor-pointer'
                                 >
                                     Logout

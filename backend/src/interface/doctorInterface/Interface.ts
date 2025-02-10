@@ -1,73 +1,67 @@
 import mongoose, { ObjectId, Types } from "mongoose";
 
 export type doctorType = {
-    doctorId: string;
-    name: string;
-    email: string;
-    phone: string;
-    password: string;
-    isVerified?: boolean;
-}
-
-// interface ImageDetails {
-//     type: string;
-//     url: string;
-//     _id?: ObjectId;
-// }
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  isVerified?: boolean;
+  docStatus?: "pending" | "approved" | "rejected";
+};
 
 export interface IDoctorInformation {
-    name: string;
-    email: string;
-    doctorId: string|ObjectId;
-    phone: string;
-    isBlocked: boolean;
-    DOB: Date;
-    fees: number;
-    image: string;
+  name: string;
+  email: string;
+  doctorId: string | ObjectId;
+  phone: string;
+  isBlocked: boolean;
+  fees: number;
+  image: string;
 }
 
 
-export interface DoctorData{
-    name: string;
-    email: string;
-    phone: string;
-    dob: Date;
-    fees: number;
-    specialization: string;
-}
 
 export interface IDoctorInfo {
-    name: string;
-    email: string;
-    doctorId: string | ObjectId; // Replace `ObjectId` with the actual type if using a specific library like MongoDB
-    phone: string;
-    isBlocked: boolean;
-    isVerified:boolean;
-    docStatus: string;
-    rejectedReason: string | null|any; // Nullable, as it might not always have a value
-  }
+  name: string;
+  email: string;
+  doctorId: string | ObjectId;
+  phone: string;
+  isBlocked: boolean;
+  isVerified: boolean;
+  docStatus: string;
+}
 
-  export interface DoctorResult{
-    _id: any;
-    doctorId: string;
-    name: string;
-    email: string;
-    phone: string;
-    password: string;
-    isBlocked: boolean;
-    DOB: Date;
-    specialization: any;
-    fees:number;
-    image:string;
-    rejectedReason?:string;
-    justApproved?: boolean;
-  }
+export interface DoctorResult {
+  _id: any;
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  isBlocked: boolean;
+  isVerified: boolean;
+  image: string;
+  
+}
 
-  export interface Doctor {
-    doctorId: string;
-    name: string;
-    phone : string;
-    email: string;
-    isBlocked: boolean;
-    isVerified: boolean;
-  }
+export interface Doctor {
+  name: string;
+  phone: string;
+  email: string;
+  isBlocked: boolean;
+  isVerified: boolean;
+}
+
+export interface Service {
+  serviceId: string;
+  name: string;
+  isActive: boolean;
+}
+
+export interface Qualification {
+  hospital: string;
+  degree: string;
+  specialization: Types.ObjectId;
+  year: string;
+  country: string;
+  achievements: string;
+}

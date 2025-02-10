@@ -5,9 +5,11 @@ import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { assets } from "../../assets/assets";
-import { backendUrl } from "../../utils/backendUrl";
-import Otp from "../../components/userComponents/Otp";
+// import { backendUrl } from "../../utils/backendUrl";
+import Otp from "../../components/doctorComponents/Otp";
 import { SignUpFormValues } from "../../interfaces/userInterface";
+import { Google } from "../common/doctorCommon/GoogleAuth";
+import axiosUrl from "../../utils/axios";
 
 const Signup: React.FC = () => {
   // const navigate = useNavigate();
@@ -23,9 +25,7 @@ const Signup: React.FC = () => {
     confirmpassword: "",
   });
   const validationSchema = Yup.object({
-    name: Yup.string()
-    .min(2, 'Name must be at least 2 characters')
-    .required("Name is required"),
+    name: Yup.string().required("Name is required"),
     email: Yup.string()
       .email("Invalid email address")
       .matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Invalid email format")
@@ -59,37 +59,34 @@ const Signup: React.FC = () => {
       try {
         console.log("Submitting:", values);
         setFormData(values);
+        
 
-        const response = await fetch(`${backendUrl}/sendOtp`, {
-          method: "POST",
+
+        const response = await axiosUrl.post('/doctor/sendOtp', values, {
+          withCredentials: true,
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(values),
-          credentials: "include", // Include cookies if your API uses sessions
         });
-
-        const data = await response.json();
-        console.log(data, "data");
-        if (!response.ok) {
-          throw new Error(data.message || "Signup failed");
-        }
-
+      
+        console.log(response.data, "data");
+      
         // Check for correct response structure
-        if (data?.response?.status === true) {
-          toast.success(data.response.message || "Signup successful!");
+        if (response.data?.status === true) {
+          toast.success(response.data.response.message || "Signup successful!");
           setOtpPage(true);
         } else {
-          toast.error(data.response?.message || "Email Already in Use");
+          toast.error(response.data.response?.message || "Email Already in Use");
         }
+      
+        
+
+       
 
         // Clear form
         formik.resetForm();
 
-        // Redirect to login page after successful signup
-        // setTimeout(() => {
-        //     navigate('/otp');
-        // }, 1500); // Give time for the success message to be seen
+       
       } catch (error: any) {
         console.error("Error Response:", error);
         toast.error(error.message || "An error occurred during signup");
@@ -108,7 +105,7 @@ const Signup: React.FC = () => {
                       <div className="max-w-[1200px] mx-auto flex items-center justify-between">
                           <img src={assets.logo} alt="Healio Logo" className="h-12 w-auto" />
                           <Link to="/signup" className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">
-                              Create Account
+                              Switch to User
                           </Link>
                       </div>
                   </header>
@@ -129,7 +126,7 @@ const Signup: React.FC = () => {
               Create Account
             </h1>
             <p className="text-gray-600 text-sm mb-6">
-              Please sign up to book appointment
+            Sign Up to Manage Your Appointments and Care
             </p>
 
             <form onSubmit={formik.handleSubmit} className="space-y-4">
@@ -296,20 +293,13 @@ const Signup: React.FC = () => {
               </button>
 
               {/* Google Signup */}
-              <div className="flex items-center justify-center mt-4">
-                <button
-                  type="button"
-                  className="flex items-center justify-center gap-2 border border-gray-300 px-4 py-3 rounded-md w-full hover:bg-gray-50 transition-colors"
-                >
-                  <img src={assets.google} alt="Google" className="h-5 w-5" />
-                  Continue with Google
-                </button>
-              </div>
+             
+              <Google/>
 
               {/* Already have an account? */}
               <p className="text-center text-sm text-gray-600 mt-6">
                 Already have an account?{" "}
-                <Link to="/login" className="text-green-600 hover:underline">
+                <Link to="/doctor/login" className="text-green-600 hover:underline">
                   Login here
                 </Link>
               </p>

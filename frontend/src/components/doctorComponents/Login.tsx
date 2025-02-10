@@ -4,13 +4,17 @@ import * as Yup from "yup";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "react-toastify";
-import { backendUrl } from "../../utils/backendUrl";
 import { assets } from "../../assets/assets";
+import axiosInstance from "../../utils/axiosInterceptors";
+import { jwtDecode } from "jwt-decode";
+import { useNavigate } from "react-router-dom";
+import { Google } from "../common/doctorCommon/GoogleAuth";
 
 const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const navigate = useNavigate();
   const validationSchema = Yup.object({
     email: Yup.string()
       .email("Invalid email address")
@@ -35,21 +39,25 @@ const Login: React.FC = () => {
       setIsSubmitting(true);
 
       try {
-        const response = await fetch(`${backendUrl}/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(values),
-          credentials: "include",
-        });
-        const data = await response.json();
+        const { data } = await axiosInstance.post("/doctor/login", values);
 
-        if (!response.ok) {
-          throw new Error(data.message || "Login failed");
-        }
+        // Store the access token
+        localStorage.setItem("authToken", data.accessToken);
+        sessionStorage.setItem("doctorId", data.doctorId);
 
-        toast.success(data.message || "Login successful!");
+        // Decode the JWT token to get the role dynamically from the backend response
+        const decodedToken = jwtDecode(data.accessToken) as { role: string };
+        localStorage.setItem("userRole", decodedToken.role); // Store user role from decoded token
+        console.log("Decoded role:", decodedToken.role);
+
+
+        toast.success("Doctor Login Successful");
+
+        // Navigate to the home page or the desired route
+        navigate("/doctor/home");
       } catch (error: any) {
-        toast.error(error.message || "An error occurred during login");
+        console.error("Login error:", error);
+        toast.error("Invalid credentials. Please try again.");
       } finally {
         setIsSubmitting(false);
       }
@@ -62,10 +70,10 @@ const Login: React.FC = () => {
         <div className="max-w-[1200px] mx-auto flex items-center justify-between">
           <img src={assets.logo} alt="Healio Logo" className="h-12 w-auto" />
           <Link
-            to="/signup"
+            to="/login"
             className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
           >
-            Create Account
+            Switch to User
           </Link>
         </div>
       </header>
@@ -167,7 +175,7 @@ const Login: React.FC = () => {
               </button>
 
               {/* Google Login */}
-              <div className="flex items-center justify-center mt-4">
+              {/* <div className="flex items-center justify-center mt-4">
                 <button
                   type="button"
                   className="flex items-center justify-center gap-2 border border-gray-300 px-4 py-3 rounded-md w-full hover:bg-gray-50 transition-colors"
@@ -175,12 +183,13 @@ const Login: React.FC = () => {
                   <img src={assets.google} alt="Google" className="h-5 w-5" />
                   Sign In with Google
                 </button>
-              </div>
+              </div> */}
+              <Google />
 
               {/* Signup Link */}
               <p className="text-center text-sm text-gray-600 mt-6">
                 Create a new account?{" "}
-                <Link to="/signup" className="text-green-600 hover:underline">
+                <Link to="/doctor/signup" className="text-green-600 hover:underline">
                   Sign Up
                 </Link>
               </p>

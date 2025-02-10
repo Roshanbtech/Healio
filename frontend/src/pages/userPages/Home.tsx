@@ -1,7 +1,9 @@
-
+import HomePage from "../../components/userComponents/Home"
 const Home = () => {
   return (
-    <div>Home</div>
+    <>
+       <HomePage/>
+    </>
   )
 }
 

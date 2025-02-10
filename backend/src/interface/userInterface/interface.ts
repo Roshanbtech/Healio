@@ -1,13 +1,13 @@
 import mongoose, { ObjectId, Types } from "mongoose";
 
-export type userType={
-    userId:string;
-    name:string;
-    email:string;
-    phone:string;
-    password:string;
-    isVerified?: boolean;
-}
+export type userType = {
+  userId: string;
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  isVerified?: boolean;
+};
 
 // export interface User {
 //     userId: string;
@@ -15,14 +15,10 @@ export type userType={
 //     phone : string;
 //     email: string;
 //     isBlocked: boolean;
-    
-  
+
 //   }
 
-
-
 export interface UserProfile {
-  
   _id: ObjectId;
   userId: string;
   name: string;
@@ -31,7 +27,8 @@ export interface UserProfile {
   password: string;
   DOB: Date;
   address: string;
-  image:string;
+  image: string;
   isBlocked: boolean;
-  isVerified: boolean
+  isVerified: boolean;
 }
+

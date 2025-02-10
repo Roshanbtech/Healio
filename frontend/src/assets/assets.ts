@@ -19,6 +19,7 @@ import razorpay_logo from './razorpay_logo.png';
 import bg1 from './bgsignup.jpg';
 import bg2 from './bg2.png';
 import google from './google.svg';
+import userDefault1 from './userDefault1.gif';
 
 
 // Importing Doctor Images
@@ -30,13 +31,13 @@ import doc5 from './doc5.png';
 import doc6 from './doc6.png';
 import doc7 from './doc7.png';
 import doc8 from './doc8.png';
-// import doc9 from './doc9.png';
-// import doc10 from './doc10.png';
-// import doc11 from './doc11.png';
-// import doc12 from './doc12.png';
-// import doc13 from './doc13.png';
-// import doc14 from './doc14.png';
-// import doc15 from './doc15.png';
+import doc9 from './doc9.png';
+import doc10 from './doc10.png';
+import doc11 from './doc11.png';
+import doc12 from './doc12.png';
+import doc13 from './doc13.png';
+import doc14 from './doc14.png';
+import doc15 from './doc15.png';
 
 // Importing Speciality Icons
 import Dermatologist from './Dermatologist.svg';
@@ -67,7 +68,9 @@ export const assets = {
   razorpay_logo,
   bg1,
   bg2,
-  google
+  google,
+  userDefault1,
+  doc11
 };
 
 // ✅ Define Speciality Type
@@ -185,6 +188,82 @@ export const doctors: Doctor[] = [
     _id: 'doc8',
     name: 'Dr. Timothy White',
     image: doc8,
+    speciality: 'Gynecologist',
+    degree: 'MBBS',
+    experience: '3 Years',
+    about: 'Provides expert care for women’s reproductive health and pregnancy management.',
+    fees: 670,
+    address: { line1: '27th Cross, Richmond', line2: 'Circle, Ring Road, London' }
+  },
+  {
+    _id: 'doc9',
+    name: 'Dr. Timothy White',
+    image: doc9,
+    speciality: 'Gynecologist',
+    degree: 'MBBS',
+    experience: '3 Years',
+    about: 'Provides expert care for women’s reproductive health and pregnancy management.',
+    fees: 670,
+    address: { line1: '27th Cross, Richmond', line2: 'Circle, Ring Road, London' }
+  },
+  {
+    _id: 'doc10',
+    name: 'Dr. Timothy White',
+    image: doc10,
+    speciality: 'Gynecologist',
+    degree: 'MBBS',
+    experience: '3 Years',
+    about: 'Provides expert care for women’s reproductive health and pregnancy management.',
+    fees: 670,
+    address: { line1: '27th Cross, Richmond', line2: 'Circle, Ring Road, London' }
+  },{
+    _id: 'doc11',
+    name: 'Dr. Timothy White',
+    image: doc11,
+    speciality: 'Gynecologist',
+    degree: 'MBBS',
+    experience: '3 Years',
+    about: 'Provides expert care for women’s reproductive health and pregnancy management.',
+    fees: 670,
+    address: { line1: '27th Cross, Richmond', line2: 'Circle, Ring Road, London' }
+  },
+  {
+    _id: 'doc12',
+    name: 'Dr. Timothy White',
+    image: doc12,
+    speciality: 'Gynecologist',
+    degree: 'MBBS',
+    experience: '3 Years',
+    about: 'Provides expert care for women’s reproductive health and pregnancy management.',
+    fees: 670,
+    address: { line1: '27th Cross, Richmond', line2: 'Circle, Ring Road, London' }
+  },
+  {
+    _id: 'doc13',
+    name: 'Dr. Timothy White',
+    image: doc13,
+    speciality: 'Gynecologist',
+    degree: 'MBBS',
+    experience: '3 Years',
+    about: 'Provides expert care for women’s reproductive health and pregnancy management.',
+    fees: 670,
+    address: { line1: '27th Cross, Richmond', line2: 'Circle, Ring Road, London' }
+  },
+  {
+    _id: 'doc14',
+    name: 'Dr. Timothy White',
+    image: doc14,
+    speciality: 'Gynecologist',
+    degree: 'MBBS',
+    experience: '3 Years',
+    about: 'Provides expert care for women’s reproductive health and pregnancy management.',
+    fees: 670,
+    address: { line1: '27th Cross, Richmond', line2: 'Circle, Ring Road, London' }
+  },
+  {
+    _id: 'doc15',
+    name: 'Dr. Timothy White',
+    image: doc15,
     speciality: 'Gynecologist',
     degree: 'MBBS',
     experience: '3 Years',

@@ -1,16 +1,26 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "react-toastify";
-import { backendUrl } from "../../utils/backendUrl";
+// import { backendUrl } from "../../utils/backendUrl";
 import { assets } from "../../assets/assets";
 import { Google } from "../common/userCommon/GoogleAuth";
+import axiosInstance from "../../utils/axiosInterceptors";
+import { jwtDecode } from "jwt-decode";
 
 const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      navigate("/home");
+    }
+  }, []);
 
   const validationSchema = Yup.object({
     email: Yup.string()
@@ -36,21 +46,28 @@ const Login: React.FC = () => {
       setIsSubmitting(true);
 
       try {
-        const response = await fetch(`${backendUrl}/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(values),
-          credentials: "include",
-        });
-        const data = await response.json();
+        const { data } = await axiosInstance.post("/login", values);
 
-        if (!response.ok) {
-          throw new Error(data.message || "Login failed");
-        }
+        // Store the access token
+        localStorage.setItem("authToken", data.accessToken);
 
-        toast.success(data.message || "Login successful!");
+        // Decode the JWT token to get the role dynamically from the backend response
+        const decodedToken = jwtDecode(data.accessToken) as { role: string };
+        localStorage.setItem("userRole", decodedToken.role); // Store user role from decoded token
+        console.log("Decoded role:", decodedToken.role);
+
+
+        toast.success("Login Successful");
+
+        // Navigate to the home page or the desired route
+        navigate("/home");
       } catch (error: any) {
-        toast.error(error.message || "An error occurred during login");
+        console.error("Login error:", error);
+        if (error.response && error.response.data.message === "Blocked by admin") {
+          toast.error("Your account has been blocked by the admin. Please contact support.");
+        } else {
+          toast.error("Invalid credentials. Please try again.");
+        }
       } finally {
         setIsSubmitting(false);
       }
@@ -63,10 +80,10 @@ const Login: React.FC = () => {
         <div className="max-w-[1200px] mx-auto flex items-center justify-between">
           <img src={assets.logo} alt="Healio Logo" className="h-12 w-auto" />
           <Link
-            to="/signup"
+            to="/doctor/login"
             className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
           >
-            Create Account
+            Switch to Doctor
           </Link>
         </div>
       </header>

@@ -127,8 +127,8 @@ const Signup: React.FC = () => {
       <header className="bg-white py-4 px-6 shadow-sm">
                       <div className="max-w-[1200px] mx-auto flex items-center justify-between">
                           <img src={assets.logo} alt="Healio Logo" className="h-12 w-auto" />
-                          <Link to="/signup" className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">
-                              Create Account
+                          <Link to="/doctor/signup" className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">
+                              Switch to Doctor
                           </Link>
                       </div>
                   </header>
