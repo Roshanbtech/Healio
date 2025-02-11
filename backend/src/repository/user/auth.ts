@@ -60,4 +60,17 @@ export class AuthRepository implements IAuthRepository {
       throw new Error("Database error occurred while checking user.");
     }
   }
+
+  async logout(refreshToken: string): Promise<any> {
+    try {
+      console.log(refreshToken, "refresh token");
+      return await userModel.updateOne(
+        { refreshToken },
+        { $set: { refreshToken: "" } }
+      );
+      console.log("Logout successful");
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
 }

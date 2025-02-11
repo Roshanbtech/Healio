@@ -20,6 +20,7 @@ interface IDoctor extends Document {
   fees?: number;
   isDoctor?: boolean;
   docStatus?: "pending" | "approved" | "rejected";
+  about?: string;
 }
 
 const doctorSchema = new Schema<IDoctor>(
@@ -46,6 +47,7 @@ const doctorSchema = new Schema<IDoctor>(
       enum: ["pending", "approved", "rejected"],
       default: "pending",
     },
+    about: { type: String },
   },
   { timestamps: true }
 );

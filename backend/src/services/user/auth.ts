@@ -139,7 +139,7 @@ export class AuthService implements IAuthService {
       return { status: false, message: "Error while resending OTP" };
     }
   }
-  
+
   async login(userData: {
     email: string;
     password: string;
@@ -184,4 +184,15 @@ export class AuthService implements IAuthService {
       return { error: "Internal server error." };
     }
   }
+
+  async logout(refreshToken: string): Promise<any> {
+    try {
+      console.log("Logout process started...");
+      return await this.AuthRepository.logout(refreshToken);
+    } catch (error) {
+      console.error("Logout error:", error);
+      return { error: "Internal server error." };
+    }
+  }
+
 }

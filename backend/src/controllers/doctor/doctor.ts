@@ -15,7 +15,7 @@ export class DoctorController {
       return res.status(HTTP_statusCode.OK).json({
         status: true,
         data: { services },
-        message: 'Services fetched successfully',
+        message: "Services fetched successfully",
       });
     } catch (error: any) {
       console.error("Error in serviceList:", error);
@@ -28,15 +28,15 @@ export class DoctorController {
 
   async addQualification(req: Request, res: Response): Promise<any> {
     const data = req.body;
-    console.log(data,'1')
+    console.log(data, "1");
     const files = req.files as Express.Multer.File[];
     try {
       const result = await this.doctorService.addQualification(data, files);
-      console.log(result,'2')
+      console.log(result, "2");
       return res.status(HTTP_statusCode.OK).json({
         status: true,
         data: { result },
-        message: 'Qualification added successfully',
+        message: "Qualification added successfully",
       });
     } catch (error: any) {
       console.error("Error in addQualification:", error);
@@ -47,14 +47,14 @@ export class DoctorController {
     }
   }
 
- async getQualifications(req: Request, res: Response): Promise<any> {
+  async getQualifications(req: Request, res: Response): Promise<any> {
     try {
-      const {id} = req.params;
+      const { id } = req.params;
       const qualifications = await this.doctorService.getQualifications(id);
       return res.status(HTTP_statusCode.OK).json({
         status: true,
         data: { qualifications },
-        message: 'Qualifications fetched successfully',
+        message: "Qualifications fetched successfully",
       });
     } catch (error: any) {
       console.error("Error in getQualifications:", error);

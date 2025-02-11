@@ -1,26 +1,35 @@
-import type React from "react"
-import { useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import type React from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Sidebar } from "../common/adminCommon/Sidebar";
-import { Users, UserIcon as UserMd, Calendar, DollarSign } from "lucide-react"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
+import { Users, UserIcon as UserMd, Calendar, DollarSign } from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+} from "recharts";
 
 interface DoctorData {
-  id: number
-  name: string
-  earnings: string
-  appointments: number
+  id: number;
+  name: string;
+  earnings: string;
+  appointments: number;
 }
 
 const Dashboard: React.FC = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  // State to control the sidebar collapse state
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken")
+    const token = localStorage.getItem("authToken");
     if (!token) {
-      navigate("/admin/login")
+      navigate("/admin/login");
     }
-  }, [navigate])
+  }, [navigate]);
 
   const chartData = [
     { name: "JAN", value: 2, value2: 1 },
@@ -31,20 +40,26 @@ const Dashboard: React.FC = () => {
     { name: "JUN", value: 4, value2: 1 },
     { name: "JUL", value: 3, value2: 2 },
     { name: "AUG", value: 2, value2: 1 },
-  ]
-  
+  ];
+
   const doctorsData: DoctorData[] = [
     { id: 1, name: "Dr. Ryan", earnings: "$55", appointments: 31 },
     { id: 2, name: "Dr. John", earnings: "$45", appointments: 17 },
-  ]
+  ];
 
   return (
     <>
-      {/* Sidebar */}
-      <Sidebar />
-      <div className="p-6 bg-gray-50 min-h-screen">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Welcome Admin!...</h1>
-  
+      {/* Pass the onCollapse callback to Sidebar */}
+      <Sidebar onCollapse={setSidebarCollapsed} />
+      <div
+        className={`p-6 bg-gray-50 min-h-screen transition-all duration-300 ${
+          sidebarCollapsed ? "ml-16" : "ml-64"
+        }`}
+      >
+        <h1 className="text-2xl font-bold text-gray-800 mb-6">
+          Welcome Admin!...
+        </h1>
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div className="bg-white rounded-xl p-4 shadow-sm">
@@ -58,7 +73,7 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
           </div>
-  
+
           <div className="bg-white rounded-xl p-4 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
@@ -70,7 +85,7 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
           </div>
-  
+
           <div className="bg-white rounded-xl p-4 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
@@ -82,7 +97,7 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
           </div>
-  
+
           <div className="bg-white rounded-xl p-4 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
@@ -95,7 +110,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
-  
+
         {/* Charts and Tables Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Data Analysis Chart */}
@@ -113,7 +128,7 @@ const Dashboard: React.FC = () => {
               </ResponsiveContainer>
             </div>
           </div>
-  
+
           {/* Top Doctors Table */}
           <div className="bg-white p-4 rounded-xl shadow-sm">
             <h2 className="text-lg font-semibold mb-4">TOP DOCTORS</h2>
@@ -144,5 +159,6 @@ const Dashboard: React.FC = () => {
       </div>
     </>
   );
-};  
+};
+
 export default Dashboard;

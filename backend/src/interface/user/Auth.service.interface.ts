@@ -14,4 +14,5 @@ export interface IAuthService {
   }): Promise<
     { accessToken: string; refreshToken: string } | { error: string }
   >;
+  logout(refreshToken: string): Promise<any>;
 }

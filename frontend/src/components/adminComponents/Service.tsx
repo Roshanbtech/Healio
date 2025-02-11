@@ -18,6 +18,8 @@ const Service: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [newService, setNewService] = useState<{ name: string }>({ name: "" });
+  const [errorMessage, setErrorMessage] = useState<string>(""); // For Add modal
+  const [editErrorMessage, setEditErrorMessage] = useState<string>(""); // For Edit modal
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
   const itemsPerPage = 10;
@@ -40,7 +42,6 @@ const Service: React.FC = () => {
   const filteredServices = useMemo(() => {
     const lowerCaseSearchTerm = searchTerm.toLowerCase().trim();
     if (!lowerCaseSearchTerm) return services;
-
     return services.filter((service) =>
       service.name.toLowerCase().includes(lowerCaseSearchTerm)
     );
@@ -49,9 +50,11 @@ const Service: React.FC = () => {
   const { currentServices, totalPages } = useMemo(() => {
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-
     return {
-      currentServices: filteredServices.slice(indexOfFirstItem, indexOfLastItem),
+      currentServices: filteredServices.slice(
+        indexOfFirstItem,
+        indexOfLastItem
+      ),
       totalPages: Math.ceil(filteredServices.length / itemsPerPage),
     };
   }, [filteredServices, currentPage]);
@@ -62,7 +65,9 @@ const Service: React.FC = () => {
       if (response.data?.status) {
         setServices((prevServices) =>
           prevServices.map((service) =>
-            service._id === id ? { ...service, isActive: !service.isActive } : service
+            service._id === id
+              ? { ...service, isActive: !service.isActive }
+              : service
           )
         );
         toast.success(response.data.service.message);
@@ -74,8 +79,19 @@ const Service: React.FC = () => {
   };
 
   const handleAddService = async () => {
+    if (!newService.name.trim()) {
+      setErrorMessage("Service name cannot be empty.");
+      return;
+    }
+    if (newService.name.length > 12) {
+      setErrorMessage("Service name cannot exceed 12 characters.");
+      return;
+    }
     try {
-      const response = await axiosInstance.post("/admin/addService", newService);
+      const response = await axiosInstance.post(
+        "/admin/addService",
+        newService
+      );
       if (response.data?.status) {
         setServices((prevServices) => [response.data.service, ...prevServices]);
         toast.success("Service added successfully");
@@ -94,14 +110,15 @@ const Service: React.FC = () => {
   };
 
   const handleUpdateService = async () => {
-    if (!selectedService) return;
-
+    if (!selectedService || !selectedService.name.trim()) {
+      setEditErrorMessage("Service name is required.");
+      return;
+    }
     try {
       const response = await axiosInstance.patch(
         `/admin/updateService/${selectedService._id}`,
         { name: selectedService.name }
       );
-
       if (response.data?.status) {
         setServices((prevServices) =>
           prevServices.map((service) =>
@@ -121,12 +138,16 @@ const Service: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      {/* New Sidebar Component */}
+    <div className="flex min-h-screen ">
+      {/* Sidebar Component */}
       <Sidebar onCollapse={setSidebarCollapsed} />
 
       {/* Main Content */}
-      <div className={`flex-1 transition-all duration-300 ${sidebarCollapsed ? "ml-16" : "ml-64"}`}>
+      <div
+        className={`flex-1 transition-all duration-300 ${
+          sidebarCollapsed ? "ml-16" : "ml-64"
+        }`}
+      >
         <div className="p-8">
           {/* Header */}
           <div className="flex justify-between items-center mb-8 bg-white p-6 rounded-lg shadow-sm">
@@ -205,7 +226,10 @@ const Service: React.FC = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
+                      <td
+                        colSpan={4}
+                        className="px-6 py-4 text-center text-gray-500"
+                      >
                         No services found
                       </td>
                     </tr>
@@ -220,7 +244,9 @@ const Service: React.FC = () => {
             <div className="mt-6 flex justify-center">
               <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
                 <button
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
                   disabled={currentPage === 1}
                   className="relative inline-flex items-center px-4 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
@@ -258,29 +284,37 @@ const Service: React.FC = () => {
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 bg-gray-900 bg-opacity-50 flex items-center justify-center">
           <div className="bg-white rounded-lg shadow-lg p-6 w-96">
-            <h2 className="text-lg font-semibold mb-4">Add New Service</h2>
-            <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Name"
-                value={newService.name}
-                onChange={(e) => setNewService({ name: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500"
-              />
-              <div className="flex justify-end space-x-4">
-                <button
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="bg-gray-300 px-4 py-2 rounded-lg hover:bg-gray-400"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAddService}
-                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
-                >
-                  Add
-                </button>
-              </div>
+            <h2 className="text-lg font-semibold mb-4">Add Service</h2>
+            <input
+              type="text"
+              placeholder="Service Name"
+              value={newService.name}
+              onChange={(e) => {
+                setNewService({ name: e.target.value });
+                setErrorMessage("");
+              }}
+              className={`w-full border rounded-lg px-4 py-2 mb-2 focus:outline-none focus:ring-2 ${
+                errorMessage
+                  ? "border-red-500 focus:ring-red-500"
+                  : "focus:ring-red-500"
+              }`}
+            />
+            {errorMessage && (
+              <p className="text-red-500 text-sm mb-4">{errorMessage}</p>
+            )}
+            <div className="flex justify-end">
+              <button
+                onClick={() => setIsAddModalOpen(false)}
+                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg mr-2 hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddService}
+                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+              >
+                Add
+              </button>
             </div>
           </div>
         </div>
@@ -296,11 +330,20 @@ const Service: React.FC = () => {
                 type="text"
                 placeholder="Name"
                 value={selectedService.name}
-                onChange={(e) =>
-                  setSelectedService({ ...selectedService, name: e.target.value })
-                }
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500"
+                onChange={(e) => {
+                  setSelectedService({
+                    ...selectedService,
+                    name: e.target.value,
+                  });
+                  setEditErrorMessage("");
+                }}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 ${
+                  editErrorMessage ? "border-red-500" : ""
+                }`}
               />
+              {editErrorMessage && (
+                <p className="text-red-500 text-sm">{editErrorMessage}</p>
+              )}
               <div className="flex justify-end space-x-4">
                 <button
                   onClick={() => {

@@ -131,26 +131,28 @@ export class AuthController {
       const data = req.body;
       const loginResponse = await this.authService.login(data);
       if ("error" in loginResponse) {
-        return res.status(HTTP_statusCode.Unauthorized).json({ 
+        return res.status(HTTP_statusCode.Unauthorized).json({
           status: false,
-          message: loginResponse.error
+          message: loginResponse.error,
         });
       }
 
       const { accessToken, refreshToken } = loginResponse;
+      console.log(accessToken,'1');
+      console.log(refreshToken,'2');
 
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: true, // Set to false for local testing
+        secure: true,
         sameSite: "strict",
-        path: "/auth/refresh", // Refresh token endpoint
+        path: "/auth/refresh", 
         expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // 7 days
       });
 
-      res.status(HTTP_statusCode.OK).json({ 
-        status: true, 
-        message: "User logged in successfully", 
-        accessToken 
+      res.status(HTTP_statusCode.OK).json({
+        status: true,
+        message: "User logged in successfully",
+        accessToken
       });
     } catch (error) {
       console.error(error);
@@ -160,6 +162,25 @@ export class AuthController {
           .status(HttpStatusCode.InternalServerError)
           .json({ message: "Authentication failed" });
       }
+    }
+  }
+
+  async logoutUser(req: Request, res: Response): Promise<any> {
+    try {
+      const refreshToken = req.cookies.refreshToken;
+      await this.authService.logout(refreshToken);
+      res.clearCookie("refreshToken",{
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        path: "/", 
+      });
+      res.status(HTTP_statusCode.OK).json({ status: true, message: "Logout" });
+    } catch (error) {
+      console.error(error);
+      res
+        .status(HTTP_statusCode.InternalServerError)
+        .json({ message: "Something went wrong, please try again later" });
     }
   }
 }

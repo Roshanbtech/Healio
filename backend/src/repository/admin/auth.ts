@@ -6,6 +6,18 @@ import { IAuthRepository } from "../../interface/admin/Auth.repository.interface
 import sendMail from "../../config/emailConfig";
 
 export class AuthRepository implements IAuthRepository {
+  async logout(refreshToken: string): Promise<any> {
+    try {
+      console.log(refreshToken, "refresh token");
+      return await userModel.updateOne(
+        { refreshToken },
+        { $set: { refreshToken: "" } }
+      );
+      console.log("Logout successful");
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
   async getAllUsers(): Promise<any> {
     try {
       const users = await userModel.find().lean();
@@ -142,11 +154,7 @@ We regret to inform you that your account has been rejected as a doctor in the H
 
 Thank you,
 Team Healio`;
-      await sendMail(
-        doctor.email,
-        "Account Rejected",
-        emailContent
-      );
+      await sendMail(doctor.email, "Account Rejected", emailContent);
       return await doctorModel.findByIdAndUpdate(
         id,
         { docStatus: "rejected", isDoctor: false },

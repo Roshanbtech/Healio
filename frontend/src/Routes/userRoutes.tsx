@@ -10,7 +10,7 @@ import Footer from "../components/common/userCommon/Footer";
 const UserRoutes = () => {
   const location = useLocation();
 
-  const showNavbar = !["/signup", "/login",'/otp'].includes(location.pathname);
+  const showNavbar = !["/signup", "/login",'/otp','/'].includes(location.pathname);
   const showFooter = !["/signup", "/login",'/otp'].includes(location.pathname);
 
   return (

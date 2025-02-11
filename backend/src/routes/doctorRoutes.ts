@@ -7,6 +7,7 @@ import { DoctorController } from "../controllers/doctor/doctor";
 import { DoctorRepository } from "../repository/doctor/doctor";
 import { checkDoctorBlocked } from "../helper/doctorAuthMiddleware";
 import { upload } from "../config/multerConfig";
+import verifyToken from '../helper/accessToken';
 
 const route = Router();
 
@@ -46,15 +47,16 @@ route.post(
 route.get(
   "/services",
   DoctorControllerInstance.getServices.bind(DoctorControllerInstance)
-)
+);
 route.post(
   "/qualifications",
   upload.array("certificate", 5),
   DoctorControllerInstance.addQualification.bind(DoctorControllerInstance)
-)
+);
 route.get(
   "/getQual/:id",
   DoctorControllerInstance.getQualifications.bind(DoctorControllerInstance)
 );
+// route.use(verifyToken(["doctor"]));
 
 export default route;

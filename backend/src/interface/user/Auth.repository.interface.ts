@@ -5,4 +5,5 @@ export interface IAuthRepository {
   existUser(email: string): Promise<{ existEmail: boolean }>;
   createUser(userData: userType): Promise<Document>;
   userCheck(email: string): Promise<UserProfile | null>;
+  logout(refreshToken: string): Promise<any>;
 }

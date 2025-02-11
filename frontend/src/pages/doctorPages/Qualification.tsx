@@ -5,7 +5,6 @@ import { Breadcrumb } from "../../components/common/doctorCommon/BreadCrumb";
 const Qualification = () => {
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
       <main className="flex-1">
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">

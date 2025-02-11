@@ -5,6 +5,7 @@ export interface IAuthService {
   }): Promise<
     { accessToken: string; refreshToken: string } | { error: string }
   >;
+  logout(refreshToken: string): Promise<any>;
   getUser(): Promise<any>;
   getDoctor(): Promise<any>;
   toggleUser(id: string): Promise<any>;

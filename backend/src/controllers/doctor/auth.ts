@@ -14,7 +14,7 @@ export class AuthController {
     try {
       console.log("create doctor auth");
       const data = req.body;
-      console.log(data,'docdata');
+      console.log(data, "docdata");
 
       const response = await this.authService.signup(data);
       res.status(HTTP_statusCode.OK).json({ status: true, response });
@@ -88,7 +88,7 @@ export class AuthController {
 
       const { email, name, uid, picture } = decodedToken;
       let doctor = await Doctor.findOne({ email });
-      console.log(doctor)
+      console.log(doctor);
 
       if (!doctor) {
         const doctorData = {
@@ -125,9 +125,9 @@ export class AuthController {
       const data = req.body;
       const loginResponse = await this.authService.login(data);
       if ("error" in loginResponse) {
-        return res.status(HTTP_statusCode.Unauthorized).json({ 
+        return res.status(HTTP_statusCode.Unauthorized).json({
           status: false,
-          message: loginResponse.error
+          message: loginResponse.error,
         });
       }
 
@@ -141,11 +141,11 @@ export class AuthController {
         expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // 7 days
       });
 
-      res.status(HTTP_statusCode.OK).json({ 
-        status: true, 
-        message: "Doctor logged in successfully", 
+      res.status(HTTP_statusCode.OK).json({
+        status: true,
+        message: "Doctor logged in successfully",
         accessToken,
-        doctorId
+        doctorId,
       });
     } catch (error) {
       console.error(error);

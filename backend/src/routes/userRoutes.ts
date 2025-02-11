@@ -2,14 +2,21 @@ import { Router } from "express";
 import { AuthRepository } from "../repository/user/auth";
 import { AuthService } from "../services/user/auth";
 import { AuthController } from "../controllers/user/auth";
+import { UserRepository } from "../repository/user/user";
+import { UserService } from "../services/user/user";
+import { UserController } from "../controllers/user/user";
 import { checkUserBlocked } from "../helper/authMiddleware";
-
+import verifyToken from "../helper/accessToken";
 
 const route = Router();
 
 const AuthRepositoryInstance = new AuthRepository();
 const AuthServiceInstance = new AuthService(AuthRepositoryInstance);
 const AuthControllerInstance = new AuthController(AuthServiceInstance);
+
+const UserRepositoryInstance = new UserRepository();
+const UserServiceInstance = new UserService(UserRepositoryInstance);
+const UserControllerInstance = new UserController(UserServiceInstance);
 
 const asyncMiddleware = (fn: any) => (req: any, res: any, next: any) => {
   Promise.resolve(fn(req, res, next)).catch(next);
@@ -37,5 +44,14 @@ route.post(
   asyncMiddleware(checkUserBlocked),
   AuthControllerInstance.loginUser.bind(AuthControllerInstance)
 );
+route.get(
+  "/doctors",
+  UserControllerInstance.getDoctors.bind(UserControllerInstance)
+)
+route.use(verifyToken(["user"]));
+route.post(
+  "/logout",
+  AuthControllerInstance.logoutUser.bind(AuthControllerInstance)
+)
 
 export default route;

@@ -40,7 +40,8 @@ export interface DoctorResult {
   isBlocked: boolean;
   isVerified: boolean;
   image: string;
-  
+  isDoctor?:boolean;
+  docStatus?: "pending" |"approved" | "rejected"
 }
 
 export interface Doctor {

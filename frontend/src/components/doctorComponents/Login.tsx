@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Link } from "react-router-dom";
@@ -15,17 +15,19 @@ const Login: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      navigate("/doctor/home");
+    }
+  }, []);
+
   const validationSchema = Yup.object({
     email: Yup.string()
       .email("Invalid email address")
-      .matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Invalid email format")
       .required("Email is required"),
-    password: Yup.string()
-      .matches(
-        /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-        "Password must be at least 8 characters long, include one uppercase letter, one number, and one special character"
-      )
-      .required("Password is required"),
+    password: Yup.string().required("Password is required"),
   });
 
   const formik = useFormik({
@@ -50,14 +52,15 @@ const Login: React.FC = () => {
         localStorage.setItem("userRole", decodedToken.role); // Store user role from decoded token
         console.log("Decoded role:", decodedToken.role);
 
-
-        toast.success("Doctor Login Successful");
+        if (data.status) {
+          toast.success(data.message);
+          navigate("/doctor/home");
+        }
 
         // Navigate to the home page or the desired route
-        navigate("/doctor/home");
       } catch (error: any) {
         console.error("Login error:", error);
-        toast.error("Invalid credentials. Please try again.");
+        toast.error(error.response.data.message);
       } finally {
         setIsSubmitting(false);
       }
@@ -189,7 +192,10 @@ const Login: React.FC = () => {
               {/* Signup Link */}
               <p className="text-center text-sm text-gray-600 mt-6">
                 Create a new account?{" "}
-                <Link to="/doctor/signup" className="text-green-600 hover:underline">
+                <Link
+                  to="/doctor/signup"
+                  className="text-green-600 hover:underline"
+                >
                   Sign Up
                 </Link>
               </p>

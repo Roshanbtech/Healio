@@ -4,7 +4,6 @@ import * as Yup from "yup";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "react-toastify";
-// import { backendUrl } from "../../utils/backendUrl";
 import { assets } from "../../assets/assets";
 import { Google } from "../common/userCommon/GoogleAuth";
 import axiosInstance from "../../utils/axiosInterceptors";
@@ -25,14 +24,8 @@ const Login: React.FC = () => {
   const validationSchema = Yup.object({
     email: Yup.string()
       .email("Invalid email address")
-      .matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Invalid email format")
       .required("Email is required"),
-    password: Yup.string()
-      .matches(
-        /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-        "Password must be at least 8 characters long, include one uppercase letter, one number, and one special character"
-      )
-      .required("Password is required"),
+    password: Yup.string().required("Password is required"),
   });
 
   const formik = useFormik({
@@ -56,15 +49,19 @@ const Login: React.FC = () => {
         localStorage.setItem("userRole", decodedToken.role); // Store user role from decoded token
         console.log("Decoded role:", decodedToken.role);
 
-
         toast.success("Login Successful");
 
         // Navigate to the home page or the desired route
         navigate("/home");
       } catch (error: any) {
         console.error("Login error:", error);
-        if (error.response && error.response.data.message === "Blocked by admin") {
-          toast.error("Your account has been blocked by the admin. Please contact support.");
+        if (
+          error.response &&
+          error.response.data.message === "Blocked by admin"
+        ) {
+          toast.error(
+            "Your account has been blocked by the admin. Please contact support."
+          );
         } else {
           toast.error("Invalid credentials. Please try again.");
         }
@@ -209,7 +206,7 @@ const Login: React.FC = () => {
           {/* Right Side - Doctor Image */}
           <div className="hidden md:block w-1/2 p-6 flex items-center justify-center">
             <img
-              src={assets.bg2} // Replace with correct doctor image path
+              src={assets.bg2}
               alt="Doctor"
               className="w-full h-auto object-contain"
             />

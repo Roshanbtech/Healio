@@ -9,15 +9,6 @@ export type userType = {
   isVerified?: boolean;
 };
 
-// export interface User {
-//     userId: string;
-//     name: string;
-//     phone : string;
-//     email: string;
-//     isBlocked: boolean;
-
-//   }
-
 export interface UserProfile {
   _id: ObjectId;
   userId: string;
@@ -32,3 +23,23 @@ export interface UserProfile {
   isVerified: boolean;
 }
 
+export interface DoctorDetails {
+  _id: any;
+  name: string;
+  email: string;
+  phone: string;
+  image?: string;
+  speciality?: string;
+  degree: string;
+  experience: string;
+  about?: string;
+  achievements?: string;
+  fees?:number;
+  hospital?: string;
+}
+
+export interface Service {
+  _id: string;
+  name: string;
+  isActive: boolean;
+}

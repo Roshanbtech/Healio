@@ -64,6 +64,25 @@ export class AuthController {
     }
   }
 
+  async logoutAdmin(req: Request, res: Response): Promise<any> {
+    try {
+      const refreshToken = req.cookies.refreshToken;
+      await this.authService.logout(refreshToken);
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        path: "/",
+      });
+      res.status(HTTP_statusCode.OK).json({ status: true, message: "Logout" });
+    } catch (error) {
+      console.error(error);
+      res
+        .status(HTTP_statusCode.InternalServerError)
+        .json({ message: "Something went wrong, please try again later" });
+    }
+  }
+
   async getUserList(req: Request, res: Response): Promise<any> {
     try {
       const userList = await this.authService.getUser();
@@ -148,21 +167,20 @@ export class AuthController {
   async addService(req: Request, res: Response): Promise<any> {
     try {
       const { name } = req.body;
-  
+
       const service = await this.authService.addService(name, true);
-  
+
       return res.status(200).json({ status: true, service });
     } catch (error: any) {
-      console.error("Error in AuthController.addService:", error); 
-  
+      console.error("Error in AuthController.addService:", error);
+
       return res.status(500).json({
         status: false,
-        message: error.message || "Something went wrong, please try again later.",
+        message:
+          error.message || "Something went wrong, please try again later.",
       });
     }
   }
-  
-
 
   async editService(req: Request, res: Response): Promise<any> {
     try {
@@ -211,7 +229,9 @@ export class AuthController {
     try {
       const { id } = req.params;
       const certificates = await this.authService.getCertificates(id);
-      return res.status(HTTP_statusCode.OK).json({ status: true, certificates });
+      return res
+        .status(HTTP_statusCode.OK)
+        .json({ status: true, certificates });
     } catch (error: any) {
       console.error("Error in getCertificates:", error);
       return res.status(HTTP_statusCode.InternalServerError).json({
@@ -248,5 +268,4 @@ export class AuthController {
       });
     }
   }
-
 }

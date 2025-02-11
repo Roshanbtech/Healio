@@ -4,7 +4,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "react-toastify";
-import axiosInstance from "../../utils/axiosInterceptors"; // Import axios instance
+import axiosInstance from "../../utils/axiosInterceptors";
 import { assets } from "../../assets/assets";
 
 const Login: React.FC = () => {
@@ -22,13 +22,8 @@ const Login: React.FC = () => {
   const validationSchema = Yup.object({
     email: Yup.string()
       .email("Invalid email address")
-      .matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Invalid email format")
       .required("Email is required"),
     password: Yup.string()
-      .matches(
-        /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-        "Password must be at least 8 characters long, include one uppercase letter, one number, and one special character"
-      )
       .required("Password is required"),
   });
 
@@ -50,7 +45,7 @@ const Login: React.FC = () => {
         localStorage.setItem("userRole", "admin");
 
         toast.success("Login Successful");
-        navigate("/admin/dashboard"); // Using react-router navigation instead of window.location
+        navigate("/admin/dashboard");
       } catch (error: any) {
         console.error("Login error:", error);
         toast.error(error?.response?.data?.message || "Login failed");
@@ -87,11 +82,13 @@ const Login: React.FC = () => {
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   className={`w-full px-4 py-3 rounded-md bg-[#f0fdf4] border-2 focus:ring-2 focus:ring-green-100 
-                    ${formik.touched.email && formik.errors.email
-                      ? "border-red-500"
-                      : formik.touched.email && !formik.errors.email
-                      ? "border-green-400"
-                      : "border-transparent"}`}
+                    ${
+                      formik.touched.email && formik.errors.email
+                        ? "border-red-500"
+                        : formik.touched.email && !formik.errors.email
+                        ? "border-green-400"
+                        : "border-transparent"
+                    }`}
                 />
                 {formik.touched.email && formik.errors.email && (
                   <div className="text-red-500 text-xs mt-1">
@@ -110,11 +107,13 @@ const Login: React.FC = () => {
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   className={`w-full px-4 py-3 rounded-md bg-[#f0fdf4] border-2 focus:ring-2 focus:ring-green-100
-                    ${formik.touched.password && formik.errors.password
-                      ? "border-red-500"
-                      : formik.touched.password && !formik.errors.password
-                      ? "border-green-400"
-                      : "border-transparent"}`}
+                    ${
+                      formik.touched.password && formik.errors.password
+                        ? "border-red-500"
+                        : formik.touched.password && !formik.errors.password
+                        ? "border-green-400"
+                        : "border-transparent"
+                    }`}
                 />
                 <button
                   type="button"
@@ -138,7 +137,9 @@ const Login: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`w-full ${isSubmitting ? "bg-red-400" : "bg-red-500 hover:bg-red-600"} text-white py-3 rounded-md transition-colors`}
+                className={`w-full ${
+                  isSubmitting ? "bg-red-400" : "bg-red-500 hover:bg-red-600"
+                } text-white py-3 rounded-md transition-colors`}
               >
                 {isSubmitting ? "Logging in..." : "Login"}
               </button>

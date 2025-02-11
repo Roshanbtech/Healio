@@ -53,6 +53,8 @@ export class AuthRepository implements IAuthRepository {
         isBlocked: doctorData.isBlocked,
         isVerified: doctorData.isVerified,
         image: doctorData.image || "",
+        isDoctor: doctorData.isDoctor,
+        docStatus: doctorData.docStatus
       };
     } catch (error: any) {
       throw new Error(error.message);

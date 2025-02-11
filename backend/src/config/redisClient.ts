@@ -20,11 +20,10 @@ export const generateOTP = (): string => {
   return Math.floor(1000 + Math.random() * 9000).toString();
 };
 
-// Store OTP properly in Redis
 export const otpSetData = async (email: string, otp: string): Promise<void> => {
   try {
-    await client.del(email); // Delete previous OTP if any
-    await client.hSet(email, { otp }); // Store OTP as a hash
+    await client.del(email);
+    await client.hSet(email, { otp }); 
     await client.expire(email, 3000);
     console.log(`OTP stored for ${email}: ${otp}`);
   } catch (error) {
@@ -32,11 +31,10 @@ export const otpSetData = async (email: string, otp: string): Promise<void> => {
   }
 };
 
-// Retrieve OTP correctly from Redis
 export const getOtpByEmail = async (email: string): Promise<string | null> => {
   try {
-    const userData = await client.hGetAll(email); // Retrieve all hash fields for the email
-    console.log(`Retrieved OTP for ${email}:`, userData); // Debug log
+    const userData = await client.hGetAll(email); 
+    console.log(`Retrieved OTP for ${email}:`, userData); 
     return userData.otp || null;
   } catch (error) {
     console.error("Error retrieving OTP:", error);
@@ -44,11 +42,10 @@ export const getOtpByEmail = async (email: string): Promise<string | null> => {
   }
 };
 
-// Resend OTP properly and store it
 export const resendOtpUtil = async (email: string): Promise<string | null> => {
   try {
-    const newOtp = generateOTP(); // Generate a new OTP
-    await otpSetData(email, newOtp); // Store new OTP in Redis with expiration time
+    const newOtp = generateOTP(); 
+    await otpSetData(email, newOtp);
     return newOtp;
   } catch (error) {
     console.error("Error resending OTP:", error);
@@ -58,18 +55,15 @@ export const resendOtpUtil = async (email: string): Promise<string | null> => {
 
 export const resendOtp = async (email: string): Promise<string | null> => {
   try {
-    // Check if an OTP exists for the email
     const existingOtp = await getOtpByEmail(email);
 
     if (existingOtp) {
       console.log(`Existing OTP for ${email} is being deleted.`);
-      await client.del(email); // Remove old OTP explicitly
+      await client.del(email); 
     }
 
-    // Generate a new OTP
     const newOtp = generateOTP();
 
-    // Store new OTP with expiration
     await otpSetData(email, newOtp);
 
     console.log(`New OTP generated for ${email}: ${newOtp}`);

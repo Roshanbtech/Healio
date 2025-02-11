@@ -15,29 +15,43 @@ import {
 import { assets } from "../../../assets/assets";
 import axiosInstance from "../../../utils/axiosInterceptors";
 
+// Define a type for each navigation item.
 interface NavItem {
   icon: React.ReactNode;
   label: string;
   path: string;
 }
 
-export const Sidebar: React.FC = () => {
+interface SidebarProps {
+  onCollapse?: (collapsed: boolean) => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ onCollapse }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
+  // Toggle the collapse state and notify the parent if onCollapse is provided.
+  const toggleCollapse = () => {
+    const newCollapsed = !isCollapsed;
+    setIsCollapsed(newCollapsed);
+    if (onCollapse) {
+      onCollapse(newCollapsed);
+    }
+  };
+
   const handleLogout = async () => {
     try {
-      await axiosInstance.post("/doctor/logout")
+      await axiosInstance.post("/doctor/logout");
     } catch (error) {
-      console.error("Logout failed:", error)
+      console.error("Logout failed:", error);
     }
-    
-    localStorage.removeItem("authToken")
-    localStorage.removeItem("userRole")
-    document.cookie = "refreshToken=; Max-Age=-99999999; path=/"
-    navigate("/doctor/login")
-  }
+
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userRole");
+    document.cookie = "refreshToken=; Max-Age=-99999999; path=/";
+    navigate("/doctor/login");
+  };
 
   const navItems: NavItem[] = [
     { icon: <LayoutGrid size={20} />, label: "Dashboard", path: "/doctor/home" },
@@ -55,7 +69,7 @@ export const Sidebar: React.FC = () => {
       <div className="relative h-full flex flex-col p-4">
         {/* Toggle Button */}
         <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={toggleCollapse}
           className="absolute -right-3 top-6 bg-white p-1.5 rounded-full shadow-md hover:bg-gray-100"
         >
           {isCollapsed ? <Menu size={16} /> : <X size={16} />}

@@ -1,4 +1,3 @@
-import { Document } from "mongoose";
 import { UserProfile, userType } from "../userInterface/interface";
 import { DoctorResult, doctorType } from "../doctorInterface/Interface";
 
@@ -9,6 +8,7 @@ export interface Service {
 }
 
 export interface IAuthRepository {
+  logout(refreshToken: string): Promise<any>;
   getAllUsers(): Promise<UserProfile[]>;
   getAllDoctors(): Promise<DoctorResult[]>;
   toggleUser(id: string): Promise<any>;

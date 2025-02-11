@@ -2,7 +2,7 @@ import { Router } from "express";
 import { AuthService } from "../services/admin/auth";
 import { AuthController } from "../controllers/admin/auth";
 import { AuthRepository } from "../repository/admin/auth";
-import refresh from "../helper/refreshToken";
+import verifyToken from "../helper/accessToken";
 
 const route = Router();
 
@@ -14,6 +14,11 @@ route.post(
   "/login",
   AuthControllerInstance.loginAdmin.bind(AuthControllerInstance)
 );
+route.post(
+  "/logout",
+  AuthControllerInstance.logoutAdmin.bind(AuthControllerInstance)
+)
+route.use(verifyToken(["admin"]));
 route.get(
   "/getUsers",
   AuthControllerInstance.getUserList.bind(AuthControllerInstance)
@@ -49,16 +54,14 @@ route.patch(
 route.get(
   "/docCert/:id",
   AuthControllerInstance.getCertificates.bind(AuthControllerInstance)
-)
+);
 route.patch(
   "/docCertAccept/:id",
   AuthControllerInstance.approveDoctor.bind(AuthControllerInstance)
-)
+);
 route.patch(
   "/docCertReject/:id",
   AuthControllerInstance.rejectDoctor.bind(AuthControllerInstance)
-)
-
-
+);
 
 export default route;

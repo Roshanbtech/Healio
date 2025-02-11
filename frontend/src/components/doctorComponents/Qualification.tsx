@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import axiosInstance from "../../utils/axiosInterceptors";
 import { toast } from "react-toastify";
+import { Sidebar } from "../common/doctorCommon/Sidebar";
 
 interface FormField {
   label: string;
@@ -16,7 +17,7 @@ interface Service {
   isActive: boolean;
 }
 
-interface Qualification {
+interface QualificationDetails {
   degree: string;
   experience: string;
   country: string;
@@ -42,18 +43,33 @@ export const QualificationForm: React.FC = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [selectedFile, setSelectedFile] = useState<File[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [submittedData, setSubmittedData] = useState<QualificationDetails | null>(null);
+  const [submittedData, setSubmittedData] =
+    useState<QualificationDetails | null>(null);
+  // State to track whether the sidebar is collapsed
+  const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const leftFields: FormField[] = [
     { label: "Degree", name: "degree", placeholder: "Enter degree" },
-    { label: "Experience", name: "experience", placeholder: "Years of experience" },
+    {
+      label: "Experience",
+      name: "experience",
+      placeholder: "Years of experience",
+    },
     { label: "Country", name: "country", placeholder: "Enter country" },
   ];
 
   const rightFields: FormField[] = [
-    { label: "Speciality", name: "speciality", placeholder: "Select speciality" },
+    {
+      label: "Speciality",
+      name: "speciality",
+      placeholder: "Select speciality",
+    },
     { label: "Hospital", name: "hospital", placeholder: "Enter hospital name" },
-    { label: "Achievements", name: "achievements", placeholder: "Enter achievements (optional)" },
+    {
+      label: "Achievements",
+      name: "achievements",
+      placeholder: "Enter achievements (optional)",
+    },
   ];
 
   const fetchServices = async () => {
@@ -117,25 +133,28 @@ export const QualificationForm: React.FC = () => {
       setIsLoading(true);
       const doctorId = sessionStorage.getItem("doctorId");
       const formData = new FormData();
-      
+
       Object.keys(values).forEach((key) => {
         formData.append(key, values[key as keyof FormValues]);
       });
-      
+
       selectedFile.forEach((file) => formData.append("certificate", file));
       formData.append("doctorId", doctorId || "");
 
       try {
-        const response = await axiosInstance.post("/doctor/qualifications", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        const response = await axiosInstance.post(
+          "/doctor/qualifications",
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          }
+        );
 
         if (response.data.status) {
           toast.success("Qualifications submitted successfully!");
-          // Set the submitted data to show success component
           setSubmittedData({
             ...values,
-            files: selectedFile.map(file => file.name)
+            files: selectedFile.map((file) => file.name),
           });
         }
       } catch (error: any) {
@@ -153,215 +172,281 @@ export const QualificationForm: React.FC = () => {
     }
   };
 
-  // Show success component if data is submitted
-  if (submittedData) {
-    return (
-      <div className="p-6">
-        <div className="bg-green-100 p-6 rounded-lg">
-          <div className="flex items-center mb-4">
-            <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center mr-3">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
+  const mainContentMargin = isSidebarCollapsed ? "4rem" : "16rem";
+
+  return (
+    <>
+      {/* Sidebar component */}
+      <Sidebar onCollapse={setSidebarCollapsed} />
+
+      {/* Main content wrapper */}
+      <div
+        style={{ marginLeft: mainContentMargin }}
+        className="min-h-screen p-6 transition-all duration-300"
+      >
+        {submittedData ? (
+          // Success view when qualification details have been submitted
+          <div className="bg-green-100 p-6 rounded-lg">
+            <div className="flex items-center mb-4">
+              <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center mr-3">
+                <svg
+                  className="w-5 h-5 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-green-700">
+                Qualification Details Submitted
+              </h3>
             </div>
-            <h3 className="text-xl font-semibold text-green-700">Qualification Details Submitted</h3>
+
+            <div className="bg-white rounded-lg p-6 mt-4">
+              <h4 className="text-lg font-medium text-gray-800 mb-4">
+                Your Information
+              </h4>
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <p className="text-gray-600 mb-2">
+                    <span className="font-medium">Degree:</span>{" "}
+                    {submittedData.degree}
+                  </p>
+                  <p className="text-gray-600 mb-2">
+                    <span className="font-medium">Experience:</span>{" "}
+                    {submittedData.experience} years
+                  </p>
+                  <p className="text-gray-600 mb-2">
+                    <span className="font-medium">Country:</span>{" "}
+                    {submittedData.country}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-600 mb-2">
+                    <span className="font-medium">Speciality:</span>{" "}
+                    {submittedData.speciality?.name}
+                  </p>
+                  <p className="text-gray-600 mb-2">
+                    <span className="font-medium">Hospital:</span>{" "}
+                    {submittedData.hospital}
+                  </p>
+                  <p className="text-gray-600 mb-2">
+                    <span className="font-medium">Achievements:</span>{" "}
+                    {submittedData.achievements || "None"}
+                  </p>
+                </div>
+              </div>
+
+              {submittedData.files && submittedData.files.length > 0 && (
+                <div className="mt-6">
+                  <h5 className="text-md font-medium text-gray-800 mb-2">
+                    Uploaded Documents
+                  </h5>
+                  <div className="flex flex-wrap gap-2">
+                    {submittedData.files.map((file, index) => (
+                      <div
+                        key={index}
+                        className="inline-flex items-center px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-700"
+                      >
+                        <svg
+                          className="w-4 h-4 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                          />
+                        </svg>
+                        Document {index + 1}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-          
-          <div className="bg-white rounded-lg p-6 mt-4">
-            <h4 className="text-lg font-medium text-gray-800 mb-4">Your Information</h4>
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <p className="text-gray-600 mb-2"><span className="font-medium">Degree:</span> {submittedData.degree}</p>
-                <p className="text-gray-600 mb-2"><span className="font-medium">Experience:</span> {submittedData.experience} years</p>
-                <p className="text-gray-600 mb-2"><span className="font-medium">Country:</span> {submittedData.country}</p>
-              </div>
-              <div>
-                <p className="text-gray-600 mb-2"><span className="font-medium">Speciality:</span> {submittedData.speciality?.name}</p>
-                <p className="text-gray-600 mb-2"><span className="font-medium">Hospital:</span> {submittedData.hospital}</p>
-                <p className="text-gray-600 mb-2"><span className="font-medium">Achievements:</span> {submittedData.achievements || "None"}</p>
-              </div>
-            </div>
-            
-            {submittedData.files && submittedData.files.length > 0 && (
-              <div className="mt-6">
-                <h5 className="text-md font-medium text-gray-800 mb-2">Uploaded Documents</h5>
-                <div className="flex flex-wrap gap-2">
-                  {submittedData.files.map((file, index) => (
-                    <div
-                      key={index}
-                      className="inline-flex items-center px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-700"
-                    >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                      </svg>
-                      Document {index + 1}
+        ) : (
+          // Form view when no qualification details have been submitted
+          <form onSubmit={formik.handleSubmit} className="space-y-6">
+            {/* Form Section */}
+            <div className="bg-white rounded-2xl p-6">
+              <h2 className="text-lg font-semibold mb-6">
+                Current Practicing Details
+              </h2>
+              <div className="grid grid-cols-2 gap-6">
+                {/* Left Fields */}
+                <div className="space-y-4">
+                  {leftFields.map((field) => (
+                    <div key={field.name}>
+                      <label className="block text-sm text-gray-600 mb-1">
+                        {field.label}
+                      </label>
+                      <input
+                        type="text"
+                        name={field.name}
+                        placeholder={field.placeholder}
+                        value={formik.values[field.name as keyof FormValues]}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className={`w-full p-2 rounded-lg bg-[#e8f8e8] border-2 ${
+                          formik.touched[field.name as keyof FormValues] &&
+                          formik.errors[field.name as keyof FormValues]
+                            ? "border-red-500"
+                            : formik.touched[field.name as keyof FormValues] &&
+                              !formik.errors[field.name as keyof FormValues]
+                            ? "border-green-400"
+                            : "border-transparent"
+                        }`}
+                      />
+                      {formik.touched[field.name as keyof FormValues] &&
+                        formik.errors[field.name as keyof FormValues] && (
+                          <p className="text-sm text-red-600">
+                            {formik.errors[field.name as keyof FormValues]}
+                          </p>
+                        )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Right Fields */}
+                <div className="space-y-4">
+                  {rightFields.map((field) => (
+                    <div key={field.name}>
+                      <label className="block text-sm text-gray-600 mb-1">
+                        {field.label}
+                      </label>
+                      {field.name === "speciality" ? (
+                        <select
+                          name={field.name}
+                          value={formik.values.speciality}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          className={`w-full p-2 rounded-lg bg-[#e8f8e8] border-2 ${
+                            formik.touched[field.name as keyof FormValues] &&
+                            formik.errors[field.name as keyof FormValues]
+                              ? "border-red-500"
+                              : formik.touched[
+                                  field.name as keyof FormValues
+                                ] &&
+                                !formik.errors[field.name as keyof FormValues]
+                              ? "border-green-400"
+                              : "border-transparent"
+                          } cursor-pointer`}
+                        >
+                          <option value="" disabled>
+                            {field.placeholder}
+                          </option>
+                          {services.map((service) => (
+                            <option key={service._id} value={service._id}>
+                              {service.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          name={field.name}
+                          placeholder={field.placeholder}
+                          value={formik.values[field.name as keyof FormValues]}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          className={`w-full p-2 rounded-lg bg-[#e8f8e8] border-2 ${
+                            formik.touched[field.name as keyof FormValues] &&
+                            formik.errors[field.name as keyof FormValues]
+                              ? "border-red-500"
+                              : formik.touched[
+                                  field.name as keyof FormValues
+                                ] &&
+                                !formik.errors[field.name as keyof FormValues]
+                              ? "border-green-400"
+                              : "border-transparent"
+                          }`}
+                        />
+                      )}
+                      {formik.touched[field.name as keyof FormValues] &&
+                        formik.errors[field.name as keyof FormValues] && (
+                          <p className="text-sm text-red-600">
+                            {formik.errors[field.name as keyof FormValues]}
+                          </p>
+                        )}
                     </div>
                   ))}
                 </div>
               </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
-  // Show the form if no data is submitted
-  return (
-    <form onSubmit={formik.handleSubmit} className="p-6 space-y-6">
-      {/* Form Section */}
-      <div className="bg-white rounded-2xl p-6">
-        <h2 className="text-lg font-semibold mb-6">Current Practicing Details</h2>
-        <div className="grid grid-cols-2 gap-6">
-          {/* Left Fields */}
-          <div className="space-y-4">
-            {leftFields.map((field) => (
-              <div key={field.name}>
-                <label className="block text-sm text-gray-600 mb-1">{field.label}</label>
-                <input
-                  type="text"
-                  name={field.name}
-                  placeholder={field.placeholder}
-                  value={formik.values[field.name as keyof FormValues]}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  className={`w-full p-2 rounded-lg bg-[#e8f8e8] border-2 ${
-                    formik.touched[field.name as keyof FormValues] &&
-                    formik.errors[field.name as keyof FormValues]
-                      ? "border-red-500"
-                      : formik.touched[field.name as keyof FormValues] &&
-                        !formik.errors[field.name as keyof FormValues]
-                      ? "border-green-400"
-                      : "border-transparent"
+              <div className="flex justify-center mt-6">
+                <button
+                  type="submit"
+                  className={`px-8 py-2 text-white rounded-lg ${
+                    isLoading ? "bg-gray-400" : "bg-red-600 hover:bg-red-700"
                   }`}
-                />
-                {formik.touched[field.name as keyof FormValues] &&
-                  formik.errors[field.name as keyof FormValues] && (
-                    <p className="text-sm text-red-600">
-                      {formik.errors[field.name as keyof FormValues]}
-                    </p>
-                  )}
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Submitting..." : "Save"}
+                </button>
               </div>
-            ))}
-          </div>
-
-          {/* Right Fields */}
-          <div className="space-y-4">
-            {rightFields.map((field) => (
-              <div key={field.name}>
-                <label className="block text-sm text-gray-600 mb-1">{field.label}</label>
-                {field.name === "speciality" ? (
-                  <select
-                    name={field.name}
-                    value={formik.values.speciality}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className={`w-full p-2 rounded-lg bg-[#e8f8e8] border-2 ${
-                      formik.touched[field.name as keyof FormValues] &&
-                      formik.errors[field.name as keyof FormValues]
-                        ? "border-red-500"
-                        : formik.touched[field.name as keyof FormValues] &&
-                          !formik.errors[field.name as keyof FormValues]
-                        ? "border-green-400"
-                        : "border-transparent"
-                    } cursor-pointer`}
-                  >
-                    <option value="" disabled>
-                      {field.placeholder}
-                    </option>
-                    {services.map((service) => (
-                      <option key={service._id} value={service._id}>
-                        {service.name}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    name={field.name}
-                    placeholder={field.placeholder}
-                    value={formik.values[field.name as keyof FormValues]}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className={`w-full p-2 rounded-lg bg-[#e8f8e8] border-2 ${
-                      formik.touched[field.name as keyof FormValues] &&
-                      formik.errors[field.name as keyof FormValues]
-                        ? "border-red-500"
-                        : formik.touched[field.name as keyof FormValues] &&
-                          !formik.errors[field.name as keyof FormValues]
-                        ? "border-green-400"
-                        : "border-transparent"
-                    }`}
-                  />
-                )}
-                {formik.touched[field.name as keyof FormValues] &&
-                  formik.errors[field.name as keyof FormValues] && (
-                    <p className="text-sm text-red-600">
-                      {formik.errors[field.name as keyof FormValues]}
-                    </p>
-                  )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex justify-center mt-6">
-          <button
-            type="submit"
-            className={`px-8 py-2 text-white rounded-lg ${
-              isLoading ? "bg-gray-400" : "bg-red-600 hover:bg-red-700"
-            }`}
-            disabled={isLoading}
-          >
-            {isLoading ? "Submitting..." : "Save"}
-          </button>
-        </div>
-      </div>
-
-      {/* File Upload Section */}
-      <div className="bg-white rounded-2xl p-6">
-        <h2 className="text-lg font-semibold mb-6">Upload your documents</h2>
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-[#e8f8e8]">
-          <div className="flex flex-col items-center">
-            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
-              <svg
-                className="w-6 h-6 text-red-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
             </div>
-            <p className="text-gray-600 mb-2">
-              Select your file or drag and drop
-            </p>
-            <input
-              type="file"
-              multiple
-              onChange={handleFileChange}
-              className="hidden"
-              id="fileInput"
-            />
-            <label
-              htmlFor="fileInput"
-              className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 cursor-pointer"
-            >
-              Browse
-            </label>
-            {selectedFile && selectedFile.length > 0 && (
-              <p className="mt-2 text-sm text-gray-600">
-                {selectedFile.length} file{selectedFile.length > 1 ? "s" : ""} selected
-              </p>
-            )}
-          </div>
-        </div>
+
+            {/* File Upload Section */}
+            <div className="bg-white rounded-2xl p-6">
+              <h2 className="text-lg font-semibold mb-6">
+                Upload your documents
+              </h2>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-[#e8f8e8]">
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
+                    <svg
+                      className="w-6 h-6 text-red-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v16m8-8H4"
+                      />
+                    </svg>
+                  </div>
+                  <p className="text-gray-600 mb-2">
+                    Select your file or drag and drop
+                  </p>
+                  <input
+                    type="file"
+                    multiple
+                    onChange={handleFileChange}
+                    className="hidden"
+                    id="fileInput"
+                  />
+                  <label
+                    htmlFor="fileInput"
+                    className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 cursor-pointer"
+                  >
+                    Browse
+                  </label>
+                  {selectedFile && selectedFile.length > 0 && (
+                    <p className="mt-2 text-sm text-gray-600">
+                      {selectedFile.length} file
+                      {selectedFile.length > 1 ? "s" : ""} selected
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </form>
+        )}
       </div>
-    </form>
+    </>
   );
 };

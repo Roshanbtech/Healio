@@ -2,10 +2,7 @@ import jwt from "jsonwebtoken";
 import { config } from "dotenv";
 import { IAuthService } from "../../interface/admin/Auth.service.interface";
 import { IAuthRepository } from "../../interface/admin/Auth.repository.interface";
-import emailConfig from "../../config/emailConfig";
 config();
-
-
 
 export class AuthService implements IAuthService {
   private AuthRepository: IAuthRepository;
@@ -64,6 +61,17 @@ export class AuthService implements IAuthService {
       return { error: "Internal server error. Please try again later." };
     }
   }
+
+  async logout(refreshToken: string): Promise<any> {
+    try {
+      console.log("Logout process started...");
+      return await this.AuthRepository.logout(refreshToken);
+    } catch (error) {
+      console.error("Logout error:", error);
+      return { error: "Internal server error." };
+    }
+  }
+  
   async getUser(): Promise<any> {
     try {
       const users = await this.AuthRepository.getAllUsers();
@@ -123,29 +131,29 @@ export class AuthService implements IAuthService {
       if (!name || name.trim() === "") {
         throw new Error("Service name cannot be empty.");
       }
-  
+
       if (name.length > 12) {
         throw new Error("Service name cannot exceed 12 characters.");
       }
-  
+
       const existingService = await this.AuthRepository.findServiceByName(name);
       if (existingService) {
         throw new Error("Service name already exists.");
       }
-  
+
       const service = await this.AuthRepository.addService(name, isActive);
       if (!service) {
         throw new Error("Service not added.");
       }
-  
+
       return { status: true, message: "Service added successfully", service };
     } catch (error: any) {
-      console.error("Error in AuthService.addService:", error); 
-      throw new Error(error.message || "An error occurred while adding the service.");
+      console.error("Error in AuthService.addService:", error);
+      throw new Error(
+        error.message || "An error occurred while adding the service."
+      );
     }
   }
-  
-  
 
   async editService(id: string, name: string, isActive: boolean): Promise<any> {
     try {
@@ -166,9 +174,10 @@ export class AuthService implements IAuthService {
         throw new Error("Service not updated");
       }
       const message = service.isActive
-      ? "Service enabled successfully"
-      : "Service disabled successfully";
-    return { status: true, message };    } catch (error: any) {
+        ? "Service enabled successfully"
+        : "Service disabled successfully";
+      return { status: true, message };
+    } catch (error: any) {
       throw new Error(error.message);
     }
   }
@@ -186,12 +195,12 @@ export class AuthService implements IAuthService {
   }
 
   async getCertificates(id: string): Promise<any> {
-      try{
-        const certificates = await this.AuthRepository.getCertificates(id);
-        return certificates;
-      }catch(error: any){
-        throw new Error(error.message);
-      }
+    try {
+      const certificates = await this.AuthRepository.getCertificates(id);
+      return certificates;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
   }
 
   async approveDoctor(id: string): Promise<any> {

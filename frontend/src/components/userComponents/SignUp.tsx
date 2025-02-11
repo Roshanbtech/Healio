@@ -5,7 +5,6 @@ import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { assets } from "../../assets/assets";
-// import { backendUrl } from "../../utils/backendUrl";
 import Otp from "../../components/userComponents/Otp";
 import { SignUpFormValues } from "../../interfaces/userInterface";
 import { Google } from "../common/userCommon/GoogleAuth";
@@ -25,21 +24,49 @@ const Signup: React.FC = () => {
     confirmpassword: "",
   });
   const validationSchema = Yup.object({
-    name: Yup.string().required("Name is required"),
+    name: Yup.string()
+      .trim()
+      .matches(/^[a-zA-Z\s]+$/, "Name must only contain letters and spaces")
+      .max(50, "Name cannot exceed 50 characters")
+      .required("Name is required"),
+
     email: Yup.string()
+      .trim()
       .email("Invalid email address")
       .matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Invalid email format")
+      .max(100, "Email cannot exceed 100 characters")
       .required("Email is required"),
+
     phone: Yup.string()
-      .matches(/^\d{10}$/, "Phone number must be 10 digits")
+      .trim()
+      .matches(/^\d{10}$/, "Phone number must be exactly 10 digits")
       .required("Phone number is required"),
+
     password: Yup.string()
+      .trim()
+      .matches(/^.{8,}$/, "Password must be at least 8 characters long")
       .matches(
-        /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-        "Password must be at least 8 characters long, include one uppercase letter, one number, and one special character"
+        /(?=.*[A-Z])/,
+        "Password must include at least one uppercase letter"
       )
+      .matches(
+        /(?=.*[a-z])/,
+        "Password must include at least one lowercase letter"
+      )
+      .matches(/(?=.*\d)/, "Password must include at least one number")
+      .matches(
+        /(?=.*[@$!%*?&])/,
+        "Password must include at least one special character (@, $, !, %, *, ?, &)"
+      )
+      .matches(
+        /^[A-Za-z\d@$!%*?&]+$/,
+        "Password must not contain spaces or unsupported characters"
+      )
+      .max(50, "Password cannot exceed 50 characters")
       .required("Password is required"),
+
     confirmpassword: Yup.string()
+      .trim()
       .oneOf([Yup.ref("password")], "Passwords must match")
       .required("Confirm password is required"),
   });
@@ -59,57 +86,26 @@ const Signup: React.FC = () => {
       try {
         console.log("Submitting:", values);
         setFormData(values);
-        
 
-        // const response = await fetch(`${backendUrl}/sendOtp`, {
-        //   method: "POST",
-        //   headers: {
-        //     "Content-Type": "application/json",
-        //   },
-        //   body: JSON.stringify(values),
-        //   credentials: "include", // Include cookies if your API uses sessions
-        // });
-
-        const response = await axiosUrl.post('/sendOtp', values, {
+        const response = await axiosUrl.post("/sendOtp", values, {
           withCredentials: true,
           headers: {
             "Content-Type": "application/json",
           },
         });
-      
+
         console.log(response.data, "data");
-      
-        // Check for correct response structure
+
         if (response.data?.response?.status === true) {
           toast.success(response.data.response.message || "Signup successful!");
           setOtpPage(true);
         } else {
-          toast.error(response.data.response?.message || "Email Already in Use");
+          toast.error(
+            response.data.response?.message || "Email Already in Use"
+          );
         }
-      
-        
 
-        // const data = await response.json();
-        // console.log(data, "data");
-        // if (!response.ok) {
-        //   throw new Error(data.message || "Signup failed");
-        // }
-
-        // // Check for correct response structure
-        // if (data?.response?.status === true) {
-        //   toast.success(data.response.message || "Signup successful!");
-        //   setOtpPage(true);
-        // } else {
-        //   toast.error(data.response?.message || "Email Already in Use");
-        // }
-
-        // Clear form
         formik.resetForm();
-
-        // Redirect to login page after successful signup
-        // setTimeout(() => {
-        //     navigate('/otp');
-        // }, 1500); // Give time for the success message to be seen
       } catch (error: any) {
         console.error("Error Response:", error);
         toast.error(error.message || "An error occurred during signup");
@@ -125,13 +121,16 @@ const Signup: React.FC = () => {
     <>
       {" "}
       <header className="bg-white py-4 px-6 shadow-sm">
-                      <div className="max-w-[1200px] mx-auto flex items-center justify-between">
-                          <img src={assets.logo} alt="Healio Logo" className="h-12 w-auto" />
-                          <Link to="/doctor/signup" className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">
-                              Switch to Doctor
-                          </Link>
-                      </div>
-                  </header>
+        <div className="max-w-[1200px] mx-auto flex items-center justify-between">
+          <img src={assets.logo} alt="Healio Logo" className="h-12 w-auto" />
+          <Link
+            to="/doctor/signup"
+            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+          >
+            Switch to Doctor
+          </Link>
+        </div>
+      </header>
       <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
         <div className="w-full max-w-[1000px] bg-white rounded-[20px] shadow-lg flex overflow-hidden">
           {/* Left Side - Doctor Image */}
@@ -164,12 +163,12 @@ const Signup: React.FC = () => {
                   onBlur={formik.handleBlur}
                   className={`w-full px-4 py-3 rounded-md bg-[#f0fdf4] border-2 focus:ring-2 focus:ring-green-100
                     ${
-                        formik.touched.name && formik.errors.name
-                          ? "border-red-500" // Red border for errors
-                          : formik.touched.name && !formik.errors.name
-                          ? "border-green-400" // Green border for valid input
-                          : "border-transparent" // Default state
-                      }` }
+                      formik.touched.name && formik.errors.name
+                        ? "border-red-500" // Red border for errors
+                        : formik.touched.name && !formik.errors.name
+                        ? "border-green-400" // Green border for valid input
+                        : "border-transparent" // Default state
+                    }`}
                 />
                 {formik.touched.name && formik.errors.name && (
                   <div className="text-red-500 text-xs mt-1">
@@ -239,13 +238,12 @@ const Signup: React.FC = () => {
                   onBlur={formik.handleBlur}
                   className={`w-full px-4 py-3 rounded-md bg-[#f0fdf4] border-2 focus:ring-2 focus:ring-green-100
                     ${
-                        formik.touched.password && formik.errors.password
-                          ? "border-red-500" // Red border for errors
-                          : formik.touched.password && !formik.errors.password
-                          ? "border-green-400" // Green border for valid input
-                          : "border-transparent" // Default state
-                      }`}
-
+                      formik.touched.password && formik.errors.password
+                        ? "border-red-500" // Red border for errors
+                        : formik.touched.password && !formik.errors.password
+                        ? "border-green-400" // Green border for valid input
+                        : "border-transparent" // Default state
+                    }`}
                 />
                 <button
                   type="button"
@@ -276,14 +274,14 @@ const Signup: React.FC = () => {
                   onBlur={formik.handleBlur}
                   className={`w-full px-4 py-3 rounded-md bg-[#f0fdf4] border-2 focus:ring-2 focus:ring-green-100
                     ${
-                        formik.touched.confirmpassword &&
-                        formik.errors.confirmpassword
-                          ? "border-red-500" // Red border for errors
-                          : formik.touched.confirmpassword &&
-                            !formik.errors.confirmpassword
-                          ? "border-green-400" // Green border for valid input
-                          : "border-transparent" // Default state
-                      }`}
+                      formik.touched.confirmpassword &&
+                      formik.errors.confirmpassword
+                        ? "border-red-500" // Red border for errors
+                        : formik.touched.confirmpassword &&
+                          !formik.errors.confirmpassword
+                        ? "border-green-400" // Green border for valid input
+                        : "border-transparent" // Default state
+                    }`}
                 />
                 <button
                   type="button"
@@ -316,8 +314,8 @@ const Signup: React.FC = () => {
               </button>
 
               {/* Google Signup */}
-             
-              <Google/>
+
+              <Google />
 
               {/* Already have an account? */}
               <p className="text-center text-sm text-gray-600 mt-6">

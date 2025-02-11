@@ -2,7 +2,6 @@ import { Request, Response, NextFunction } from "express";
 import doctorModel from "../model/doctorModel";
 import HttpStatusCode from "../enums/httpStatusCode";
 
-// Middleware to check if doctor is blocked
 export const checkDoctorBlocked = async (
   req: Request,
   res: Response,

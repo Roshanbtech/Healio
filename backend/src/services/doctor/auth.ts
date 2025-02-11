@@ -54,7 +54,7 @@ export class AuthService implements IAuthService {
         phone: doctorData.phone,
         password: hashedPassword,
         isVerified: true,
-        docStatus: "pending" as "pending"
+        docStatus: "pending" as "pending",
       };
 
       await this.AuthRepository.createDoctor(this.doctorData);
@@ -143,7 +143,8 @@ export class AuthService implements IAuthService {
     email: string;
     password: string;
   }): Promise<
-    { accessToken: string; refreshToken: string; doctorId: string } | { error: string }
+    | { accessToken: string; refreshToken: string; doctorId: string }
+    | { error: string }
   > {
     try {
       const { email, password } = doctorData;
@@ -156,6 +157,11 @@ export class AuthService implements IAuthService {
       const doctor = await this.AuthRepository.doctorCheck(email);
       if (!doctor) {
         return { error: "Doctor Not Found." };
+      }
+
+
+      if(doctor.docStatus === "rejected"){
+        return {error: "Your account has been rejected"}
       }
 
       const isPasswordValid = await bcrypt.compare(password, doctor.password);
