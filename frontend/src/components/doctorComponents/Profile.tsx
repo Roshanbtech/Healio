@@ -20,13 +20,13 @@ interface DoctorProfile {
   id: string;
   name: string;
   email: string;
-  speciality: Specialization;
+  speciality: Specialization | { _id: string; name: string }; // it might come as an object with _id
   experience: number;
-  bio: string;
-  phoneNumber: string;
+  about: string;
+  phone: string;
   country?: string;
-  fees?: string;
-  profilePicture?: string;
+  fees?: number;
+  image?: string;
   hospital?: string;
   degree?: string;
   achievements?: string;
@@ -35,7 +35,7 @@ interface DoctorProfile {
 }
 
 const Profile: React.FC = () => {
-  // State for profile displayed on the left side (database state)
+  // State for the profile (from DB)
   const [profile, setProfile] = useState<DoctorProfile | null>(null);
   // State for the edit form
   const [editProfile, setEditProfile] = useState<DoctorProfile | null>(null);
@@ -43,11 +43,11 @@ const Profile: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // State for image upload in the edit form
+  // States for image upload
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("");
 
-  // State to track sidebar collapsed state
+  // Sidebar collapse state
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const doctor = sessionStorage.getItem("doctorId");
@@ -60,8 +60,8 @@ const Profile: React.FC = () => {
         const fetchedProfile = response.data.data.profile;
         setProfile(fetchedProfile);
         setEditProfile(fetchedProfile);
-        if (fetchedProfile.profilePicture) {
-          setPreviewUrl(fetchedProfile.profilePicture);
+        if (fetchedProfile.image) {
+          setPreviewUrl(fetchedProfile.image);
         }
       } catch (err) {
         setError("Failed to load profile");
@@ -90,7 +90,6 @@ const Profile: React.FC = () => {
     fetchServices();
   }, []);
 
-  // Update editProfile state when form fields change
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -107,20 +106,42 @@ const Profile: React.FC = () => {
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
 
-    // Optionally update editProfile with the new image URL
-    setEditProfile((prev) => (prev ? { ...prev, profilePicture: url } : null));
+    setEditProfile((prev) => (prev ? { ...prev, image: url } : null));
   };
 
-  // Submit handler: update the database then update the display (left side)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editProfile) return;
+    
     try {
-      const response = await axiosInstance.put(
-        `/doctor/profile/${doctor}`,
-        editProfile
+      const formData = new FormData();
+      
+      for (const key in editProfile) {
+        if (key === "image") continue;
+        
+        if (key === "speciality") {
+          const specialityObj = editProfile.speciality as any;
+          const specialityId = specialityObj?._id || specialityObj?.id || "";
+          formData.append(key, specialityId);
+        } else {
+          formData.append(key, String(editProfile[key as keyof DoctorProfile]));
+        }
+      }
+      
+      if (selectedImage) {
+        formData.append("image", selectedImage);
+      }
+      
+      await axiosInstance.patch(
+        `/doctor/editProfile/${doctor}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
-      // If the update is successful, update the left side profile display
+      
       setProfile(editProfile);
       toast.success("Profile updated successfully!");
     } catch (error) {
@@ -143,12 +164,8 @@ const Profile: React.FC = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar Container with dynamic width */}
-      <div
-        className={`transition-all duration-300 ${
-          sidebarCollapsed ? "w-16" : "w-64"
-        }`}
-      >
+      {/* Sidebar */}
+      <div className={`transition-all duration-300 ${sidebarCollapsed ? "w-16" : "w-64"}`}>
         <Sidebar onCollapse={(collapsed) => setSidebarCollapsed(collapsed)} />
       </div>
 
@@ -159,101 +176,107 @@ const Profile: React.FC = () => {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
-          {/* Updated Profile Information Card */}
+          {/* Display Profile Information */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="bg-red-600 px-6 py-4">
-              <h2 className="text-2xl font-semibold text-white text-center">
-                Profile Information
-              </h2>
-            </div>
-            <div className="p-6">
-              <div className="flex items-center space-x-6">
-                {/* Image with active/inactive indicator */}
-                <div className="relative">
-                  <img
-                    src={profile?.profilePicture || assets.doc11}
-                    alt={profile?.name || "Doctor"}
-                    className="w-24 h-24 rounded-full object-cover border-4 border-gray-300"
-                  />
-                  <div
-                    className={`absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-white ${
-                      profile && profile.isBlocked
-                        ? "bg-red-500"
-                        : "bg-green-500"
-                    }`}
-                  ></div>
-                </div>
-                <div>
-                  <h3 className="flex items-center space-x-3">
-                    <span className="text-2xl font-bold text-green-700">
-                      {profile?.name}
-                    </span>
-                    <span
-                      className={`px-3 py-1 text-sm font-semibold rounded-full ${
-                        profile?.docStatus === "approved"
-                          ? "bg-green-100 text-green-800"
-                          : profile?.docStatus === "pending"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {profile?.docStatus || "N/A"}
-                    </span>
-                  </h3>
-                  <p className="text-base text-gray-600">{profile?.email}</p>
-                </div>
-              </div>
-              <div className="mt-6 grid gap-y-3 text-base">
-                <p>
-                  <span className="font-semibold text-green-700">Phone:</span>{" "}
-                  {profile?.phoneNumber || "N/A"}
-                </p>
-                <p>
-                  <span className="font-semibold text-green-700">
-                    Speciality:
-                  </span>{" "}
-                  {profile?.speciality?.name || "N/A"}
-                </p>
-                <p>
-                  <span className="font-semibold text-green-700">
-                    Experience:
-                  </span>{" "}
-                  {profile?.experience || "N/A"} years
-                </p>
-                <p>
-                  <span className="font-semibold text-green-700">
-                    Hospital:
-                  </span>{" "}
-                  {profile?.hospital || "N/A"}
-                </p>
-                <p>
-                  <span className="font-semibold text-green-700">Degree:</span>{" "}
-                  {profile?.degree || "N/A"}
-                </p>
-                <p>
-                  <span className="font-semibold text-green-700">Country:</span>{" "}
-                  {profile?.country || "N/A"}
-                </p>
-                <p>
-                  <span className="font-semibold text-green-700">
-                    Achievements:
-                  </span>{" "}
-                  {profile?.achievements || "N/A"}
-                </p>
-              </div>
-            </div>
-          </div>
+  <div className="bg-red-600 px-6 py-4">
+    <h2 className="text-2xl font-semibold text-white text-center">
+      Profile Information
+    </h2>
+  </div>
+  <div className="p-6 flex flex-col md:flex-row">
+    {/* Left Column: Profile Image and Basic Info */}
+    <div className="flex flex-col items-center md:w-1/3">
+      <div className="relative">
+        {selectedImage ? (
+          <img
+            src={URL.createObjectURL(selectedImage)}
+            alt="Selected"
+            className="w-32 h-32 rounded-full object-cover border-4 border-gray-300"
+          />
+        ) : (
+          <img
+            src={profile?.image || assets.doc11}
+            alt={profile?.name || "Doctor"}
+            className="w-32 h-32 rounded-full object-cover border-4 border-gray-300"
+          />
+        )}
+        <div
+          className={`absolute bottom-1 right-1 w-5 h-5 rounded-full border-2 border-white ${
+            profile && profile.isBlocked ? "bg-red-500" : "bg-green-500"
+          }`}
+        ></div>
+      </div>
+      <h3 className="mt-4 text-xl font-bold text-green-700">
+        {profile?.name}
+      </h3>
+      <p className="text-sm text-gray-600">{profile?.email}</p>
+    </div>
 
-          {/* Edit Form Card (Right Side) */}
+    {/* Right Column: About Content at Top, then Other Details */}
+    <div className="mt-6 md:mt-0 md:ml-8 md:w-2/3">
+      {/* About Section */}
+      <div className="mb-4">
+        <h4 className="text-lg font-semibold text-green-700 mb-2">
+          About
+        </h4>
+        <p className="text-gray-700 leading-relaxed">
+          {profile?.about || "No description provided."}
+        </p>
+      </div>
+
+      {/* Separation Line */}
+      <div className="border-t border-gray-300 my-4"></div>
+
+      {/* Other Details */}
+      <div className="grid grid-cols-1 gap-y-2 text-base">
+        <p>
+          <span className="font-semibold text-green-700">Phone:</span>{" "}
+          {profile?.phone || "N/A"}
+        </p>
+        <p>
+          <span className="font-semibold text-green-700">Speciality:</span>{" "}
+          {profile?.speciality?.name || "N/A"}
+        </p>
+        <p>
+          <span className="font-semibold text-green-700">Experience:</span>{" "}
+          {profile?.experience || "N/A"} years
+        </p>
+        <p>
+          <span className="font-semibold text-green-700">Hospital:</span>{" "}
+          {profile?.hospital || "N/A"}
+        </p>
+        <p>
+          <span className="font-semibold text-green-700">Degree:</span>{" "}
+          {profile?.degree || "N/A"}
+        </p>
+        <p>
+          <span className="font-semibold text-green-700">Country:</span>{" "}
+          {profile?.country || "N/A"}
+        </p>
+        <p>
+          <span className="font-semibold text-green-700">Achievements:</span>{" "}
+          {profile?.achievements || "N/A"}
+        </p>
+        <p>
+          <span className="font-semibold text-green-700">Fees:</span>{" "}
+          {profile?.fees || "N/A"}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+          {/* Edit Profile Form */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="bg-red-600 px-6 py-4">
-              <h2 className="text-2xl font-semibold text-white text-center">
-                Edit Profile
-              </h2>
+              <h2 className="text-2xl font-semibold text-white text-center">Edit Profile</h2>
             </div>
             <div className="p-6">
               <form className="space-y-4" onSubmit={handleSubmit}>
-                {/* Image Upload Field */}
+                {/* Image Upload */}
                 <div className="flex flex-col items-center">
                   <div className="relative w-24 h-24 rounded-md bg-green-100 flex items-center justify-center overflow-hidden">
                     {previewUrl ? (
@@ -266,13 +289,13 @@ const Profile: React.FC = () => {
                       <Camera className="w-8 h-8 text-gray-400" />
                     )}
                     <label
-                      htmlFor="profilePictureUpload"
+                      htmlFor="imageUpload"
                       className="absolute inset-0 flex items-center justify-center bg-red-600 bg-opacity-0 hover:bg-opacity-50 transition-colors cursor-pointer"
                     >
                       <span className="text-white text-xs">Change</span>
                       <input
-                        id="profilePictureUpload"
-                        name="profilePictureUpload"
+                        id="imageUpload"
+                        name="image"
                         type="file"
                         accept="image/*"
                         onChange={handleImageChange}
@@ -282,7 +305,7 @@ const Profile: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Grid layout for form fields */}
+                {/* Form Fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     label="Name"
@@ -294,52 +317,11 @@ const Profile: React.FC = () => {
                   <FormField
                     label="Email"
                     name="email"
-                    type="email"
                     value={editProfile?.email}
                     onChange={handleInputChange}
                     required
+                    readOnly={true}
                   />
-                  {/* Dropdown for Specialization using fetched services */}
-                  <div className="space-y-1">
-                    <label
-                      htmlFor="specialization"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Specialization
-                    </label>
-                    <select
-                      id="specialization"
-                      name="specialization"
-                      value={editProfile?.speciality.id || ""}
-                      onChange={(e) => {
-                        const selectedId = e.target.value;
-                        const selectedService = services.find(
-                          (service) => service._id === selectedId
-                        );
-                        if (selectedService) {
-                          setEditProfile((prev) =>
-                            prev
-                              ? {
-                                  ...prev,
-                                  speciality: {
-                                    id: selectedService._id,
-                                    name: selectedService.name,
-                                  },
-                                }
-                              : null
-                          );
-                        }
-                      }}
-                      required
-                      className="w-full bg-green-100 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                    >
-                      {services.map((service) => (
-                        <option key={service._id} value={service._id}>
-                          {service.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
                   <FormField
                     label="Experience (years)"
                     name="experience"
@@ -357,30 +339,28 @@ const Profile: React.FC = () => {
                   <FormField
                     label="Fees"
                     name="fees"
+                    type="number"
                     value={editProfile?.fees}
                     onChange={handleInputChange}
                   />
                   <FormField
-                    label="Phone Number"
-                    name="phoneNumber"
-                    value={editProfile?.phoneNumber}
+                    label="Phone"
+                    name="phone"
+                    value={editProfile?.phone}
                     onChange={handleInputChange}
                     required
                   />
                 </div>
 
-                {/* Bio field full width */}
+                {/* About Field */}
                 <div className="space-y-1">
-                  <label
-                    htmlFor="bio"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Bio
+                  <label htmlFor="about" className="block text-sm font-medium text-gray-700">
+                    About
                   </label>
                   <textarea
-                    id="bio"
-                    name="bio"
-                    value={editProfile?.bio || ""}
+                    id="about"
+                    name="about"
+                    value={editProfile?.about}
                     onChange={handleInputChange}
                     rows={3}
                     className="w-full bg-green-100 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
@@ -402,7 +382,6 @@ const Profile: React.FC = () => {
   );
 };
 
-// Helper Components
 const FormField: React.FC<{
   label: string;
   name: string;
@@ -410,18 +389,21 @@ const FormField: React.FC<{
   value?: string | number;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   required?: boolean;
-}> = ({ label, name, type = "text", value, onChange, required }) => (
+  readOnly?: boolean;
+}> = ({ label, name, type = "text", value, onChange, required, readOnly }) => (
   <div className="space-y-1">
     <label htmlFor={name} className="block text-sm font-medium text-gray-700">
       {label}
     </label>
     <input
       type={type}
+      min={type === "number" ? 0 : undefined}
       id={name}
       name={name}
       value={value || ""}
       onChange={onChange}
       required={required}
+      readOnly={readOnly}
       className="w-full bg-green-100 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
     />
   </div>

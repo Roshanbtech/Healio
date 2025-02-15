@@ -83,28 +83,28 @@ export class DoctorController {
     }
   }
 
-  // async editDoctorProfile(req: Request, res: Response): Promise<any> {
-  //   try {
-  //     const { id } = req.params;
-  //     const data = req.body;
-  //     const files = req.files as Express.Multer.File[];
-  //     const result = await this.doctorService.editDoctorProfile(
-  //       id,
-  //       data,
-  //       files
-  //     );
-  //     return res.status(HTTP_statusCode.OK).json({
-  //       status: true,
-  //       data: { result },
-  //       message: "Profile updated successfully",
-  //     });
-  //   } catch (error: any) {
-  //     console.error("Error in editDoctorProfile:", error);
-  //     return res.status(HTTP_statusCode.InternalServerError).json({
-  //       status: false,
-  //       message: "Something went wrong, please try again later.",
-  //     });
-  //   }
-  // }
+  async editDoctorProfile(req: Request, res: Response): Promise<any> {
+    try {
+      const { id } = req.params;
+      const data = req.body;
+      const file = req.file as Express.Multer.File; 
+      console.log('Controller - Data:', data, 'ID:', id);
+      
+      const result = await this.doctorService.editDoctorProfile(id, data, file);
+      
+      return res.status(HTTP_statusCode.OK).json({
+        status: true,
+        data: { result },
+        message: "Profile updated successfully",
+      });
+    } catch (error: any) {
+      console.error("Error in editDoctorProfile:", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: "Something went wrong, please try again later.",
+      });
+    }
+  }
+  
 
 }

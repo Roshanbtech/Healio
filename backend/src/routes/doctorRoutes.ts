@@ -69,15 +69,15 @@ route.get(
   "/getQual/:id",
   DoctorControllerInstance.getQualifications.bind(DoctorControllerInstance)
 );
+
+route.use(verifyToken(["doctor"]));
 route.get(
   "/profile/:id",
   DoctorControllerInstance.getDoctorProfile.bind(DoctorControllerInstance)
 )
-// route.post(
-//   "/editProfile/:id",
-//   upload.array("image", 5),
-//   DoctorControllerInstance.editDoctorProfile.bind(DoctorControllerInstance)
-// )
-// route.use(verifyToken(["doctor"]));
-
+route.patch(
+  "/editProfile/:id",
+  upload.single("image"),
+  DoctorControllerInstance.editDoctorProfile.bind(DoctorControllerInstance)
+)
 export default route;

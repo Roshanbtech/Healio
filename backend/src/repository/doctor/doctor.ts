@@ -50,4 +50,14 @@ export class DoctorRepository implements IDoctorRepository {
       throw new Error(error.message);
     }
   }
+
+  async editDoctorProfile(id: string, data: any): Promise<any> {
+    try {
+      const updatedDoctor = await doctorModel.findByIdAndUpdate(id, { $set: data }, { new: true });
+      return updatedDoctor;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+  
 }

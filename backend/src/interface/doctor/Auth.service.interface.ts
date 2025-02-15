@@ -25,5 +25,4 @@ export interface IDoctorService {
   addQualification(data: any, files: any): Promise<any>;
   getQualifications(id: string): Promise<any>;
   getDoctorProfile(id: string): Promise<any>;
-  // editDoctorProfile(id: string, data: any, files: any): Promise<any>;
-}
+  editDoctorProfile(id: string, data: any, file: Express.Multer.File): Promise<any>}

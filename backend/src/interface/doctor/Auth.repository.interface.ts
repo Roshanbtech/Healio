@@ -15,5 +15,4 @@ export interface IDoctorRepository{
   addQualification(data: any, id: string): Promise<any>
   getQualifications(id: string): Promise<any>
   getDoctorProfile(id: string): Promise<any>
-  // editDoctorProfile(id: string, data: any, files: any): Promise<any>
-}
+  editDoctorProfile(id: string, data: any): Promise<any> }
