@@ -1,4 +1,5 @@
 import userModel from "../../model/userModel";
+import bcrypt from "bcrypt";
 import { UserProfile, userType } from "../../interface/userInterface/interface";
 import { Document, ObjectId } from "mongoose";
 import mongoose from "mongoose";
@@ -11,7 +12,7 @@ export class AuthRepository implements IAuthRepository {
 
       let existEmail = true;
 
-      const emailExist = await userModel.findOne({ email: email });
+      const emailExist = await userModel.findOne({ email });
       if (!emailExist) {
         existEmail = false;
       }
@@ -60,6 +61,15 @@ export class AuthRepository implements IAuthRepository {
       throw new Error("Database error occurred while checking user.");
     }
   }
+  
+  async updatePassword(email: string, hashedPassword: string): Promise<any> {
+    try {
+      return await userModel.updateOne({ email }, { $set: { password: hashedPassword } });
+    } catch (error: any) {
+      console.error("Error updating password:", error);
+      throw new Error("Error updating password");
+    }
+  }
 
   async logout(refreshToken: string): Promise<any> {
     try {
@@ -68,7 +78,6 @@ export class AuthRepository implements IAuthRepository {
         { refreshToken },
         { $set: { refreshToken: "" } }
       );
-      console.log("Logout successful");
     } catch (error: any) {
       throw new Error(error.message);
     }

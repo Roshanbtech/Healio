@@ -139,6 +139,58 @@ export class AuthService implements IAuthService {
     }
   }
 
+  async sendForgotPasswordOtp(email: string): Promise<any> {
+    const DoctorExist = await this.AuthRepository.existDoctor(email);
+    if (!DoctorExist.existEmail) {
+      throw new Error("Email not found");
+    }
+  
+    const otp = await resendOtpUtil(email);
+    if (!otp) {
+      throw new Error("OTP not sent");
+    }
+  
+    const subject = "OTP Verification";
+    const text = `Hello,\n\nYour OTP for password reset is ${otp}. It is valid for 1 minute.\n\nThank you.`;
+    await sendMail(email, subject, text);
+  
+    return { status: true, message: "OTP sent successfully" };
+  }
+  
+  async verifyForgotPasswordOtp(email: string, otp: string): Promise<any> {
+    const storedOtp = await getOtpByEmail(email);
+    if (!storedOtp) {
+      throw new Error("OTP expired or invalid");
+    }
+    if (storedOtp !== otp) {
+      throw new Error("Incorrect OTP");
+    }
+  
+    await otpSetData(email, "");
+    return { status: true, message: "OTP verified successfully" };
+  }
+  
+  async resetPassword(email: string, password: string): Promise<any> {
+    const doctorExist = await this.AuthRepository.existDoctor(email);
+    console.log("User exist:",doctorExist);
+    if (!doctorExist.existEmail) {
+      throw new Error("Email not found");
+    }
+   console.log("Password:",
+    password,email);
+    const saltRounds: number = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    console.log("Hashed password:", hashedPassword,password);
+  
+    const response = await this.AuthRepository.updatePassword(email, hashedPassword);
+    console.log("Response:", response);
+    if (!response || response.modifiedCount === 0) {
+      throw new Error("Password not updated");
+    }
+    return { status: true, message: "Password updated successfully" };
+  }
+  
+
   async login(doctorData: {
     email: string;
     password: string;

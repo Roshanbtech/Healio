@@ -139,7 +139,6 @@ const Service: React.FC = () => {
 
   return (
     <div className="flex min-h-screen ">
-      {/* Sidebar Component */}
       <Sidebar onCollapse={setSidebarCollapsed} />
 
       {/* Main Content */}
@@ -283,49 +282,58 @@ const Service: React.FC = () => {
       {/* Add Service Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 bg-gray-900 bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-96">
-            <h2 className="text-lg font-semibold mb-4">Add Service</h2>
-            <input
-              type="text"
-              placeholder="Service Name"
-              value={newService.name}
-              onChange={(e) => {
-                setNewService({ name: e.target.value });
-                setErrorMessage("");
-              }}
-              className={`w-full border rounded-lg px-4 py-2 mb-2 focus:outline-none focus:ring-2 ${
-                errorMessage
-                  ? "border-red-500 focus:ring-red-500"
-                  : "focus:ring-red-500"
-              }`}
-            />
-            {errorMessage && (
-              <p className="text-red-500 text-sm mb-4">{errorMessage}</p>
-            )}
-            <div className="flex justify-end">
-              <button
-                onClick={() => setIsAddModalOpen(false)}
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg mr-2 hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddService}
-                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
-              >
-                Add
-              </button>
+          <div className="bg-white rounded-lg shadow-lg w-96">
+            {/* Header */}
+            <div className="bg-red-600 rounded-t-lg p-4">
+              <h2 className="text-lg font-semibold text-white text-center">
+                Add Service
+              </h2>
+            </div>
+            {/* Content */}
+            <div className="p-6 space-y-3">
+              <input
+                type="text"
+                placeholder="Service Name"
+                value={newService.name}
+                onChange={(e) => {
+                  setNewService({ name: e.target.value });
+                  setErrorMessage("");
+                }}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+              {errorMessage && (
+                <p className="text-red-500 text-sm">{errorMessage}</p>
+              )}
+              <div className="flex justify-end space-x-2 pt-2">
+                <button
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddService}
+                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200"
+                >
+                  Add
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Edit Service Modal */}
       {isEditModalOpen && selectedService && (
         <div className="fixed inset-0 z-50 bg-gray-900 bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-96">
-            <h2 className="text-lg font-semibold mb-4">Edit Service</h2>
-            <div className="space-y-4">
+          <div className="bg-white rounded-lg shadow-lg w-96">
+            {/* Header */}
+            <div className="bg-red-600 rounded-t-lg p-4">
+              <h2 className="text-lg font-semibold text-white text-center">
+                Edit Service
+              </h2>
+            </div>
+            {/* Content */}
+            <div className="p-6 space-y-3">
               <input
                 type="text"
                 placeholder="Name"
@@ -337,26 +345,26 @@ const Service: React.FC = () => {
                   });
                   setEditErrorMessage("");
                 }}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 ${
+                className={`w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 ${
                   editErrorMessage ? "border-red-500" : ""
                 }`}
               />
               {editErrorMessage && (
                 <p className="text-red-500 text-sm">{editErrorMessage}</p>
               )}
-              <div className="flex justify-end space-x-4">
+              <div className="flex justify-end space-x-2 pt-2">
                 <button
                   onClick={() => {
                     setIsEditModalOpen(false);
                     setSelectedService(null);
                   }}
-                  className="bg-gray-300 px-4 py-2 rounded-lg hover:bg-gray-400"
+                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors duration-200"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleUpdateService}
-                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200"
                 >
                   Update
                 </button>

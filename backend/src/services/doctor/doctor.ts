@@ -77,4 +77,26 @@ export class DoctorService implements IDoctorService {
       throw new Error(error.message);
     }
   }
+
+  async getDoctorProfile(id: string): Promise<any> {
+    try {
+      const doctor = await this.DoctorRepository.getDoctorProfile(id);
+      return doctor;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+
+  // async editDoctorProfile(id: string, data: any, files: any): Promise<any> {
+  //     try {
+  //         let profilePicture: string | undefined = undefined;
+  //         if(files && files.profilePicture){
+  //             profilePicture = await this.fileUploadService.uploadProfilePicture(id, files.profilePicture);
+  //         }
+  //         const updatedDoctor = await this.DoctorRepository.editDoctorProfile(id, data, profilePicture);
+  //         return updatedDoctor;
+  //     }catch(error: any){
+  //         throw new Error(error.message);
+  //     }
+  // }
 }

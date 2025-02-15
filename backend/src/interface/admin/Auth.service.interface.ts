@@ -17,6 +17,10 @@ export interface IAuthService {
   getCertificates(id: string): Promise<any>;
   approveDoctor(id: string): Promise<any>;
   rejectDoctor(id: string): Promise<any>;
+  createCoupon(couponData: any): Promise<any>;
+  getCoupons(): Promise<any>;
+  toggleCoupon(id: string): Promise<any>;
+  editCoupon(id: string, couponData: any): Promise<any>;
 }
 
 export type AdminType = {

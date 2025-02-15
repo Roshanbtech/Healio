@@ -7,6 +7,15 @@ export interface Service {
   isActive: boolean;
 }
 
+export interface Coupon {
+  _id: string;
+  name: string;
+  code: string;
+  discount: number;
+  expirationDate: string;
+  isActive: boolean;
+}
+
 export interface IAuthRepository {
   logout(refreshToken: string): Promise<any>;
   getAllUsers(): Promise<UserProfile[]>;
@@ -15,10 +24,15 @@ export interface IAuthRepository {
   toggleDoctor(id: string): Promise<any>;
   getAllServices(): Promise<Service[]>;
   addService(name: string, isActive: boolean): Promise<any>;
+  createCoupon(couponData: any): Promise<any>;
   editService(id: string,name: string, isActive: boolean): Promise<any>;
   toggleService(id: string): Promise<any>;
   findServiceByName(name: string): Promise<any>;
   getCertificates(id: string): Promise<any>;
   approveDoctor(id: string): Promise<any>;
   rejectDoctor(id: string): Promise<any>;
+  getAllCoupons(): Promise<Coupon[]>;
+  toggleCoupon(id: string): Promise<any>;
+  editCoupon(id: string, couponData: any): Promise<any>;
+  existCoupon(code:string): Promise<any>;
 }

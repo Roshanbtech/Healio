@@ -38,6 +38,7 @@ import doc12 from './doc12.png';
 import doc13 from './doc13.png';
 import doc14 from './doc14.png';
 import doc15 from './doc15.png';
+import docthink from './docthink.jpg'
 
 // Importing Speciality Icons
 import Dermatologist from './Dermatologist.svg';
@@ -70,7 +71,8 @@ export const assets = {
   bg2,
   google,
   userDefault1,
-  doc11
+  doc11,
+  docthink
 };
 
 // ✅ Define Speciality Type

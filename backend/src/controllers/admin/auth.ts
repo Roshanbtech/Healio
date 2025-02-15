@@ -268,4 +268,76 @@ export class AuthController {
       });
     }
   }
+
+  async createCoupon(req: Request, res: Response): Promise<any> {
+    try {
+      const { name, code, discount, expirationDate } = req.body;
+      const expireDate = new Date(expirationDate);
+      const couponData = {
+        name,
+        code,
+        discount,
+        startDate: new Date(),
+        expirationDate: expireDate,
+        isActive: true,
+      };
+
+      const result = await this.authService.createCoupon(couponData);
+
+      return res.status(HTTP_statusCode.OK).json({ status: true, result });
+    } catch (error: any) {
+      console.error("Error in createCoupon:", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: "Something went wrong, please try again later.",
+      });
+    }
+  }
+
+  async getCoupons(req: Request, res: Response): Promise<any> {
+    try {
+      const coupons = await this.authService.getCoupons();
+      return res.status(HTTP_statusCode.OK).json({ status: true, coupons });
+    } catch (error: any) {
+      console.error("Error in getCoupons:", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: "Something went wrong, please try again later.",
+      });
+    }
+  }
+
+  async toggleCoupon(req: Request, res: Response): Promise<any> {
+    try {
+      const { id } = req.params;
+      const coupon = await this.authService.toggleCoupon(id);
+      return res.status(HTTP_statusCode.OK).json({ status: true, coupon });
+    } catch (error: any) {
+      console.error("Error in blockingCoupon:", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: "Something went wrong, please try again later.",
+      });
+    }
+  }
+
+  async editCoupon(req: Request, res: Response): Promise<any> {
+    try {
+      const { id } = req.params;
+      const { name, code, discount, expirationDate } = req.body;
+      const expireDate = new Date(expirationDate);
+      const couponData = {
+        name,
+        code,
+        discount,
+        startDate: new Date(),
+        expirationDate: expireDate,
+        isActive: true,
+      };
+      const result = await this.authService.editCoupon(id, couponData);
+      return res.status(HTTP_statusCode.OK).json({ status: true, result });
+    } catch (error: any) {
+      console.error("Error in editCoupon:", error);
+    }
+  }
 }

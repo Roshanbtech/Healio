@@ -14,6 +14,9 @@ export interface IAuthService {
   }): Promise<
     { accessToken: string; refreshToken: string; doctorId: string } | { error: string }
   >;
+  sendForgotPasswordOtp(email: string): Promise<{ status: boolean; message: string }>;
+  verifyForgotPasswordOtp(email: string, otp: string): Promise<{ status: boolean; message: string }>;
+  resetPassword(email: string, password: string): Promise<{ status: boolean; message: string }>;
 }
  
 import { Service } from "../../interface/doctorInterface/Interface";
@@ -21,4 +24,6 @@ export interface IDoctorService {
   getServices(): Promise<Service[]>;
   addQualification(data: any, files: any): Promise<any>;
   getQualifications(id: string): Promise<any>;
+  getDoctorProfile(id: string): Promise<any>;
+  // editDoctorProfile(id: string, data: any, files: any): Promise<any>;
 }

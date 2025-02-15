@@ -27,4 +27,18 @@ export class UserController {
       });
     }
   }
+
+  async getUserProfile(req: Request, res: Response): Promise<any> {
+    try{
+      const { id } = req.params;
+      const user = await this.userService.getUserProfile(id);
+      return res.status(HTTP_statusCode.OK).json({ status: true, user });
+    }catch(error: any){
+      console.error("Error in getProfile:", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: "Something went wrong, please try again later.",
+      });
+    }
+  }
 }

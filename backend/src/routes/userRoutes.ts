@@ -48,10 +48,27 @@ route.get(
   "/doctors",
   UserControllerInstance.getDoctors.bind(UserControllerInstance)
 )
-route.use(verifyToken(["user"]));
+route.get(
+  "/profile/:id",
+  UserControllerInstance.getUserProfile.bind(UserControllerInstance)
+)
+// route.use(verifyToken(["user"]));
 route.post(
   "/logout",
   AuthControllerInstance.logoutUser.bind(AuthControllerInstance)
 )
+route.post(
+  "/forgot-password/sendOtp",
+  AuthControllerInstance.sendForgotPasswordOtp.bind(AuthControllerInstance)
+)
+route.post(
+  "/forgot-password/verifyOtp",
+  AuthControllerInstance.verifyForgotPasswordOtp.bind(AuthControllerInstance)
+)
+route.post(
+  "/forgot-password/reset",
+  AuthControllerInstance.resetPassword.bind(AuthControllerInstance)
+)
+
 
 export default route;

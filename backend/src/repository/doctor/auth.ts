@@ -36,6 +36,18 @@ export class AuthRepository implements IAuthRepository {
       throw new Error(`Error creating user : ${error.message}`);
     }
   }
+
+  async updatePassword(email: string, hashedPassword: string): Promise<any> {
+    try {
+      console.log('1', email, hashedPassword);
+      return await doctorModel.updateOne({ email }, { $set: { password: hashedPassword } });
+      console.log('2');
+    } catch (error: any) {
+      console.error("Error updating password:", error);
+      throw new Error("Error updating password");
+    }
+  }
+
   async doctorCheck(email: string): Promise<DoctorResult | null> {
     try {
       const doctorData = await doctorModel.findOne({ email: email }).lean();

@@ -22,4 +22,16 @@ export class UserService implements IUserService {
       throw new Error(error.message);
     }
   }
+
+  async getUserProfile(id: string): Promise<any> {
+    try {
+      const user = await this.UserRepository.getUserProfile(id);
+      if (!user) {
+        return null;
+      }
+      return user;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
 }

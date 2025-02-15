@@ -41,17 +41,14 @@ const Login: React.FC = () => {
       try {
         const { data } = await axiosInstance.post("/login", values);
 
-        // Store the access token
         localStorage.setItem("authToken", data.accessToken);
 
-        // Decode the JWT token to get the role dynamically from the backend response
         const decodedToken = jwtDecode(data.accessToken) as { role: string };
         localStorage.setItem("userRole", decodedToken.role); // Store user role from decoded token
         console.log("Decoded role:", decodedToken.role);
 
         toast.success("Login Successful");
 
-        // Navigate to the home page or the desired route
         navigate("/home");
       } catch (error: any) {
         console.error("Login error:", error);

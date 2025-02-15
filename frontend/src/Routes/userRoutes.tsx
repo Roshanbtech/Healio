@@ -6,12 +6,14 @@ import ProtectedRoute from "./protectedRoutes/user";
 
 import Home from "../pages/userPages/Home";
 import Footer from "../components/common/userCommon/Footer";
+import ForgotPassword from "../pages/userPages/ForgotPassword";
+import ResetPassword from "../pages/userPages/ResetPassword";
 
 const UserRoutes = () => {
   const location = useLocation();
 
-  const showNavbar = !["/signup", "/login",'/otp','/'].includes(location.pathname);
-  const showFooter = !["/signup", "/login",'/otp'].includes(location.pathname);
+  const showNavbar = !["/signup", "/login",'/otp','/','/forgot-password','/reset-password'].includes(location.pathname);
+  const showFooter = !["/signup", "/login",'/otp','/forgot-password','/reset-password'].includes(location.pathname);
 
   return (
     <div className="mx-4 sm:mx-[10%]">
@@ -22,6 +24,8 @@ const UserRoutes = () => {
         <Route element={<ProtectedRoute role="user" />}>
           <Route path="/home" element={<Home />} />
         </Route>
+        <Route path="/forgot-password" element={<ForgotPassword/>} />
+        <Route path="/reset-password" element={<ResetPassword/>} />
       </Routes>
       {showFooter && <Footer />}
     </div>

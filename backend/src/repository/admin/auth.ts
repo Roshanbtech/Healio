@@ -1,6 +1,7 @@
 import userModel from "../../model/userModel";
 import doctorModel from "../../model/doctorModel";
 import serviceModel from "../../model/serviceModel";
+import couponModel from "../../model/couponModel";
 
 import { IAuthRepository } from "../../interface/admin/Auth.repository.interface";
 import sendMail from "../../config/emailConfig";
@@ -72,6 +73,32 @@ export class AuthRepository implements IAuthRepository {
     return await service.save();
   }
 
+  async createCoupon(couponData: any): Promise<any> {
+    try {
+      const coupon = new couponModel(couponData);
+      return await coupon.save();
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+
+  async getAllCoupons(): Promise<any> {
+    try {
+      const coupons = await couponModel.find().lean();
+      return coupons;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+
+  async existCoupon(code:string): Promise<any>{
+    try{
+      return await couponModel.findOne({code});
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+
   async editService(id: string, name: string, isActive: boolean): Promise<any> {
     const service = await serviceModel.findById(id);
     if (!service) return null;
@@ -79,6 +106,22 @@ export class AuthRepository implements IAuthRepository {
     service.name = name;
     service.isActive = isActive;
     return await service.save();
+  }
+
+  async editCoupon(id: string, couponData: any): Promise<any> {
+    try{
+      const coupon = await couponModel.findById(id);
+      if(!coupon) return null;
+      coupon.name = couponData.name;
+      coupon.code = couponData.code;
+      coupon.discount = couponData.discount;
+      coupon.startDate = couponData.startDate;
+      coupon.expirationDate = couponData.expirationDate;
+      coupon.isActive = couponData.isActive;
+      return await coupon.save();
+    } catch (error: any){
+      throw new Error(error.message);
+    }
   }
 
   async toggleService(id: string): Promise<any> {
@@ -93,6 +136,18 @@ export class AuthRepository implements IAuthRepository {
     } catch (error: any) {
       throw new Error(error.message);
     }
+  }
+
+  async toggleCoupon(id: string): Promise<any> {
+      try{
+        const coupon = await couponModel.findById(id);
+        if(!coupon) return null;
+        coupon.isActive = !coupon.isActive;
+        await coupon.save();
+        return coupon;
+      } catch (error: any){
+        throw new Error(error.message);
+      }
   }
 
   async getAllServices(): Promise<any> {

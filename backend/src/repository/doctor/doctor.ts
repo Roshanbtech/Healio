@@ -38,4 +38,16 @@ export class DoctorRepository implements IDoctorRepository {
       throw new Error(error.message);
     }
   }
+
+  async getDoctorProfile(id: string): Promise<any> {
+    try {
+      const doctor = await doctorModel
+        .findById(id)
+        .populate({ path: "speciality", model: "Service", select: "name" })
+        .lean();
+      return doctor;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
 }

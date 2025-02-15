@@ -71,7 +71,7 @@ export class AuthService implements IAuthService {
       return { error: "Internal server error." };
     }
   }
-  
+
   async getUser(): Promise<any> {
     try {
       const users = await this.AuthRepository.getAllUsers();
@@ -182,6 +182,21 @@ export class AuthService implements IAuthService {
     }
   }
 
+  async toggleCoupon(id: string): Promise<any> {
+      try{
+        const coupon = await this.AuthRepository.toggleCoupon(id);
+        if(!coupon){
+          throw new Error("Coupon not updated")
+        }
+        const message = coupon.isActive
+        ? "Coupon enabled successfully"
+        : "Coupon disabled successfully"
+        return {status:true, message}
+      }catch(error: any){
+        throw new Error(error.message);
+      }
+  }
+
   async getService(): Promise<any> {
     try {
       const services = await this.AuthRepository.getAllServices();
@@ -222,6 +237,49 @@ export class AuthService implements IAuthService {
         throw new Error("Doctor not rejected");
       }
       return { status: true, message: "Doctor rejected successfully", doctor };
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+
+  async createCoupon(
+   couponData: any
+  ): Promise<any> {
+    try {
+     const { code } = couponData;
+     let existingCode = await this.AuthRepository.existCoupon(code);
+     if(existingCode){
+       throw new Error("Coupon code already exists");
+     }
+     const coupon = await this.AuthRepository.createCoupon(couponData);
+      if (!coupon) {
+        return { status: false, message: "Coupon not created" };
+      }
+      return { status: true, message: "Coupon created successfully", coupon };
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+
+  async editCoupon(id: string, couponData: any): Promise<any> {
+      try{
+        const coupon = await this.AuthRepository.editCoupon(id, couponData);
+        if(!coupon){
+          throw new Error("Coupon not updated")
+        }
+        return {status:true, message:"Coupon updated successfully", coupon}
+      }catch(error: any){
+        throw new Error(error.message);
+      }
+  }
+
+  async getCoupons(): Promise<any> {
+    try {
+      const coupons = await this.AuthRepository.getAllCoupons();
+      if (!coupons) {
+        return null;
+      }
+      return coupons;
     } catch (error: any) {
       throw new Error(error.message);
     }

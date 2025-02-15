@@ -5,6 +5,7 @@ import ProtectedRoute from "./protectedRoutes/admin";
 import UserListing from "../pages/adminPages/UserListing";
 import DocotorListing from "../pages/adminPages/DoctorListing";
 import Services from "../pages/adminPages/Services";
+import Coupons from "../pages/adminPages/Coupon";
 
 const AdminRoutes = () => {
   return (
@@ -25,6 +26,9 @@ const AdminRoutes = () => {
         </Route>
         <Route element={<ProtectedRoute role="admin" />}>
         <Route path='/services' element={<Services />} />
+        </Route>
+        <Route element={<ProtectedRoute role="admin" />}>
+        <Route path='/coupons' element={<Coupons />} />
         </Route>
       </Routes>
     </div>

@@ -44,6 +44,18 @@ route.post(
   asyncMiddleware(checkDoctorBlocked),
   AuthControllerInstance.loginDoctor.bind(AuthControllerInstance)
 );
+route.post(
+  "/forgot-password/sendOtp",
+  AuthControllerInstance.sendForgotPasswordOtp.bind(AuthControllerInstance)
+)
+route.post(
+  "/forgot-password/verifyOtp",
+  AuthControllerInstance.verifyForgotPasswordOtp.bind(AuthControllerInstance)
+)
+route.post(
+  "/forgot-password/reset",
+  AuthControllerInstance.resetPassword.bind(AuthControllerInstance)
+)
 route.get(
   "/services",
   DoctorControllerInstance.getServices.bind(DoctorControllerInstance)
@@ -57,6 +69,15 @@ route.get(
   "/getQual/:id",
   DoctorControllerInstance.getQualifications.bind(DoctorControllerInstance)
 );
+route.get(
+  "/profile/:id",
+  DoctorControllerInstance.getDoctorProfile.bind(DoctorControllerInstance)
+)
+// route.post(
+//   "/editProfile/:id",
+//   upload.array("image", 5),
+//   DoctorControllerInstance.editDoctorProfile.bind(DoctorControllerInstance)
+// )
 // route.use(verifyToken(["doctor"]));
 
 export default route;

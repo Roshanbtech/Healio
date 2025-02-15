@@ -138,21 +138,21 @@ export class AuthController {
       }
 
       const { accessToken, refreshToken } = loginResponse;
-      console.log(accessToken,'1');
-      console.log(refreshToken,'2');
+      console.log(accessToken, "1");
+      console.log(refreshToken, "2");
 
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: true,
         sameSite: "strict",
-        path: "/auth/refresh", 
+        path: "/auth/refresh",
         expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // 7 days
       });
 
       res.status(HTTP_statusCode.OK).json({
         status: true,
         message: "User logged in successfully",
-        accessToken
+        accessToken,
       });
     } catch (error) {
       console.error(error);
@@ -165,15 +165,75 @@ export class AuthController {
     }
   }
 
+  async sendForgotPasswordOtp(req: Request, res: Response): Promise<any> {
+    try {
+      const { email } = req.body;
+      const result = await this.authService.sendForgotPasswordOtp(email);
+      return res.status(200).json(result);
+    } catch (error: any) {
+      if (error.message === "Email not found") {
+        return res.status(404).json({ message: "Email not found" });
+      } else if (error.message === "OTP not sent") {
+        return res.status(500).json({ message: "OTP not sent" });
+      } else {
+        return res
+          .status(500)
+          .json({ message: "Something went wrong, please try again later" });
+      }
+    }
+  }
+
+  async verifyForgotPasswordOtp(req: Request, res: Response): Promise<any> {
+    try {
+      const { email, otp } = req.body;
+      const result = await this.authService.verifyForgotPasswordOtp(email, otp);
+      return res.status(200).json(result);
+    } catch (error: any) {
+      if (error.message === "Email not found") {
+        return res.status(404).json({ message: "Email not found" });
+      } else if (
+        error.message === "OTP expired or invalid" ||
+        error.message === "Incorrect OTP"
+      ) {
+        return res.status(400).json({ message: error.message });
+      } else {
+        return res
+          .status(500)
+          .json({ message: "Something went wrong, please try again later" });
+      }
+    }
+  }
+
+  async resetPassword(req: Request, res: Response): Promise<any> {
+    try {
+      const { email, values } = req.body;
+      const newPassword = values.newPassword;
+      console.log(email, newPassword, "reset password");
+      const result = await this.authService.resetPassword(email, newPassword);
+      console.log(result, "reset password");
+      return res.status(200).json(result);
+    } catch (error: any) {
+      if (error.message === "Email not found") {
+        return res.status(404).json({ message: "Email not found" });
+      } else if (error.message === "Password not updated") {
+        return res.status(500).json({ message: "Password not updated" });
+      } else {
+        return res
+          .status(500)
+          .json({ message: "Something went wrong, please try again later" });
+      }
+    }
+  }
+
   async logoutUser(req: Request, res: Response): Promise<any> {
     try {
       const refreshToken = req.cookies.refreshToken;
       await this.authService.logout(refreshToken);
-      res.clearCookie("refreshToken",{
+      res.clearCookie("refreshToken", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
-        path: "/", 
+        path: "/",
       });
       res.status(HTTP_statusCode.OK).json({ status: true, message: "Logout" });
     } catch (error) {

@@ -17,7 +17,7 @@ route.post(
 route.post(
   "/logout",
   AuthControllerInstance.logoutAdmin.bind(AuthControllerInstance)
-)
+);
 route.use(verifyToken(["admin"]));
 route.get(
   "/getUsers",
@@ -63,5 +63,22 @@ route.patch(
   "/docCertReject/:id",
   AuthControllerInstance.rejectDoctor.bind(AuthControllerInstance)
 );
+route.get(
+  "/coupons",
+  AuthControllerInstance.getCoupons.bind(AuthControllerInstance)
+);
+route.post(
+  "/addCoupon",
+  AuthControllerInstance.createCoupon.bind(AuthControllerInstance)
+);
+route.patch(
+  "/toggleCoupon/:id",
+  AuthControllerInstance.toggleCoupon.bind(AuthControllerInstance)
+);
+route.patch(
+  "/editCoupon/:id",
+  AuthControllerInstance.editCoupon.bind(AuthControllerInstance)
+)
+
 
 export default route;

@@ -120,6 +120,67 @@ export class AuthController {
       }
     }
   }
+
+  async sendForgotPasswordOtp(req: Request, res: Response): Promise<any> {
+    try {
+      const { email } = req.body;
+      const result = await this.authService.sendForgotPasswordOtp(email);
+      return res.status(200).json(result);
+    } catch (error: any) {
+      if (error.message === "Email not found") {
+        return res.status(404).json({ message: "Email not found" });
+      } else if (error.message === "OTP not sent") {
+        return res.status(500).json({ message: "OTP not sent" });
+      } else {
+        return res
+          .status(500)
+          .json({ message: "Something went wrong, please try again later" });
+      }
+    }
+  }
+
+  async verifyForgotPasswordOtp(req: Request, res: Response): Promise<any> {
+    try {
+      const { email, otp } = req.body;
+      const result = await this.authService.verifyForgotPasswordOtp(email, otp);
+      return res.status(200).json(result);
+    } catch (error: any) {
+      if (error.message === "Email not found") {
+        return res.status(404).json({ message: "Email not found" });
+      } else if (
+        error.message === "OTP expired or invalid" ||
+        error.message === "Incorrect OTP"
+      ) {
+        return res.status(400).json({ message: error.message });
+      } else {
+        return res
+          .status(500)
+          .json({ message: "Something went wrong, please try again later" });
+      }
+    }
+  }
+
+  async resetPassword(req: Request, res: Response): Promise<any> {
+    try {
+      const { email, values } = req.body;
+      const newPassword = values.newPassword;
+      console.log(email, newPassword, "reset password");
+      const result = await this.authService.resetPassword(email, newPassword);
+      console.log(result, "reset password");
+      return res.status(200).json(result);
+    } catch (error: any) {
+      if (error.message === "Email not found") {
+        return res.status(404).json({ message: "Email not found" });
+      } else if (error.message === "Password not updated") {
+        return res.status(500).json({ message: "Password not updated" });
+      } else {
+        return res
+          .status(500)
+          .json({ message: "Something went wrong, please try again later" });
+      }
+    }
+  }
+
   async loginDoctor(req: Request, res: Response): Promise<any> {
     try {
       const data = req.body;
