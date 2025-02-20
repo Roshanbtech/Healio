@@ -6,6 +6,7 @@ import {
   Building2,
   Info,
   Star,
+  CheckCircle,
 } from "lucide-react";
 import { useParams } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInterceptors";
@@ -54,37 +55,60 @@ const DoctorDetails: React.FC = ({}) => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="bg-red-600 rounded-lg p-4 sm:p-6 text-white relative flex flex-col md:flex-row gap-6">
+      <div className="bg-red-600 rounded-xl p-4 text-white flex flex-col md:flex-row gap-6 shadow-2xl">
         {/* Left: Doctor Image + Speciality */}
         <div className="flex-shrink-0">
-          <div className="bg-white rounded-lg shadow-lg p-4 flex flex-col items-center">
-            <div className="w-48 h-48 bg-white rounded-full overflow-hidden border-4 border-white shadow-lg">
+          {/* Container must be 'relative' so the VERIFIED badge can be absolutely positioned */}
+          <div className="relative bg-white rounded-lg shadow-lg p-4 flex flex-col items-center">
+            {/* Circular Image */}
+            <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-white shadow-lg items-center">
               <img
-                src={image || "/api/placeholder/128/128"}
-                alt="Doctor profile"
+                src={image || "/default-avatar.png"}
+                alt={name || "Doctor profile"}
                 className="w-full h-full object-cover bg-green-100"
               />
             </div>
-            <div className="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold text-center mt-2 shadow">
-              {speciality?.name || speciality || "Specialist"}
+
+            {/* Specialty Label */}
+            <div className="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg text-center font-bold shadow-md">
+              {typeof speciality === "object"
+                ? speciality.name
+                : speciality || "Specialist"}
+            </div>
+
+            {/* VERIFIED Badge (overlaps bottom of container) */}
+            <div className="absolute bottom-[-12px] left-1/2 transform -translate-x-1/2 flex items-center gap-1 bg-white px-3 py-1 rounded-full shadow">
+              <CheckCircle className="w-4 h-4 text-green-600" />
+              <span className="text-xs font-bold text-green-600">VERIFIED</span>
             </div>
           </div>
         </div>
 
-        {/* Right: Name, Experience, About */}
+        {/* Right: Name, Experience, About, and Fees */}
         <div className="flex-grow flex flex-col justify-center">
+          {/* Name + Degree */}
           <h1 className="text-xl sm:text-2xl font-bold">
             {name} {degree ? `(${degree})` : ""}
           </h1>
+
+          {/* Experience */}
           <div className="flex items-center gap-2 mt-2">
             <Clock size={20} />
             <span className="text-sm sm:text-base">
               {experience || 0}+ years Exp
             </span>
           </div>
+
+          {/* About Section */}
           <div className="mt-4">
             <h3 className="text-base sm:text-lg font-semibold mb-2">About</h3>
             <p>{about || "No description available."}</p>
+          </div>
+
+          {/* Consultation Fee */}
+          <div className="mt-4 p-3 bg-white/10 rounded-lg">
+            <span className="text-base font-semibold">Consultation Fee: </span>
+            <span className="text-xl font-bold">₹{fees ?? 0}</span>
           </div>
         </div>
       </div>
