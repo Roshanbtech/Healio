@@ -106,5 +106,60 @@ export class DoctorController {
     }
   }
   
+  async changePassword(req: Request, res: Response): Promise<any> {
+    try{
+       const { id} = req.params;
+       const { oldPassword, newPassword } = req.body;
+       const result = await this.doctorService.changePassword(id, oldPassword, newPassword);
+       return res.status(HTTP_statusCode.OK).json({
+          status: true,
+          data: { result },
+          message: "Password updated successfully",
+        });
+    }catch(error: any){
+      console.error("Error in changePassword:", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: "Something went wrong, please try again later.",
+      });
+    }
+  }
 
+  //Schedule management started here....
+
+  async addSchedule(req: Request, res: Response): Promise<any> {
+    try {
+      const scheduleData = req.body;
+      const result = await this.doctorService.addSchedule(scheduleData);
+      return res.status(HTTP_statusCode.OK).json({
+        status: true,
+        data: { result },
+        message: "Schedule added successfully",
+      });
+    }catch(error: any){
+      console.error("Error in addSchedule:", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: "Something went wrong, please try again later.",
+      });
+    }
+  }
+
+  async getSchedule(req: Request, res: Response): Promise<any> {
+    try{
+      const { id } = req.params;
+      const schedule = await this.doctorService.getSchedule(id);
+      return res.status(HTTP_statusCode.OK).json({
+        status: true,
+        data: { schedule },
+        message: "Schedule fetched successfully",
+      });
+    }catch(error: any){
+      console.error("Error in getSchedule:", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: "Something went wrong, please try again later.",
+      });
+    }
+  }
 }

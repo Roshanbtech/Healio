@@ -1,5 +1,6 @@
 import { UserProfile, userType } from "../userInterface/interface";
 import { DoctorResult, doctorType } from "../doctorInterface/Interface";
+import { PaginationOptions } from "../../helper/pagination";
 
 export interface Service {
   serviceId: string;
@@ -18,7 +19,7 @@ export interface Coupon {
 
 export interface IAuthRepository {
   logout(refreshToken: string): Promise<any>;
-  getAllUsers(): Promise<UserProfile[]>;
+  getAllUsers(options:PaginationOptions): Promise<UserProfile[]>;
   getAllDoctors(): Promise<DoctorResult[]>;
   toggleUser(id: string): Promise<any>;
   toggleDoctor(id: string): Promise<any>;

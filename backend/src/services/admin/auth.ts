@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { config } from "dotenv";
 import { IAuthService } from "../../interface/admin/Auth.service.interface";
 import { IAuthRepository } from "../../interface/admin/Auth.repository.interface";
+import { PaginationOptions } from "../../helper/pagination";
 config();
 
 export class AuthService implements IAuthService {
@@ -72,9 +73,9 @@ export class AuthService implements IAuthService {
     }
   }
 
-  async getUser(): Promise<any> {
+  async getUser(options:PaginationOptions): Promise<any> {
     try {
-      const users = await this.AuthRepository.getAllUsers();
+      const users = await this.AuthRepository.getAllUsers(options);
       if (!users) {
         return null;
       }

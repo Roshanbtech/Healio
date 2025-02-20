@@ -66,3 +66,21 @@ export interface Qualification {
   country: string;
   achievements: string;
 }
+
+export interface Schedule {
+  doctor: string;
+  isRecurring?: boolean;
+  recurrenceRule?: string | null;
+  startTime: Date;
+  endTime: Date;
+  defaultSlotDuration: number;
+  breaks: {
+    startTime: Date;
+    endTime: Date;
+  }[];
+  exceptions: {
+    date: Date;
+    isOff: boolean;
+    overrideSlotDuration?: number;
+  }[];
+}

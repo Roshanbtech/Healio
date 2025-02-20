@@ -42,6 +42,11 @@ const Login: React.FC = () => {
         const { data } = await axiosInstance.post("/login", values);
 
         localStorage.setItem("authToken", data.accessToken);
+       
+        localStorage.setItem("userId", data.user._id);
+        localStorage.setItem("image", data.user.image);
+    
+      
 
         const decodedToken = jwtDecode(data.accessToken) as { role: string };
         localStorage.setItem("userRole", decodedToken.role); // Store user role from decoded token
@@ -178,16 +183,7 @@ const Login: React.FC = () => {
                 {isSubmitting ? "Logging in..." : "Login"}
               </button>
 
-              {/* Google Login */}
-              {/* <div className="flex items-center justify-center mt-4">
-                <button
-                  type="button"
-                  className="flex items-center justify-center gap-2 border border-gray-300 px-4 py-3 rounded-md w-full hover:bg-gray-50 transition-colors"
-                >
-                  <img src={assets.google} alt="Google" className="h-5 w-5" />
-                  Sign In with Google
-                </button>
-              </div> */}
+            
               <Google />
 
               {/* Signup Link */}

@@ -1,4 +1,4 @@
-import React from "react";
+import React,{useEffect} from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
@@ -70,6 +70,13 @@ const Signup: React.FC = () => {
       .oneOf([Yup.ref("password")], "Passwords must match")
       .required("Confirm password is required"),
   });
+   const navigate = useNavigate();
+    useEffect(() => {
+      const token = localStorage.getItem("authToken");
+      if (token) {
+        navigate("/home");
+      }
+    }, []);
 
   const formik = useFormik({
     initialValues: {

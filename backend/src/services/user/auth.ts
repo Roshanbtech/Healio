@@ -195,7 +195,7 @@ export class AuthService implements IAuthService {
     email: string;
     password: string;
   }): Promise<
-    { accessToken: string; refreshToken: string } | { error: string }
+    { accessToken: string; refreshToken: string, user: any } | { error: string }
   > {
     try {
       const { email, password } = userData;
@@ -229,7 +229,7 @@ export class AuthService implements IAuthService {
 
       console.log("Role assigned in token:", "user");
 
-      return { accessToken, refreshToken };
+      return { accessToken, refreshToken, user };
     } catch (error) {
       console.error("Login error:", error);
       return { error: "Internal server error." };

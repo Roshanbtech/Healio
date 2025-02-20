@@ -2,7 +2,7 @@ import userModel from "../../model/userModel";
 import doctorModel from "../../model/doctorModel";
 import serviceModel from "../../model/serviceModel";
 import couponModel from "../../model/couponModel";
-
+import { paginate,PaginationOptions } from "../../helper/pagination";
 import { IAuthRepository } from "../../interface/admin/Auth.repository.interface";
 import sendMail from "../../config/emailConfig";
 
@@ -19,9 +19,9 @@ export class AuthRepository implements IAuthRepository {
       throw new Error(error.message);
     }
   }
-  async getAllUsers(): Promise<any> {
+  async getAllUsers(options:PaginationOptions): Promise<any> {
     try {
-      const users = await userModel.find().lean();
+      const users = await paginate(userModel,options);
       return users;
     } catch (error: any) {
       throw new Error(error.message);

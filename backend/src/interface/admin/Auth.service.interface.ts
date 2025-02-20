@@ -1,3 +1,5 @@
+import { PaginationOptions } from "../../helper/pagination";
+
 export interface IAuthService {
   login(AdminData: {
     email: string;
@@ -6,7 +8,7 @@ export interface IAuthService {
     { accessToken: string; refreshToken: string } | { error: string }
   >;
   logout(refreshToken: string): Promise<any>;
-  getUser(): Promise<any>;
+  getUser(options:PaginationOptions): Promise<any>;
   getDoctor(): Promise<any>;
   toggleUser(id: string): Promise<any>;
   toggleDoctor(id: string): Promise<any>;

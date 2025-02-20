@@ -4,6 +4,7 @@ import { Request, Response } from "express";
 import { admin } from "../../config/firebase";
 import User from "../../model/userModel";
 import { HttpStatusCode } from "axios";
+import jwt from "jsonwebtoken";
 
 export class AuthController {
   private authService: IAuthService;
@@ -88,13 +89,14 @@ export class AuthController {
     try {
       const { idToken } = req.body;
       console.log("Received ID Token:", idToken);
-
+  
       const decodedToken = await admin.auth().verifyIdToken(idToken);
       console.log("Decoded Token:", decodedToken);
-
+  
       const { email, name, uid, picture } = decodedToken;
       let user = await User.findOne({ email });
-
+      let isNewUser = false;
+  
       if (!user) {
         const userData = {
           name,
@@ -103,21 +105,40 @@ export class AuthController {
           isVerified: true,
           image: picture || undefined,
         };
-
+  
         user = new User(userData);
         await user.save();
-
-        return res
-          .status(HttpStatusCode.Created)
-          .json({ message: "User created successfully" });
+        isNewUser = true;
       }
-
-      return res
-        .status(HttpStatusCode.Accepted)
-        .json({ message: "User Login Successful" });
+  
+      const accessToken = jwt.sign(
+        { email, role: "user" },
+        process.env.ACCESS_TOKEN_SECRET!,
+        { expiresIn: "15m" }
+      );
+  
+      const refreshToken = jwt.sign(
+        { email, role: "user" },
+        process.env.REFRESH_TOKEN_SECRET!,
+        { expiresIn: "30d" }
+      );
+  
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        path: "/auth/refresh",
+        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+      });
+  
+      return res.status(isNewUser ? HttpStatusCode.Created : HttpStatusCode.Accepted)
+        .json({
+          message: isNewUser ? "User created successfully" : "User login successful",
+          accessToken,
+        });
     } catch (error) {
       console.error(error);
-
+  
       if (!res.headersSent) {
         return res
           .status(HttpStatusCode.InternalServerError)
@@ -125,6 +146,7 @@ export class AuthController {
       }
     }
   }
+  
 
   async loginUser(req: Request, res: Response): Promise<any> {
     try {
@@ -137,9 +159,9 @@ export class AuthController {
         });
       }
 
-      const { accessToken, refreshToken } = loginResponse;
-      console.log(accessToken, "1");
-      console.log(refreshToken, "2");
+      const { accessToken, refreshToken, user } = loginResponse;
+      // console.log(accessToken, "1");
+      // console.log(refreshToken, "2");
 
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
@@ -153,6 +175,7 @@ export class AuthController {
         status: true,
         message: "User logged in successfully",
         accessToken,
+        user
       });
     } catch (error) {
       console.error(error);

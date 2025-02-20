@@ -18,7 +18,7 @@ route.post(
   "/logout",
   AuthControllerInstance.logoutAdmin.bind(AuthControllerInstance)
 );
-route.use(verifyToken(["admin"]));
+// route.use(verifyToken(["admin"]));
 route.get(
   "/getUsers",
   AuthControllerInstance.getUserList.bind(AuthControllerInstance)

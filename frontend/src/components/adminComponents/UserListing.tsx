@@ -1,9 +1,24 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import axiosInstance from "../../utils/axiosInterceptors";
 import { assets } from "../../assets/assets";
 import ToggleButton from "../common/adminCommon/ToggleButton";
 import { Sidebar } from "../common/adminCommon/Sidebar";
+import Pagination from "../common/adminCommon/Pagination";
+
+// Debounce hook (same as before)
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 interface User {
   _id: string;
@@ -14,47 +29,49 @@ interface User {
   isBlocked: boolean;
 }
 
+interface PaginationInfo {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 const UserList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [users, setUsers] = useState<User[]>([]);
+  const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Debounced search term
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  // Items per page
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await axiosInstance.get("/admin/getUsers");
-        if (response.data?.userList) {
-          setUsers(response.data.userList);
-        }
-      } catch (error) {
-        console.error("Error fetching users:", error);
-        toast.error("Failed to fetch users");
+  const fetchUsers = async () => {
+    try {
+      const response = await axiosInstance.get("/admin/getUsers", {
+        params: {
+          page: currentPage,
+          limit: itemsPerPage,
+          search: debouncedSearchTerm,
+        },
+      });
+      if (response.data?.status) {
+        setUsers(response.data.data);
+        setPagination(response.data.pagination);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      toast.error("Failed to fetch users");
+    }
+  };
+
+  useEffect(() => {
     fetchUsers();
-  }, []);
-
-  const filteredUsers = useMemo(() => {
-    const searchTermLower = searchTerm.toLowerCase().trim();
-    if (!searchTermLower) return users;
-    return users.filter(
-      (user) =>
-        user.name.toLowerCase().includes(searchTermLower) ||
-        user.email.toLowerCase().includes(searchTermLower) ||
-        user.phone?.toLowerCase().includes(searchTermLower)
-    );
-  }, [users, searchTerm]);
-
-  const { currentUsers, totalPages } = useMemo(() => {
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    return {
-      currentUsers: filteredUsers.slice(indexOfFirstItem, indexOfLastItem),
-      totalPages: Math.ceil(filteredUsers.length / itemsPerPage),
-    };
-  }, [filteredUsers, currentPage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, debouncedSearchTerm]);
 
   const handleToggleUser = async (id: string) => {
     try {
@@ -77,7 +94,6 @@ const UserList: React.FC = () => {
     <div className="flex min-h-screen">
       <Sidebar onCollapse={setSidebarCollapsed} />
 
-      {/* Main Content */}
       <div
         className={`flex-1 transition-all duration-300 ${
           sidebarCollapsed ? "ml-16" : "ml-64"
@@ -85,35 +101,39 @@ const UserList: React.FC = () => {
       >
         <div className="p-8">
           <div className="max-w-7xl mx-auto">
-
             {/* Page Header */}
             <div className="bg-white rounded-lg shadow-sm mb-6">
               <div className="p-6 flex flex-col md:flex-row justify-between items-center gap-4">
-                <h1 className="text-2xl font-bold text-gray-800">
-                  User Management
-                </h1>
-                <div className="relative w-full md:w-80">
+                <h1 className="text-2xl font-bold text-gray-800">Users</h1>
+
+                {/* Custom Search Bar */}
+                <div className="flex items-center bg-white rounded-full shadow-md px-4 py-2 w-full md:w-80 relative">
                   <input
                     type="text"
-                    placeholder="Search users..."
-                    className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    placeholder="Search Users...."
+                    className="flex-grow bg-transparent outline-none text-gray-700"
                     value={searchTerm}
                     onChange={(e) => {
                       setSearchTerm(e.target.value);
                       setCurrentPage(1);
                     }}
                   />
-                  <svg
-                    className="w-5 h-5 text-gray-400 absolute left-3 top-3"
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+                  <button
+                    type="button"
+                    className="bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center ml-2"
                   >
-                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </button>
                 </div>
               </div>
             </div>
@@ -145,14 +165,14 @@ const UserList: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {currentUsers.map((user, index) => (
+                    {users.map((user, index) => (
                       <tr key={user._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {(currentPage - 1) * itemsPerPage + index + 1}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <img
-                            src={user.image || assets.userDefault1}
+                            src={user?.image || assets.userDefault1}
                             alt={user.name}
                             className="h-10 w-10 rounded-full object-cover"
                           />
@@ -180,43 +200,12 @@ const UserList: React.FC = () => {
             </div>
 
             {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="mt-6 flex justify-center">
-                <nav className="flex items-center gap-2">
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(prev - 1, 1))
-                    }
-                    disabled={currentPage === 1}
-                    className="px-4 py-2 rounded-lg border bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-                  >
-                    Previous
-                  </button>
-                  {Array.from({ length: totalPages }).map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentPage(index + 1)}
-                      className={`px-4 py-2 rounded-lg border text-sm font-medium
-                        ${
-                          currentPage === index + 1
-                            ? "bg-red-600 text-white border-red-600"
-                            : "bg-white text-gray-700 hover:bg-gray-50"
-                        }`}
-                    >
-                      {index + 1}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                    }
-                    disabled={currentPage === totalPages}
-                    className="px-4 py-2 rounded-lg border bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-                  >
-                    Next
-                  </button>
-                </nav>
-              </div>
+            {pagination && (
+              <Pagination
+                currentPage={pagination.page}
+                totalPages={pagination.totalPages}
+                onPageChange={(page) => setCurrentPage(page)}
+              />
             )}
           </div>
         </div>

@@ -1,9 +1,10 @@
-import { doctorType } from "../../interface/doctorInterface/Interface";
+import { doctorType, Schedule } from "../../interface/doctorInterface/Interface";
 import { IDoctorService } from "../../interface/doctor/Auth.service.interface";
 import { IDoctorRepository } from "../../interface/doctor/Auth.repository.interface";
 import { Service } from "../../interface/doctorInterface/Interface";
 import { awsFileUpload } from "../../helper/uploadFiles";
 import { AwsConfig } from "../../config/s3Config";
+import { RRule, Weekday } from "rrule";
 
 export class DoctorService implements IDoctorService {
   private DoctorRepository: IDoctorRepository;
@@ -104,5 +105,60 @@ export class DoctorService implements IDoctorService {
       throw new Error(error.message);
     }
   }
+
+  async changePassword(id: string, oldPassword: any, newPassword: any): Promise<any> {
+    try {
+      const result = await this.DoctorRepository.changePassword(id, oldPassword, newPassword);
+      return result;
+    } catch (error: any) {
+      throw new Error(error.message);
+  }
+}
+
+async addSchedule(scheduleData: Schedule): Promise<any> {
+  try {
+    if (scheduleData.isRecurring) {
+      // Cast to access extra fields provided by the frontend.
+      const extra = scheduleData as any;
+      if (!scheduleData.recurrenceRule) {
+        if (
+          !extra.recurrenceDays ||
+          extra.recurrenceDays.length === 0 ||
+          !extra.recurrenceUntil
+        ) {
+          throw new Error(
+            "Missing recurrence details: recurrenceDays and recurrenceUntil are required for recurring schedules."
+          );
+        }
+        const weekdays: Weekday[] = extra.recurrenceDays.map(
+          (day: string) => RRule[day as keyof typeof RRule]
+        );
+        const dtstart = new Date(scheduleData.startTime);
+        const until = new Date(extra.recurrenceUntil);
+        const rule = new RRule({
+          freq: RRule.WEEKLY,
+          byweekday: weekdays,
+          dtstart,
+          until,
+        });
+        scheduleData.recurrenceRule = rule.toString();
+      }
+    }
+    const result = await this.DoctorRepository.addSchedule(scheduleData);
+    return result;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+
+   async getSchedule(id: string): Promise<any> {
+       try{
+          const result = await this.DoctorRepository.getSchedule(id);
+          return result;
+       }catch(error: any){
+         throw new Error(error.message);
+       }
+   }
+   
   
 }

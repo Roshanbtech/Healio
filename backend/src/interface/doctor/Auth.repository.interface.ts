@@ -1,5 +1,5 @@
 import { Document } from "mongoose";
-import { DoctorResult, doctorType } from "../doctorInterface/Interface";
+import { DoctorResult, doctorType, Schedule } from "../doctorInterface/Interface";
 import { Service } from "../doctorInterface/Interface";
 
 export interface IAuthRepository {
@@ -15,4 +15,8 @@ export interface IDoctorRepository{
   addQualification(data: any, id: string): Promise<any>
   getQualifications(id: string): Promise<any>
   getDoctorProfile(id: string): Promise<any>
-  editDoctorProfile(id: string, data: any): Promise<any> }
+  editDoctorProfile(id: string, data: any): Promise<any> 
+  changePassword(id: string,oldPassword:string, newPassword: string): Promise<any>
+  addSchedule(scheduleData: Schedule): Promise<any>
+  getSchedule(id: string): Promise<any>
+}

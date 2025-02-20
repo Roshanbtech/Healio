@@ -43,4 +43,23 @@ export class awsFileUpload {
     return profileUrl.split("?")[0];
   }
   
+  async uploadUserProfileImage(userId: string, profilePicture: Express.Multer.File) {
+    console.log('Helper - User ID:', userId);
+    const profileKey = `user/profile/${userId}/`;
+    console.log('Helper - Profile Key:', profileKey);
+    
+    const uploadedKey = await this.awsConfig.uploadFileToS3(
+      profileKey,
+      profilePicture
+    );
+    console.log('Helper - Uploaded Key:', uploadedKey);
+    
+    const profileUrl = await this.awsConfig.getfile(
+      uploadedKey.split("/").pop()!,
+      profileKey
+    );
+    console.log('Helper - Profile URL:', profileUrl);
+    
+    return profileUrl.split("?")[0];
+  }
 }

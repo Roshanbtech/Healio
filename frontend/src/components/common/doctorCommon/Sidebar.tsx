@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, Link, useNavigate } from "react-router-dom";
+import axiosInstance from "../../../utils/axiosInterceptors"; // Your axios instance setup
 import {
   LayoutGrid,
   User,
@@ -13,7 +14,6 @@ import {
   X
 } from "lucide-react";
 import { assets } from "../../../assets/assets";
-import axiosInstance from "../../../utils/axiosInterceptors";
 
 // Define a type for each navigation item.
 interface NavItem {
@@ -30,6 +30,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCollapse }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isDoctor, setIsDoctor] = useState<boolean | null>(null); // Store doctor's isDoctor status
+  const doctorId = sessionStorage.getItem("doctorId"); // Get doctorId from session storage
 
   // Toggle the collapse state and notify the parent if onCollapse is provided.
   const toggleCollapse = () => {
@@ -39,6 +41,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCollapse }) => {
       onCollapse(newCollapsed);
     }
   };
+
+  // Fetch doctor profile to check if the doctor is authorized to access full sidebar
+  useEffect(() => {
+    const fetchDoctorProfile = async () => {
+      if (doctorId) {
+        try {
+          const response = await axiosInstance.get(`/doctor/profile/${doctorId}`);
+          setIsDoctor(response.data?.data?.profile?.isDoctor); // Assuming response contains isDoctor field
+        } catch (error) {
+          console.error("Error fetching doctor profile:", error);
+        }
+      }
+    };
+
+    fetchDoctorProfile();
+  }, [doctorId]);
 
   const handleLogout = async () => {
     try {
@@ -53,6 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCollapse }) => {
     navigate("/doctor/login");
   };
 
+  // Sidebar items (filter based on isDoctor)
   const navItems: NavItem[] = [
     { icon: <LayoutGrid size={20} />, label: "Dashboard", path: "/doctor/home" },
     { icon: <User size={20} />, label: "Profile", path: "/doctor/profile" },
@@ -62,6 +81,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCollapse }) => {
     { icon: <Wallet size={20} />, label: "Wallet", path: "/doctor/wallet" },
     { icon: <MessageSquare size={20} />, label: "Chats", path: "/doctor/chats" },
   ];
+
+  // Filter navItems based on the doctor's isDoctor status
+  const filteredNavItems = isDoctor
+    ? navItems // If isDoctor is true, show all items
+    : navItems.filter((item) => item.label === "Dashboard" || item.label === "Qualification");
 
   return (
     <div className={`fixed top-0 left-0 h-screen bg-white transition-all duration-300 shadow-lg
@@ -87,7 +111,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCollapse }) => {
         {/* Navigation */}
         <nav className="flex-1">
           <ul className="space-y-2">
-            {navItems.map((item) => (
+            {filteredNavItems.map((item) => (
               <li key={item.label}>
                 <Link
                   to={item.path}

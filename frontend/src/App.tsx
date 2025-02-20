@@ -3,20 +3,20 @@ import './index.css';
 import UserRoutes from "../src/Routes/userRoutes";
 import AdminRoutes from "../src/Routes/adminRoutes";
 import DoctorRoutes from "../src/Routes/doctorRoutes";
-
-
+import ErrorBoundary from './pages/userPages/ErrorBoundary';
 
 
 const App = () => {
   return (
   <>
-  {/* <div className="App text-purple-600 underline">App</div> */}
   <Router>
+  <ErrorBoundary>
     <Routes>
       <Route path="/*" element={<UserRoutes />} />
       <Route path="/doctor/*" element={<DoctorRoutes />} />
       <Route path="/admin/*" element={<AdminRoutes />} />
     </Routes>
+    </ErrorBoundary>
   </Router>
   </>
   )

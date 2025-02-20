@@ -85,8 +85,12 @@ export class AuthController {
 
   async getUserList(req: Request, res: Response): Promise<any> {
     try {
-      const userList = await this.authService.getUser();
-      return res.status(HTTP_statusCode.OK).json({ status: true, userList });
+      const page = parseInt(req.query.page as string, 10) || 1;
+      const limit = parseInt(req.query.limit as string, 10) || 10;
+      const search = req.query.search as string;
+      const speciality = req.query.category as string;    
+      const userList = await this.authService.getUser({page,limit,search,speciality});
+      return res.status(HTTP_statusCode.OK).json({ status: true, ...userList });
     } catch (error: any) {
       console.error("Error in getUserList:", error);
       return res.status(HTTP_statusCode.InternalServerError).json({

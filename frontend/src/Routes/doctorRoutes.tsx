@@ -6,6 +6,7 @@ import Qualification from "../pages/doctorPages/Qualification";
 import Profile from "../pages/doctorPages/Profile";
 import ForgotPassword from "../pages/doctorPages/ForgotPassword";
 import ResetPassword from "../pages/doctorPages/ResetPassword";
+import Schedule from "../pages/doctorPages/Schedule";
 
 const DoctorRoutes = () => {
 
@@ -20,6 +21,8 @@ const DoctorRoutes = () => {
           <Route path="/home" element={<Home />} />
           <Route path="/qualifications" element={<Qualification/>}/>
           <Route path="/profile" element={<Profile/>}/>
+          <Route path="/schedules" element={<Schedule/>}/>
+
       </Routes>
     </div>
   );

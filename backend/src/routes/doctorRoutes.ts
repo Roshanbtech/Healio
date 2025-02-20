@@ -70,7 +70,7 @@ route.get(
   DoctorControllerInstance.getQualifications.bind(DoctorControllerInstance)
 );
 
-route.use(verifyToken(["doctor"]));
+// route.use(verifyToken(["doctor"]));
 route.get(
   "/profile/:id",
   DoctorControllerInstance.getDoctorProfile.bind(DoctorControllerInstance)
@@ -79,5 +79,17 @@ route.patch(
   "/editProfile/:id",
   upload.single("image"),
   DoctorControllerInstance.editDoctorProfile.bind(DoctorControllerInstance)
+)
+route.patch(
+  "/changePassword/:id",
+  DoctorControllerInstance.changePassword.bind(DoctorControllerInstance)
+)
+route.post(
+  "/addSchedule",
+  DoctorControllerInstance.addSchedule.bind(DoctorControllerInstance)
+)
+route.get(
+  "/schedule/:id",
+  DoctorControllerInstance.getSchedule.bind(DoctorControllerInstance)
 )
 export default route;

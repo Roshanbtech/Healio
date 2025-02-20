@@ -7,7 +7,9 @@ interface Iuser extends Document {
   phone: string;
   password: string;
   DOB: Date;
+  age?: number;
   address: string;
+  gender?:"male" | "female" | "other";
   image?: string;
   lastLogin: Date;
   isBlocked: boolean;
@@ -42,8 +44,17 @@ const userSchema = new Schema<Iuser>(
       type: Date,
       default: null,
     },
+    age: {
+      type: Number,
+      default: null,
+    },
     address: {
       type: String,
+      default: null,
+    },
+    gender: {
+      type: String,
+      enum: ["male", "female", "other"],
       default: null,
     },
     image: {

@@ -21,6 +21,7 @@
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "firebase-admin": "^13.0.2",
@@ -32,6 +33,7 @@
     "nodemailer": "^6.10.0",
     "redis": "^4.7.0",
     "rotating-file-stream": "^3.2.5",
+    "rrule": "^2.8.1",
     "uuid": "^11.0.5"
   },
   "devDependencies": {
