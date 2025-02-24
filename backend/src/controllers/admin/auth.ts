@@ -36,14 +36,13 @@ export class AuthController {
 
       const { accessToken, refreshToken } = loginResponse;
 
-      // Store refresh token securely in an HttpOnly cookie
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
-        path: "/auth/refresh", // Path where the refresh token is valid
-        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Expires in 7 days
-      });
+        path: "/auth/refresh",
+        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),     
+       });
 
       // Set authorization header with access token
       res.setHeader("Authorization", `Bearer ${accessToken}`);
@@ -262,7 +261,8 @@ export class AuthController {
   async rejectDoctor(req: Request, res: Response): Promise<any> {
     try {
       const { id } = req.params;
-      const doctor = await this.authService.rejectDoctor(id);
+      const { reason } = req.body;
+      const doctor = await this.authService.rejectDoctor(id,reason);
       return res.status(HTTP_statusCode.OK).json({ status: true, doctor });
     } catch (error: any) {
       console.error("Error in rejectDoctor:", error);

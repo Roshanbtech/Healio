@@ -34,6 +34,7 @@ export class UserController {
 
   async getDoctorDetails(req: Request, res: Response): Promise<any> {
     try{
+      
       const { id } = req.params;
       const doctor = await this.userService.getDoctorDetails(id);
       return res.status(HTTP_statusCode.OK).json({ status: true, doctor });

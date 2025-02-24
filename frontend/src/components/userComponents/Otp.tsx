@@ -4,6 +4,7 @@ import { assets } from "../../assets/assets";
 import { backendUrl } from "../../utils/backendUrl";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "../../utils/axiosInterceptors";
 
 interface OTPProps {
   onSubmit?: (otp: string) => void;
@@ -50,7 +51,6 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
     newOtp[index] = value;
     setOtp(newOtp);
 
-    // Move to next input if value is entered
     if (value && index < 3) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -77,7 +77,6 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
     });
     setOtp(newOtp);
 
-    // Focus last input or first empty input
     const lastFilledIndex = newOtp.findIndex((val) => !val);
     const focusIndex = lastFilledIndex === -1 ? 3 : lastFilledIndex;
     inputRefs.current[focusIndex]?.focus();
@@ -99,85 +98,120 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
       };
 
       try {
-        const response = await fetch(`${backendUrl}/signUp`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formValues),
-          credentials: "include", // Include cookies if your API uses sessions
-        });
-
-        const data = await response.json();
-        console.log(data, "data");
-        if (!response.ok) {
-          throw new Error(data.message || "Signup failed");
-        }
-
-        // Check for correct response structure
-        if (data?.response?.status === true) {
-          toast.success(data.response.message || "Signup successful!");
+        const response = await axiosInstance.post("/signUp", formValues);
+        console.log(response.data, "data");
+        if (response.data?.response?.status === true) {
+          toast.success(response.data.response.message || "Signup successful!");
           navigate("/login");
         } else {
           if (
-            data.response?.message === "OTP does not match or is not found."
+            response.data.response?.message ===
+            "OTP does not match or is not found."
           ) {
             toast.error(
-              data.response?.message || "OTP does not match or is not found."
+              response.data.response?.message ||
+                "OTP does not match or is not found."
             );
           }
-          toast.error(data.response?.message || "Signup failed");
+          toast.error(response.data.response?.message || "Signup failed");
         }
-
-        // Clear form
-        // formik.resetForm();
-
-        // Redirect to login page after successful signup
-        // setTimeout(() => {
-        //     navigate('/otp');
-        // }, 1500); // Give time for the success message to be seen
       } catch (error: any) {
         console.error("Error Response:", error);
         toast.error(error.message || "An error occurred during signup");
-        // } finally {
-        //     setIsSubmitting(false);
-        // }
       }
+
+      // try {
+      //   const response = await fetch(`${backendUrl}/signUp`, {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //     },
+      //     body: JSON.stringify(formValues),
+      //     credentials: "include",
+      //   });
+
+      //   const data = await response.json();
+      //   console.log(data, "data");
+      //   if (!response.ok) {
+      //     throw new Error(data.message || "Signup failed");
+      //   }
+
+      //   if (data?.response?.status === true) {
+      //     toast.success(data.response.message || "Signup successful!");
+      //     navigate("/login");
+      //   } else {
+      //     if (
+      //       data.response?.message === "OTP does not match or is not found."
+      //     ) {
+      //       toast.error(
+      //         data.response?.message || "OTP does not match or is not found."
+      //       );
+      //     }
+      //     toast.error(data.response?.message || "Signup failed");
+      //   }
+
+      //   // Clear form
+      //   // formik.resetForm();
+
+      //   // Redirect to login page after successful signup
+      //   // setTimeout(() => {
+      //   //     navigate('/otp');
+      //   // }, 1500); // Give time for the success message to be seen
+      // } catch (error: any) {
+      //   console.error("Error Response:", error);
+      //   toast.error(error.message || "An error occurred during signup");
+      //   // } finally {
+      //   //     setIsSubmitting(false);
+      //   // }
+      // }
     }
   };
 
   const handleResend = async () => {
     if (canResend) {
-      setTimeLeft(60);  // Reset timer
-      setCanResend(false);  // Disable the resend button until time is up
-      setOtp(["", "", "", ""]);  // Clear the OTP input fields
+      setTimeLeft(60);
+      setCanResend(false);
+      setOtp(["", "", "", ""]);
 
       // Trigger the resend OTP request
       if (formData?.email) {
-        try {
-          const response = await fetch(`${backendUrl}/resendOtp`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ email: formData.email }),  // Send email to the backend
-          });
-
-          const data = await response.json();
-
-          if (response.ok) {
-            toast.success(data.message || "OTP resent successfully!");
-          } else {
-            toast.error(data.message || "Failed to resend OTP");
-          }
-        } catch (error) {
-          console.error("Error resending OTP:", error);
-          toast.error("An error occurred while resending OTP");
+        try{
+         const response = await axiosInstance.post("/resendOtp", {
+           email: formData.email
+         })
+         console.log(response.data, "data");
+         if (response.data?.status) {
+           toast.success(response.data.message || "OTP resent successfully!");
+         }else{
+           toast.error(response.data.message || "Failed to resend OTP");
+         }
+        }catch(error:any){
+          console.log(error);
+          toast.error(error.message || "An error occurred while resending OTP");
         }
+        // try {
+        //   const response = await fetch(`${backendUrl}/resendOtp`, {
+        //     method: "POST",
+        //     headers: {
+        //       "Content-Type": "application/json",
+        //     },
+        //     body: JSON.stringify({ email: formData.email }), // Send email to the backend
+        //   });
+
+        //   const data = await response.json();
+
+        //   if (response.ok) {
+        //     toast.success(data.message || "OTP resent successfully!");
+        //   } else {
+        //     toast.error(data.message || "Failed to resend OTP");
+        //   }
+        // } catch (error) {
+        //   console.error("Error resending OTP:", error);
+        //   toast.error("An error occurred while resending OTP");
+        // }
       }
     }
   };
-
 
   return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col">
@@ -251,7 +285,6 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
             </div>
           </div>
 
-          {/* Image Section */}
           <div className="hidden md:block w-1/2 p-6">
             <img
               src={assets.bg2}

@@ -195,24 +195,28 @@ export class AuthService implements IAuthService {
     email: string;
     password: string;
   }): Promise<
-    { accessToken: string; refreshToken: string, user: any } | { error: string }
+    { accessToken: string; refreshToken: string, user: any }
   > {
     try {
       const { email, password } = userData;
       const check = await this.AuthRepository.existUser(email);
 
       if (!check) {
-        return { error: "Email not found, please sign up!" };
+        throw new Error("User not found.");
       }
 
       const user = await this.AuthRepository.userCheck(email);
       if (!user) {
-        return { error: "User Not Found." };
+        throw new Error("User not found.");
+      }
+
+      if(user.isBlocked){
+        throw new Error("User is blocked. Ask admin for access.");
       }
 
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
-        return { error: "Invalid password." };
+        throw new Error("Invalid password.");
       }
 
       const accessToken = jwt.sign(
@@ -232,7 +236,7 @@ export class AuthService implements IAuthService {
       return { accessToken, refreshToken, user };
     } catch (error) {
       console.error("Login error:", error);
-      return { error: "Internal server error." };
+      throw error;
     }
   }
 

@@ -18,7 +18,7 @@ export interface IAuthService {
   toggleService(id: string): Promise<any>;
   getCertificates(id: string): Promise<any>;
   approveDoctor(id: string): Promise<any>;
-  rejectDoctor(id: string): Promise<any>;
+  rejectDoctor(id: string, reason: string): Promise<any>;
   createCoupon(couponData: any): Promise<any>;
   getCoupons(): Promise<any>;
   toggleCoupon(id: string): Promise<any>;

@@ -5,6 +5,7 @@ import { toast } from "react-toastify"
 import { useNavigate } from "react-router-dom"
 import axiosUrl from "../../utils/axios"
 import { backendUrl } from "../../utils/backendUrl"
+import axiosInstance from "../../utils/axiosInterceptors"
 
 interface OTPProps {
   onSubmit?: (otp: string) => void
@@ -98,7 +99,7 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
       };
   
       try {
-        const response = await axiosUrl.post("/doctor/signUp", formValues, {
+        const response = await axiosInstance.post("/doctor/signUp", formValues, {
           withCredentials: true,
           headers: {
             "Content-Type": "application/json",
@@ -134,26 +135,38 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
  
        // Trigger the resend OTP request
        if (formData?.email) {
-         try {
-           const response = await fetch(`${backendUrl}/doctor/resendOtp`, {
-             method: "POST",
-             headers: {
-               "Content-Type": "application/json",
-             },
-             body: JSON.stringify({ email: formData.email }),  // Send email to the backend
-           });
- 
-           const data = await response.json();
- 
-           if (response.ok) {
-             toast.success(data.message || "OTP resent successfully!");
-           } else {
-             toast.error(data.message || "Failed to resend OTP");
-           }
-         } catch (error) {
-           console.error("Error resending OTP:", error);
-           toast.error("An error occurred while resending OTP");
+        try{
+         const response = await axiosInstance.post("/doctor/resendOtp", { email: formData.email });
+         console.log(response.data, "data");
+         if(response.data?.status){
+           toast.success(response.data.message || "OTP resent successfully!");
+         } else {
+           toast.error(response.data.message || "Failed to resend OTP");
          }
+        }catch(error:any){
+          console.log(error);
+          toast.error(error.message || "An error occurred while resending OTP");
+        }
+        //  try {
+        //    const response = await fetch(`${backendUrl}/doctor/resendOtp`, {
+        //      method: "POST",
+        //      headers: {
+        //        "Content-Type": "application/json",
+        //      },
+        //      body: JSON.stringify({ email: formData.email }),  // Send email to the backend
+        //    });
+ 
+        //    const data = await response.json();
+ 
+        //    if (response.ok) {
+        //      toast.success(data.message || "OTP resent successfully!");
+        //    } else {
+        //      toast.error(data.message || "Failed to resend OTP");
+        //    }
+        //  } catch (error) {
+        //    console.error("Error resending OTP:", error);
+        //    toast.error("An error occurred while resending OTP");
+        //  }
        }
      }
    };

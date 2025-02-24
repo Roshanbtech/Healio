@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import axiosInstance from "../../utils/axiosInterceptors";
-import profile from "../../assets/profile_pic.png";
 import ToggleButton from "../common/adminCommon/ToggleButton";
 import { Sidebar } from "../common/adminCommon/Sidebar";
 import Draggable from "react-draggable";
@@ -32,10 +31,10 @@ interface Doctor {
   country?: string;
   achievements?: string;
   degree?: string;
+  rejectionReason?: string;
 }
 
 const DoctorList: React.FC = () => {
-  // Existing state hooks
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -45,10 +44,16 @@ const DoctorList: React.FC = () => {
   const [showModal, setShowModal] = useState<boolean>(false);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const itemsPerPage = 10;
 
-  // New state hooks for the info modal
+  // States for rejection flow in the verification modal
+  const [showRejectInput, setShowRejectInput] = useState<boolean>(false);
+  const [rejectionReason, setRejectionReason] = useState<string>("");
+  const [selectedFile, setSelectedFile] = useState<string[]>([]);
+  const [currentCertIndex, setCurrentCertIndex] = useState<number>(0);
+
+  // States for the draggable info modal
   const [showInfoModal, setShowInfoModal] = useState<boolean>(false);
   const [selectedInfoDoctor, setSelectedInfoDoctor] = useState<Doctor | null>(
     null
@@ -84,7 +89,6 @@ const DoctorList: React.FC = () => {
           doctor.speciality?.name?.toLowerCase().includes(searchTermLower)
       );
     }
-
     return filtered;
   }, [doctors, searchTerm, statusFilter]);
 
@@ -116,10 +120,6 @@ const DoctorList: React.FC = () => {
     }
   };
 
-  // Functions for certificate verification (existing)
-  const [selectedFile, setSelectedFile] = useState<string[]>([]);
-  const [currentCertIndex, setCurrentCertIndex] = useState<number>(0);
-
   const fetchCertificates = async (id: string) => {
     try {
       const response = await axiosInstance.get(`/admin/docCert/${id}`);
@@ -138,12 +138,16 @@ const DoctorList: React.FC = () => {
   const openVerifyModal = (doctor: Doctor) => {
     setSelectedDoctor(doctor);
     fetchCertificates(doctor._id);
+    setShowRejectInput(false);
+    setRejectionReason("");
     setShowModal(true);
   };
 
   const closeModal = () => {
     setShowModal(false);
     setSelectedDoctor(null);
+    setShowRejectInput(false);
+    setRejectionReason("");
   };
 
   const handleApprove = async () => {
@@ -171,17 +175,24 @@ const DoctorList: React.FC = () => {
     closeModal();
   };
 
-  const handleReject = async () => {
+  const handleConfirmReject = async () => {
     if (!selectedDoctor) return;
+    if (!rejectionReason.trim()) {
+      toast.error("Please provide a rejection reason");
+      return;
+    }
     try {
       const response = await axiosInstance.patch(
-        `/admin/docCertReject/${selectedDoctor._id}`
+        `/admin/docCertReject/${selectedDoctor._id}`,
+        {
+          reason: rejectionReason,
+        }
       );
       if (response.data?.status) {
         setDoctors((prevDoctors) =>
           prevDoctors.map((doctor) =>
             doctor._id === selectedDoctor._id
-              ? { ...doctor, docStatus: "rejected" }
+              ? { ...doctor, docStatus: "rejected", rejectionReason }
               : doctor
           )
         );
@@ -196,7 +207,15 @@ const DoctorList: React.FC = () => {
     closeModal();
   };
 
-  // New functions for the info modal
+  const handleRejectButton = () => {
+    if (!showRejectInput) {
+      setShowRejectInput(true);
+    } else {
+      handleConfirmReject();
+    }
+  };
+
+  // Info Modal for viewing doctor details (including rejection reason if available)
   const openInfoModal = (doctor: Doctor) => {
     setSelectedInfoDoctor(doctor);
     setShowInfoModal(true);
@@ -207,17 +226,9 @@ const DoctorList: React.FC = () => {
     setSelectedInfoDoctor(null);
   };
 
-  // Existing handleInfo if needed elsewhere
-  const handleInfo = (id: string) => {
-    console.log(id);
-  };
-
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar */}
       <Sidebar onCollapse={setSidebarCollapsed} />
-
-      {/* Main Content */}
       <div
         className={`flex-1 transition-all duration-300 ${
           sidebarCollapsed ? "ml-16" : "ml-64"
@@ -225,14 +236,10 @@ const DoctorList: React.FC = () => {
       >
         <div className="flex justify-center">
           <div className="w-full max-w-7xl px-4 py-6">
-            {/* Header & Search */}
             <div className="flex flex-col sm:flex-row justify-between items-center mb-6 bg-white p-6 rounded-lg shadow-sm">
               <h1 className="text-3xl font-bold text-gray-800">Doctors</h1>
-
               <div className="relative mt-4 sm:mt-0">
-                {/* Search Bar Container */}
                 <div className="flex items-center bg-white rounded-full shadow-md px-4 py-2 w-full sm:w-96">
-                  {/* Search Input */}
                   <input
                     type="text"
                     placeholder="Search Doctors..."
@@ -243,7 +250,6 @@ const DoctorList: React.FC = () => {
                       setCurrentPage(1);
                     }}
                   />
-                  {/* Red Circle with Search Icon */}
                   <button
                     type="button"
                     className="bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center ml-2"
@@ -257,14 +263,13 @@ const DoctorList: React.FC = () => {
                       strokeLinejoin="round"
                       viewBox="0 0 24 24"
                     >
-                      <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0z" />
+                      <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Status Filter Tabs */}
             <div className="mb-4 border-b border-gray-200">
               <nav className="-mb-px flex space-x-8" aria-label="Tabs">
                 <button
@@ -300,7 +305,6 @@ const DoctorList: React.FC = () => {
               </nav>
             </div>
 
-            {/* Responsive Doctor Table */}
             <div className="bg-white rounded-lg shadow overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
@@ -360,7 +364,6 @@ const DoctorList: React.FC = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {doctor.email}
                           </td>
-                          {/* Modified Info Column with Info Icon Button */}
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             <button
                               onClick={() => openInfoModal(doctor)}
@@ -428,91 +431,108 @@ const DoctorList: React.FC = () => {
               </div>
             </div>
 
-            {/* Verification Modal (existing) */}
-            {showModal && (
+            {/* Verification Modal (Approve/Reject with certificate carousel and rejection input) */}
+            {showModal && selectedDoctor && (
               <div className="fixed inset-0 flex items-center justify-center z-50">
                 <div
                   className="absolute inset-0 bg-black opacity-50"
                   onClick={closeModal}
                 ></div>
-                <div className="bg-white p-6 rounded shadow-lg z-50 max-w-md w-full">
-                  <h2 className="text-xl font-bold mb-4">Verify Doctor</h2>
-                  <div className="mb-4">
-                    {selectedFile.length > 0 ? (
-                      <div className="relative">
-                        <iframe
-                          src={selectedFile[currentCertIndex]}
-                          title="Certificate Document"
-                          className="w-full h-64 rounded"
-                          frameBorder="0"
-                          allowFullScreen
-                        ></iframe>
-                        {selectedFile.length > 1 && (
-                          <>
-                            <button
-                              onClick={() =>
-                                setCurrentCertIndex(
-                                  (prev) =>
-                                    (prev - 1 + selectedFile.length) %
-                                    selectedFile.length
-                                )
-                              }
-                              className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-600 text-white p-2 rounded-full"
-                            >
-                              {"<"}
-                            </button>
-                            <button
-                              onClick={() =>
-                                setCurrentCertIndex(
-                                  (prev) => (prev + 1) % selectedFile.length
-                                )
-                              }
-                              className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-600 text-white p-2 rounded-full"
-                            >
-                              {">"}
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center h-64 bg-gray-200 rounded">
-                        <span>No Certificates Found</span>
+                <div className="bg-white rounded shadow-lg z-50 max-w-md w-full">
+                  <div className="bg-red-600 p-3 rounded-t-lg">
+                    <h2 className="text-white text-xl font-bold">
+                      Doctor Uploads
+                    </h2>
+                  </div>
+                  <div className="p-6">
+                    <div className="mb-4">
+                      {selectedFile.length > 0 ? (
+                        <div className="relative">
+                          <iframe
+                            src={selectedFile[currentCertIndex]}
+                            title="Certificate Document"
+                            className="w-full h-64 border border-gray-300 rounded"
+                            frameBorder="0"
+                            allowFullScreen
+                          ></iframe>
+                          {selectedFile.length > 1 && (
+                            <>
+                              <button
+                                onClick={() =>
+                                  setCurrentCertIndex(
+                                    (prev) =>
+                                      (prev - 1 + selectedFile.length) %
+                                      selectedFile.length
+                                  )
+                                }
+                                className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-600 text-white p-2 rounded-full"
+                              >
+                                {"<"}
+                              </button>
+                              <button
+                                onClick={() =>
+                                  setCurrentCertIndex(
+                                    (prev) => (prev + 1) % selectedFile.length
+                                  )
+                                }
+                                className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-600 text-white p-2 rounded-full"
+                              >
+                                {">"}
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center h-64 bg-gray-200 rounded">
+                          <span>No Certificates Found</span>
+                        </div>
+                      )}
+                    </div>
+                    {showRejectInput && (
+                      <div className="mt-4">
+                        <p className="mb-1 text-sm font-semibold">
+                          Why rejecting this doctor?
+                        </p>
+                        <textarea
+                          className="w-full p-2 bg-green-100 rounded"
+                          rows={3}
+                          placeholder="Enter rejection reason"
+                          value={rejectionReason}
+                          onChange={(e) => setRejectionReason(e.target.value)}
+                        />
                       </div>
                     )}
-                  </div>
-                  <div className="flex justify-between">
-                    <button
-                      onClick={handleApprove}
-                      className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={handleReject}
-                      className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-                    >
-                      Reject
-                    </button>
+                    <div className="flex justify-between mt-6">
+                      <button
+                        onClick={handleApprove}
+                        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={handleRejectButton}
+                        className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                      >
+                        {showRejectInput ? "Confirm Reject" : "Reject"}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             )}
 
+            {/* Info Modal for Rejected/Approved/Pending Doctor Details */}
             {showInfoModal && selectedInfoDoctor && (
               <div className="fixed inset-0 flex items-center justify-center z-50">
-                {/* Overlay */}
                 <div
                   className="absolute inset-0 bg-black opacity-50"
                   onClick={closeInfoModal}
                 ></div>
-
-                {/* Draggable Modal */}
                 <Draggable handle=".modal-header">
                   <div
                     className="relative bg-white rounded-lg shadow-2xl p-4 w-80 max-w-md transform transition-all duration-300"
                     style={{ animation: "popIn 0.3s ease-out" }}
                   >
-                    {/* Modal Header (draggable) */}
                     <div className="modal-header cursor-move flex justify-between items-center bg-red-600 p-3 rounded-t-lg">
                       <h2 className="text-white text-lg font-bold">
                         Doctor Info
@@ -524,11 +544,8 @@ const DoctorList: React.FC = () => {
                         &times;
                       </button>
                     </div>
-
-                    {/* Modal Content */}
                     <div className="p-3 space-y-3">
                       <div className="flex items-center space-x-4">
-                        {/* Image with active/inactive indicator */}
                         <div className="relative">
                           <img
                             src={selectedInfoDoctor.image || assets.doc11}
@@ -608,6 +625,15 @@ const DoctorList: React.FC = () => {
                           </span>{" "}
                           {selectedInfoDoctor.achievements || "N/A"}
                         </p>
+                        {selectedInfoDoctor.docStatus === "rejected" &&
+                          selectedInfoDoctor.rejectionReason && (
+                            <p>
+                              <span className="font-semibold text-green-700">
+                                Rejection Reason:
+                              </span>{" "}
+                              {selectedInfoDoctor.rejectionReason}
+                            </p>
+                          )}
                       </div>
                     </div>
                   </div>
@@ -615,7 +641,6 @@ const DoctorList: React.FC = () => {
               </div>
             )}
 
-            {/* Pagination */}
             {totalPages > 1 && (
               <div className="mt-6 flex justify-center">
                 <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">

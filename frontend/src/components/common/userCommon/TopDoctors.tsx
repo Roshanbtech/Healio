@@ -101,10 +101,10 @@ const TopDoctors: React.FC = () => {
 
       {/* Show More Button */}
       <button
-        // onClick={() => {
-        //   navigate("/doctors");
-        //   window.scrollTo(0, 0);
-        // }}
+        onClick={() => {
+          navigate("/doctors");
+          window.scrollTo(0, 0);
+        }}
         className="bg-red-600 text-white px-12 py-3 rounded-full mt-10 hover:bg-red-700 transition-colors duration-300"
       >
         Show More...

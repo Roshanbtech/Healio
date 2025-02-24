@@ -199,7 +199,7 @@ export class AuthController {
         secure: true, // Set to false for local testing
         sameSite: "strict",
         path: "/auth/refresh", // Refresh token endpoint
-        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // 7 days
+        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
       });
 
       res.status(HTTP_statusCode.OK).json({

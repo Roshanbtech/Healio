@@ -9,6 +9,7 @@ import Otp from "../../components/userComponents/Otp";
 import { SignUpFormValues } from "../../interfaces/userInterface";
 import { Google } from "../common/userCommon/GoogleAuth";
 import axiosUrl from "../../utils/axios";
+import axiosInstance from "../../utils/axiosInterceptors";
 
 const Signup: React.FC = () => {
   // const navigate = useNavigate();
@@ -94,7 +95,7 @@ const Signup: React.FC = () => {
         console.log("Submitting:", values);
         setFormData(values);
 
-        const response = await axiosUrl.post("/sendOtp", values, {
+        const response = await axiosInstance.post("/sendOtp", values, {
           withCredentials: true,
           headers: {
             "Content-Type": "application/json",

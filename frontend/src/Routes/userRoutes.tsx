@@ -12,6 +12,7 @@ import Doctors from "../pages/userPages/Doctors";
 import Profile from "../pages/userPages/Profile";
 import DoctorDetails from "../pages/userPages/DoctorDetails";
 import DoctorSlots from "../components/userComponents/AppointmentSlots";
+import BookAppointment from "../pages/userPages/BookAppointment";
 // import Landing from "../pages/userPages/Landing";
 
 const UserRoutes = () => {
@@ -32,6 +33,7 @@ const UserRoutes = () => {
           <Route path="/doctors" element={<Doctors/>}/>
           <Route path="/doctorDetails/:id" element={<DoctorDetails/>}/>
           <Route path="/doctorSlots/:id" element={<DoctorSlots/>}/>
+          <Route path="/book-appointment/:id" element={<BookAppointment/>}/>
           <Route path="/profile" element={<Profile />} />
         </Route>
         <Route path="/forgot-password" element={<ForgotPassword/>} />

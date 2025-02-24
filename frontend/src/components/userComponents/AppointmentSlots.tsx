@@ -223,12 +223,15 @@ const Appointment: React.FC = () => {
 
       {/* Book Appointment Button */}
       <div className="mt-8 text-center">
-        <button
-          onClick={() => navigate(`/book-appointment/${id}`)}
+        {selectedDate && selectedTime && (
+          <button
+          onClick={() => navigate(`/book-appointment/${id}`, { state: { selectedDate, selectedTime } })}
           className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full transition-all transform hover:scale-105 shadow-xl"
         >
           Book Appointment Now
         </button>
+        )}
+        
       </div>
     </div>
   );

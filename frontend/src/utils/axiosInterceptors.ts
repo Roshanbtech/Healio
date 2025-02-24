@@ -2,6 +2,18 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 
+const handleUserLogout = (message?: string) => {
+  toast.error(message || "Session expired. Please login again.");
+  localStorage.clear();
+  window.location.href = "/login";
+}
+
+const handleDoctorLogout = (message?: string) => {
+  toast.error(message || "Session expired. Please login again.");
+  localStorage.clear();
+  window.location.href = "/doctor/login";
+}
+
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_AXIOS_BASE_URL,
   withCredentials: true,
@@ -13,6 +25,7 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   async (config) => {
     let token = localStorage.getItem("authToken");
+    console.log("Auth Token (Before Request):", token);
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -23,22 +36,23 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+      console.log("accessToken expired trying to refresh.....");
       originalRequest._retry = true;
 
       try {
-        const { data } = await axios.post(
+        const { data } = await axiosInstance.post(
           `${import.meta.env.VITE_AXIOS_BASE_URL}/auth/refresh`, 
           {}, 
           { withCredentials: true }
         );
-
-        console.log("Generated Access Token:", data.accessToken);
+        console.log("New Access Token:", data.accessToken);
         
         const decodedToken = jwtDecode(data.accessToken) as { role: string };
         
@@ -52,10 +66,13 @@ axiosInstance.interceptors.response.use(
         
       } catch (refreshError) {
         toast.error("Session expired. Please login again.");
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("userRole"); 
-        window.location.href = "/";  
+        localStorage.clear();
+        window.location.reload();
       }
+    } else if (error.response?.status === 403 && error.response.data.message === "Access denied. User is blocked.") {
+      handleUserLogout(error.response.data.message)
+    } else if (error.response?.status === 403 && error.response.data.message === "Access denied. Doctor is blocked.") {
+      handleDoctorLogout()
     }
 
     return Promise.reject(error);

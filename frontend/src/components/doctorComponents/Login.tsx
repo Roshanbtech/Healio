@@ -16,13 +16,6 @@ const Login: React.FC = () => {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    if (token) {
-      navigate("/doctor/home");
-    }
-  }, []);
-
   const validationSchema = Yup.object({
     email: Yup.string()
       .email("Invalid email address")

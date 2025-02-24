@@ -5,7 +5,6 @@ import { AuthController } from "../controllers/doctor/auth";
 import { DoctorService } from "../services/doctor/doctor";
 import { DoctorController } from "../controllers/doctor/doctor";
 import { DoctorRepository } from "../repository/doctor/doctor";
-import { checkDoctorBlocked } from "../helper/doctorAuthMiddleware";
 import { upload } from "../config/multerConfig";
 import verifyToken from '../helper/accessToken';
 
@@ -19,9 +18,6 @@ const DoctorRepositoryInstance = new DoctorRepository();
 const DoctorServiceInstance = new DoctorService(DoctorRepositoryInstance);
 const DoctorControllerInstance = new DoctorController(DoctorServiceInstance);
 
-const asyncMiddleware = (fn: any) => (req: any, res: any, next: any) => {
-  Promise.resolve(fn(req, res, next)).catch(next);
-};
 
 route.post(
   "/signUp",
@@ -41,7 +37,6 @@ route.post(
 );
 route.post(
   "/login",
-  asyncMiddleware(checkDoctorBlocked),
   AuthControllerInstance.loginDoctor.bind(AuthControllerInstance)
 );
 route.post(
@@ -70,7 +65,7 @@ route.get(
   DoctorControllerInstance.getQualifications.bind(DoctorControllerInstance)
 );
 
-// route.use(verifyToken(["doctor"]));
+route.use(verifyToken(["doctor"]));
 route.get(
   "/profile/:id",
   DoctorControllerInstance.getDoctorProfile.bind(DoctorControllerInstance)

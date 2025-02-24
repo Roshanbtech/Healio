@@ -49,24 +49,16 @@ const Login: React.FC = () => {
       
 
         const decodedToken = jwtDecode(data.accessToken) as { role: string };
-        localStorage.setItem("userRole", decodedToken.role); // Store user role from decoded token
+        localStorage.setItem("userRole", decodedToken.role); 
         console.log("Decoded role:", decodedToken.role);
+        
 
         toast.success("Login Successful");
 
         navigate("/home");
       } catch (error: any) {
         console.error("Login error:", error);
-        if (
-          error.response &&
-          error.response.data.message === "Blocked by admin"
-        ) {
-          toast.error(
-            "Your account has been blocked by the admin. Please contact support."
-          );
-        } else {
-          toast.error("Invalid credentials. Please try again.");
-        }
+        toast.error(error?.response?.data?.message || "Login failed")
       } finally {
         setIsSubmitting(false);
       }
@@ -197,7 +189,7 @@ const Login: React.FC = () => {
           </div>
 
           {/* Right Side - Doctor Image */}
-          <div className="hidden md:block w-1/2 p-6 flex items-center justify-center">
+          <div className="hidden md:block w-1/2 p-6 items-center justify-center">
             <img
               src={assets.bg2}
               alt="Doctor"

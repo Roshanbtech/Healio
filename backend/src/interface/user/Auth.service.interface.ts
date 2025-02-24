@@ -12,7 +12,7 @@ export interface IAuthService {
     email: string;
     password: string;
   }): Promise<
-    { accessToken: string; refreshToken: string, user:any } | { error: string }
+    { accessToken: string; refreshToken: string, user:any } 
   >;
   sendForgotPasswordOtp(email: string): Promise<{ status: boolean; message: string }>;
   verifyForgotPasswordOtp(email: string, otp: string): Promise<{ status: boolean; message: string }>;

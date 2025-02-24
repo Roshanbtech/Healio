@@ -5,8 +5,10 @@ import { AuthController } from "../controllers/user/auth";
 import { UserRepository } from "../repository/user/user";
 import { UserService } from "../services/user/user";
 import { UserController } from "../controllers/user/user";
-import { checkUserBlocked } from "../helper/authMiddleware";
 import { upload } from "../config/multerConfig";
+import { BookingRepository } from "../repository/user/booking";
+import { BookingService } from "../services/user/booking";
+import { BookingController } from "../controllers/user/booking";
 import verifyToken from "../helper/accessToken";
 
 const route = Router();
@@ -19,9 +21,10 @@ const UserRepositoryInstance = new UserRepository();
 const UserServiceInstance = new UserService(UserRepositoryInstance);
 const UserControllerInstance = new UserController(UserServiceInstance);
 
-const asyncMiddleware = (fn: any) => (req: any, res: any, next: any) => {
-  Promise.resolve(fn(req, res, next)).catch(next);
-};
+const BookingRepositoryInstance = new BookingRepository();
+const BookingServiceInstance = new BookingService(BookingRepositoryInstance);
+const BookingControllerInstance = new BookingController(BookingServiceInstance);
+
 
 route.post(
   "/signUp",
@@ -41,55 +44,70 @@ route.post(
 );
 
 route.post(
+  "/forgot-password/sendOtp",
+  AuthControllerInstance.sendForgotPasswordOtp.bind(AuthControllerInstance)
+);
+route.post(
+  "/forgot-password/verifyOtp",
+  AuthControllerInstance.verifyForgotPasswordOtp.bind(AuthControllerInstance)
+);
+route.post(
+  "/forgot-password/reset",
+  AuthControllerInstance.resetPassword.bind(AuthControllerInstance)
+);
+route.get(
+  "/services",
+  UserControllerInstance.getServices.bind(UserControllerInstance)
+);
+
+route.post(
   "/login",
-  asyncMiddleware(checkUserBlocked),
   AuthControllerInstance.loginUser.bind(AuthControllerInstance)
 );
+
+route.use(verifyToken(["user"]));
+
 route.get(
   "/doctors",
   UserControllerInstance.getDoctors.bind(UserControllerInstance)
-)
+);
 route.get(
   "/doctorDetails/:id",
   UserControllerInstance.getDoctorDetails.bind(UserControllerInstance)
-)
+);
 route.get(
   "/profile/:id",
   UserControllerInstance.getUserProfile.bind(UserControllerInstance)
-)
+);
 route.patch(
   "/editProfile/:id",
   upload.single("image"),
   UserControllerInstance.editUserProfile.bind(UserControllerInstance)
-)
+);
 route.patch(
   "/changePassword/:id",
   UserControllerInstance.changePassword.bind(UserControllerInstance)
-)
+);
 route.get(
   "/schedule/:id",
   UserControllerInstance.getAvailableSlots.bind(UserControllerInstance)
-)
-// route.use(verifyToken(["user"]));
+);
 route.post(
   "/logout",
   AuthControllerInstance.logoutUser.bind(AuthControllerInstance)
-)
-route.post(
-  "/forgot-password/sendOtp",
-  AuthControllerInstance.sendForgotPasswordOtp.bind(AuthControllerInstance)
-)
-route.post(
-  "/forgot-password/verifyOtp",
-  AuthControllerInstance.verifyForgotPasswordOtp.bind(AuthControllerInstance)
-)
-route.post(
-  "/forgot-password/reset",
-  AuthControllerInstance.resetPassword.bind(AuthControllerInstance)
-)
+);
 route.get(
-  "/services",
-  UserControllerInstance.getServices.bind(UserControllerInstance)
-)
+  "/coupons",
+  BookingControllerInstance.getCoupons.bind(BookingControllerInstance)
+);
+
+// route.get(
+//   "/bookings",
+//   UserControllerInstance.getBookings.bind(UserControllerInstance)
+// );
+// route.post(
+//   "/bookings",
+//   UserControllerInstance.createBooking.bind(UserControllerInstance)
+// );
 
 export default route;

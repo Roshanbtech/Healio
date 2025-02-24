@@ -31,7 +31,7 @@ export interface IAuthRepository {
   findServiceByName(name: string): Promise<any>;
   getCertificates(id: string): Promise<any>;
   approveDoctor(id: string): Promise<any>;
-  rejectDoctor(id: string): Promise<any>;
+  rejectDoctor(id: string, reason: string): Promise<any>;
   getAllCoupons(): Promise<Coupon[]>;
   toggleCoupon(id: string): Promise<any>;
   editCoupon(id: string, couponData: any): Promise<any>;

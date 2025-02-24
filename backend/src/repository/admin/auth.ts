@@ -2,7 +2,7 @@ import userModel from "../../model/userModel";
 import doctorModel from "../../model/doctorModel";
 import serviceModel from "../../model/serviceModel";
 import couponModel from "../../model/couponModel";
-import { paginate,PaginationOptions } from "../../helper/pagination";
+import { paginate, PaginationOptions } from "../../helper/pagination";
 import { IAuthRepository } from "../../interface/admin/Auth.repository.interface";
 import sendMail from "../../config/emailConfig";
 
@@ -19,9 +19,9 @@ export class AuthRepository implements IAuthRepository {
       throw new Error(error.message);
     }
   }
-  async getAllUsers(options:PaginationOptions): Promise<any> {
+  async getAllUsers(options: PaginationOptions): Promise<any> {
     try {
-      const users = await paginate(userModel,options);
+      const users = await paginate(userModel, options);
       return users;
     } catch (error: any) {
       throw new Error(error.message);
@@ -91,9 +91,9 @@ export class AuthRepository implements IAuthRepository {
     }
   }
 
-  async existCoupon(code:string): Promise<any>{
-    try{
-      return await couponModel.findOne({code});
+  async existCoupon(code: string): Promise<any> {
+    try {
+      return await couponModel.findOne({ code });
     } catch (error: any) {
       throw new Error(error.message);
     }
@@ -109,9 +109,9 @@ export class AuthRepository implements IAuthRepository {
   }
 
   async editCoupon(id: string, couponData: any): Promise<any> {
-    try{
+    try {
       const coupon = await couponModel.findById(id);
-      if(!coupon) return null;
+      if (!coupon) return null;
       coupon.name = couponData.name;
       coupon.code = couponData.code;
       coupon.discount = couponData.discount;
@@ -119,7 +119,7 @@ export class AuthRepository implements IAuthRepository {
       coupon.expirationDate = couponData.expirationDate;
       coupon.isActive = couponData.isActive;
       return await coupon.save();
-    } catch (error: any){
+    } catch (error: any) {
       throw new Error(error.message);
     }
   }
@@ -139,15 +139,15 @@ export class AuthRepository implements IAuthRepository {
   }
 
   async toggleCoupon(id: string): Promise<any> {
-      try{
-        const coupon = await couponModel.findById(id);
-        if(!coupon) return null;
-        coupon.isActive = !coupon.isActive;
-        await coupon.save();
-        return coupon;
-      } catch (error: any){
-        throw new Error(error.message);
-      }
+    try {
+      const coupon = await couponModel.findById(id);
+      if (!coupon) return null;
+      coupon.isActive = !coupon.isActive;
+      await coupon.save();
+      return coupon;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
   }
 
   async getAllServices(): Promise<any> {
@@ -191,7 +191,7 @@ Team Healio`;
       await sendMail(doctor.email, "Account Approved", emailContent);
       return await doctorModel.findByIdAndUpdate(
         id,
-        { docStatus: "approved", isDoctor: true },
+        { docStatus: "approved", isDoctor: true, rejectionReason: "" },
         { new: true }
       );
     } catch (error: any) {
@@ -199,20 +199,21 @@ Team Healio`;
     }
   }
 
-  async rejectDoctor(id: string): Promise<any> {
+  async rejectDoctor(id: string, reason: string): Promise<any> {
     try {
       const doctor = await doctorModel.findById(id);
       if (!doctor) return null;
       const emailContent = `Hello Dr. ${doctor.name},
-
-We regret to inform you that your account has been rejected as a doctor in the Healio team.
-
-Thank you,
-Team Healio`;
+  
+  We regret to inform you that your account has been rejected as a doctor in the Healio team.
+  Because, ${reason}.
+  
+  Thank you,
+  Team Healio`;
       await sendMail(doctor.email, "Account Rejected", emailContent);
       return await doctorModel.findByIdAndUpdate(
         id,
-        { docStatus: "rejected", isDoctor: false },
+        { docStatus: "rejected", isDoctor: false, rejectionReason: reason },
         { new: true }
       );
     } catch (error: any) {

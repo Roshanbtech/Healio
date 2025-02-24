@@ -66,6 +66,7 @@ const DoctorDetails: React.FC = ({}) => {
                 src={image || "/default-avatar.png"}
                 alt={name || "Doctor profile"}
                 className="w-full h-full object-cover bg-green-100"
+                loading ="lazy"
               />
             </div>
 

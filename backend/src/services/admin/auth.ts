@@ -36,7 +36,6 @@ export class AuthService implements IAuthService {
 
       console.log(AdminData.password, "body");
 
-      // Compare the password directly, no hashing required
       if (
         AdminData.email !== adminEmail ||
         AdminData.password !== adminPassword
@@ -231,9 +230,9 @@ export class AuthService implements IAuthService {
     }
   }
 
-  async rejectDoctor(id: string): Promise<any> {
+  async rejectDoctor(id: string, reason: string): Promise<any> {
     try {
-      const doctor = await this.AuthRepository.rejectDoctor(id);
+      const doctor = await this.AuthRepository.rejectDoctor(id, reason);
       if (!doctor) {
         throw new Error("Doctor not rejected");
       }

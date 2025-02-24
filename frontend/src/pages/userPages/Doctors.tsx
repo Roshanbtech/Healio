@@ -140,6 +140,7 @@ const Doctors: React.FC = () => {
                         className="w-full h-full object-cover"
                         src={doctor.image || "/placeholder.svg"}
                         alt={doctor.name}
+                        loading="lazy"
                       />
                     </div>
                     <div className="p-6 bg-red-600 text-white">
