@@ -20,7 +20,8 @@ export const Google = () => {
       const { data } = await axiosInstance.post("/auth/google", { idToken });
 
       localStorage.setItem("authToken", data.accessToken);
-
+      localStorage.setItem("userId", data.user._id);
+      localStorage.setItem("image", data.user.image);
       const decodedToken = jwtDecode(data.accessToken) as { role: string };
       localStorage.setItem("userRole", decodedToken.role);
 
@@ -28,7 +29,7 @@ export const Google = () => {
       navigate("/home");
     } catch (error: any) {
       console.error("Google login error:", error);
-      toast.error(error.response?.data?.message || "Google login failed");
+      toast.error(error.response.data?.message || "Google login failed");
       navigate("/login");
     } finally {
       setIsLoading(false);

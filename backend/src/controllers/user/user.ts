@@ -139,4 +139,30 @@ export class UserController {
     }
   }
 
+  async chatImageUploads(req: Request, res: Response): Promise<any> {
+    try {
+      const { id } = req.params; 
+      const file = req.file as Express.Multer.File;
+
+      if (!id || !file) {
+        return res.status(HTTP_statusCode.BadRequest).json({
+          status: false,
+          message: "Chat ID and image file are required"
+        });
+      }
+
+      const result = await this.userService.chatImageUploads(id, file);
+      return res.status(HTTP_statusCode.OK).json({ 
+        status: true, 
+        result 
+      });
+    } catch (error: any) {
+      console.log("error in uploading chat image", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: "Something went wrong, please try again later."
+      });
+    }
+  }
+
 }

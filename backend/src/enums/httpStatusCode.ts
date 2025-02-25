@@ -3,6 +3,7 @@ enum HTTP_STATUS_CODE {
   OK = 200, //Request was successful
   Created = 201, //Resource was created successfully
   NotModified = 304, // Resource was not modified
+  Accepted = 202,
 
   //Redirection Responses
   MovedPermanently = 301, //Resource was moved permanently

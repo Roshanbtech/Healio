@@ -79,48 +79,32 @@ export class AuthController {
   }
 
   async handleGoogleLogin(req: Request, res: Response): Promise<any> {
-    try {
-      const { idToken } = req.body;
-      console.log("Received ID Token:", idToken);
-
-      const decodedToken = await admin.auth().verifyIdToken(idToken);
-      console.log("Decoded Token:", decodedToken);
-
-      const { email, name, uid, picture } = decodedToken;
-      let doctor = await Doctor.findOne({ email });
-      console.log(doctor);
-
-      if (!doctor) {
-        const doctorData = {
-          name,
-          email,
-          googleId: uid,
-          isVerified: true,
-          image: picture || undefined,
-        };
-
-        doctor = new Doctor(doctorData);
-        await doctor.save();
-
-        return res
-          .status(HTTP_statusCode.Created)
-          .json({ message: "Doctor created successfully" });
+      try {
+          const { idToken } = req.body;
+          console.log("Received ID Token:", idToken);
+  
+          const { doctor, isNewDoctor, accessToken, refreshToken } = await this.authService.handleGoogleLogin(idToken);
+  
+          res.cookie("refreshToken", refreshToken, {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === "production",
+              sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+              path: "/auth/refresh",
+              expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
+          });
+  
+          return res.status(isNewDoctor ? HTTP_statusCode.Created : HTTP_statusCode.Accepted).json({
+              message: isNewDoctor ? "Doctor created successfully" : "Doctor login successful",
+              accessToken,
+              doctor
+          });
+      } catch (error) {
+          console.error("Google Login Error:", error);
+          if (!res.headersSent) {
+              return res.status(HTTP_statusCode.InternalServerError).json({ message: "Authentication failed" });
+          }
       }
-
-      return res
-        .status(HTTP_statusCode.Created)
-        .json({ message: "Doctor Login Successful" });
-    } catch (error) {
-      console.error(error);
-
-      if (!res.headersSent) {
-        return res
-          .status(HTTP_statusCode.InternalServerError)
-          .json({ message: "Authentication failed" });
-      }
-    }
   }
-
   async sendForgotPasswordOtp(req: Request, res: Response): Promise<any> {
     try {
       const { email } = req.body;

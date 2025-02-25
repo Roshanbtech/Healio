@@ -1,13 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { assets } from "../../assets/assets";
 import axiosInstance from "../../utils/axiosInterceptors";
+import { Eye, EyeOff } from "lucide-react";
 
 const ResetPassword: React.FC = () => {
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
 
   const formik = useFormik({
     initialValues: {
@@ -25,14 +27,20 @@ const ResetPassword: React.FC = () => {
     onSubmit: async (values, { setSubmitting }) => {
       setSubmitting(true);
       try {
-        const response = await axiosInstance.post("/doctor/forgot-password/reset", {values, email: localStorage.getItem("doctorForgotPasswordEmail")});
+        const response = await axiosInstance.post("/doctor/forgot-password/reset", {
+          values,
+          email: localStorage.getItem("doctorForgotPasswordEmail"),
+        });
         console.log("Reset password response:", response.data);
 
         toast.success("Password reset successfully!");
         navigate("/doctor/login");
       } catch (error: any) {
         console.error("Error during password reset:", error);
-        toast.error(error.response?.data?.message || "An error occurred during password reset");
+        toast.error(
+          error.response?.data?.message ||
+            "An error occurred during password reset"
+        );
       } finally {
         setSubmitting(false);
       }
@@ -58,9 +66,9 @@ const ResetPassword: React.FC = () => {
                 Reset Password
               </h1>
               <form onSubmit={formik.handleSubmit} className="space-y-4">
-                <div>
+                <div className="relative">
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     name="newPassword"
                     placeholder="New Password"
                     value={formik.values.newPassword}
@@ -69,6 +77,16 @@ const ResetPassword: React.FC = () => {
                     className="w-full px-4 py-3.5 rounded-lg bg-[#e8f8e8] border-transparent focus:border-green-500 focus:bg-white focus:ring-0 transition-colors"
                     required
                   />
+                  <div
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5 text-gray-500" />
+                    ) : (
+                      <Eye className="h-5 w-5 text-gray-500" />
+                    )}
+                  </div>
                   {formik.touched.newPassword && formik.errors.newPassword && (
                     <p className="text-red-500 text-sm mt-1">
                       {formik.errors.newPassword}
@@ -76,9 +94,9 @@ const ResetPassword: React.FC = () => {
                   )}
                 </div>
 
-                <div>
+                <div className="relative">
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     name="confirmPassword"
                     placeholder="Confirm Password"
                     value={formik.values.confirmPassword}
@@ -87,11 +105,22 @@ const ResetPassword: React.FC = () => {
                     className="w-full px-4 py-3.5 rounded-lg bg-[#e8f8e8] border-transparent focus:border-green-500 focus:bg-white focus:ring-0 transition-colors"
                     required
                   />
-                  {formik.touched.confirmPassword && formik.errors.confirmPassword && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {formik.errors.confirmPassword}
-                    </p>
-                  )}
+                  <div
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5 text-gray-500" />
+                    ) : (
+                      <Eye className="h-5 w-5 text-gray-500" />
+                    )}
+                  </div>
+                  {formik.touched.confirmPassword &&
+                    formik.errors.confirmPassword && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.confirmPassword}
+                      </p>
+                    )}
                 </div>
 
                 <button
@@ -101,15 +130,6 @@ const ResetPassword: React.FC = () => {
                 >
                   {formik.isSubmitting ? "Submitting..." : "Submit"}
                 </button>
-
-                {/* <div className="text-center mt-6">
-                  <Link
-                    to="/forgot-password"
-                    className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-                  >
-                    Back to Forgot Password
-                  </Link>
-                </div> */}
               </form>
             </div>
           </div>

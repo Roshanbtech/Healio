@@ -14,6 +14,7 @@ export interface IAuthService {
   }): Promise<
     { accessToken: string; refreshToken: string, user:any } 
   >;
+  handleGoogleLogin(idToken: string): Promise<{ user: any; isNewUser: boolean; accessToken: string; refreshToken: string }> 
   sendForgotPasswordOtp(email: string): Promise<{ status: boolean; message: string }>;
   verifyForgotPasswordOtp(email: string, otp: string): Promise<{ status: boolean; message: string }>;
   resetPassword(email: string, password: string): Promise<{ status: boolean; message: string }>;

@@ -12,6 +12,7 @@ import {
   resendOtpUtil,
   resendOtp,
 } from "../../config/redisClient";
+import { admin } from "../../config/firebase";
 
 export class AuthService implements IAuthService {
   private AuthRepository: IAuthRepository;
@@ -238,5 +239,48 @@ export class AuthService implements IAuthService {
       console.error("Login error:", error);
       return { error: "Internal server error." };
     }
+  }
+
+  async handleGoogleLogin(idToken: string): Promise<{ doctor: any; isNewDoctor: boolean; accessToken: string; refreshToken: string }> {
+      try {
+          const decodedToken = await admin.auth().verifyIdToken(idToken);
+          console.log("Decoded Token:", decodedToken);
+  
+          const { email, name, uid, picture } = decodedToken;
+          const doctorData:{
+            name: string,
+            email: string | undefined,
+            googleId: string,
+            isVerified: boolean,
+            image?: string 
+          }={
+              name,
+              email,
+              googleId: uid,
+              isVerified: true,
+          }
+          if(picture){
+            doctorData.image = picture;
+          }
+         
+          const { doctor, isNewDoctor } = await this.AuthRepository.handleGoogleLogin(doctorData);
+  
+          const accessToken = jwt.sign(
+              { email, role: "doctor" },
+              process.env.ACCESS_TOKEN_SECRET!,
+              { expiresIn: "15m" }
+          );
+  
+          const refreshToken = jwt.sign(
+              { email, role: "doctor" },
+              process.env.REFRESH_TOKEN_SECRET!,
+              { expiresIn: "30d" }
+          );
+  
+          return { doctor, isNewDoctor, accessToken, refreshToken };
+      } catch (error: any) {
+          console.error("Google login error:", error);
+          throw new Error("Error handling Google login");
+      }
   }
 }

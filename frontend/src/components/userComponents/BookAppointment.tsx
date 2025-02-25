@@ -147,7 +147,7 @@ const BookAppointment: React.FC = () => {
         <div className="p-6">
           {/* Payment Methods */}
           <div className="mb-6">
-            {["stripe", "razorpay", "account"].map((method) => (
+            {["razorpay", "account"].map((method) => (
               <div key={method} className="mb-2">
                 <label className="flex items-center space-x-2 cursor-pointer">
                   <input

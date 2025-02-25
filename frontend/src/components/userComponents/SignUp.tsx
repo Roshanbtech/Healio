@@ -8,7 +8,6 @@ import { assets } from "../../assets/assets";
 import Otp from "../../components/userComponents/Otp";
 import { SignUpFormValues } from "../../interfaces/userInterface";
 import { Google } from "../common/userCommon/GoogleAuth";
-import axiosUrl from "../../utils/axios";
 import axiosInstance from "../../utils/axiosInterceptors";
 
 const Signup: React.FC = () => {

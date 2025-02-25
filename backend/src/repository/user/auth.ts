@@ -61,6 +61,32 @@ export class AuthRepository implements IAuthRepository {
       throw new Error("Database error occurred while checking user.");
     }
   }
+
+  async handleGoogleLogin(userData: any): Promise<{ user: any; isNewUser: boolean }> {
+    try {
+        const { email, name, googleId, isVerified, image } = userData;
+        let user = await userModel.findOne({ email });
+        let isNewUser = false;
+
+        if (!user) {
+            user = new userModel({
+                name,
+                email,
+                googleId,
+                isVerified,
+                image,
+            });
+            await user.save();
+            isNewUser = true;
+        }
+
+        return { user, isNewUser };
+    } catch (error: any) {
+        console.error("Error in Google login repository:", error);
+        throw new Error("DB error while handling Google login");
+    }
+}
+
   
   async updatePassword(email: string, hashedPassword: string): Promise<any> {
     try {

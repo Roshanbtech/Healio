@@ -162,4 +162,47 @@ export class DoctorController {
       });
     }
   }
+
+  async getUsers(req: Request, res: Response): Promise<any> {
+    try{
+      const users = await this.doctorService.getUsers();
+      return res.status(HTTP_statusCode.OK).json({
+        status: true,
+        data: { users },
+        message: "Users fetched successfully",
+      });
+    }catch(error: any){
+      console.error("Error in getUsers:", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: "Something went wrong, please try again later.",
+      });
+    }
+  }
+
+  async chatImageUploads(req: Request, res: Response): Promise<any> {
+    try {
+      const { id } = req.params; 
+      const file = req.file as Express.Multer.File;
+
+      if (!id || !file) {
+        return res.status(HTTP_statusCode.BadRequest).json({
+          status: false,
+          message: "Chat ID and image file are required"
+        });
+      }
+
+      const result = await this.doctorService.chatImageUploads(id, file);
+      return res.status(HTTP_statusCode.OK).json({ 
+        status: true, 
+        result 
+      });
+    } catch (error: any) {
+      console.log("error in uploading chat image", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: "Something went wrong, please try again later."
+      });
+    }
+  }
 }

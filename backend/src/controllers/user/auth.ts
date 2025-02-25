@@ -87,68 +87,31 @@ export class AuthController {
 
   async handleGoogleLogin(req: Request, res: Response): Promise<any> {
     try {
-      const { idToken } = req.body;
-      console.log("Received ID Token:", idToken);
+        const { idToken } = req.body;
+        console.log("Received ID Token:", idToken);
 
-      const decodedToken = await admin.auth().verifyIdToken(idToken);
-      console.log("Decoded Token:", decodedToken);
+        const { user, isNewUser, accessToken, refreshToken } = await this.authService.handleGoogleLogin(idToken);
 
-      const { email, name, uid, picture } = decodedToken;
-      let user = await User.findOne({ email });
-      let isNewUser = false;
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+            path: "/auth/refresh",
+            expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
+        });
 
-      if (!user) {
-        const userData = {
-          name,
-          email,
-          googleId: uid,
-          isVerified: true,
-          image: picture || undefined,
-        };
-
-        user = new User(userData);
-        await user.save();
-        isNewUser = true;
-      }
-
-      const accessToken = jwt.sign(
-        { email, role: "user" },
-        process.env.ACCESS_TOKEN_SECRET!,
-        { expiresIn: "15m" }
-      );
-
-      const refreshToken = jwt.sign(
-        { email, role: "user" },
-        process.env.REFRESH_TOKEN_SECRET!,
-        { expiresIn: "30d" }
-      );
-
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        path: "/auth/refresh",
-        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-      });
-
-      return res
-        .status(isNewUser ? HttpStatusCode.Created : HttpStatusCode.Accepted)
-        .json({
-          message: isNewUser
-            ? "User created successfully"
-            : "User login successful",
-          accessToken,
+        return res.status(isNewUser ? HttpStatusCode.Created : HttpStatusCode.Accepted).json({
+            message: isNewUser ? "User created successfully" : "User login successful",
+            accessToken,
+            user
         });
     } catch (error) {
-      console.error(error);
-
-      if (!res.headersSent) {
-        return res
-          .status(HttpStatusCode.InternalServerError)
-          .json({ message: "Authentication failed" });
-      }
+        console.error("Google Login Error:", error);
+        if (!res.headersSent) {
+            return res.status(HttpStatusCode.InternalServerError).json({ message: "Authentication failed" });
+        }
     }
-  }
+}
 
   async loginUser(req: Request, res: Response): Promise<any> {
     try {

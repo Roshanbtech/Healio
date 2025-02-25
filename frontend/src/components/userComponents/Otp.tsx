@@ -1,7 +1,7 @@
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
 import { assets } from "../../assets/assets";
-import { backendUrl } from "../../utils/backendUrl";
+// import { backendUrl } from "../../utils/backendUrl";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInterceptors";

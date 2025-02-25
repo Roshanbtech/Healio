@@ -15,6 +15,7 @@ export interface IAuthService {
     | { accessToken: string; refreshToken: string; doctorId: string }
     | { error: string }
   >;
+  handleGoogleLogin(idToken: string): Promise<{ doctor: any; isNewDoctor: boolean; accessToken: string; refreshToken: string }> 
   sendForgotPasswordOtp(
     email: string
   ): Promise<{ status: boolean; message: string }>;
@@ -43,4 +44,8 @@ export interface IDoctorService {
   changePassword(id: string, oldPassword: any, newPassword: any): Promise<any>;
   addSchedule(scheduleData: Schedule): Promise<any>; 
   getSchedule(id: string): Promise<any>;
+  getUsers(): Promise<any>;
+  chatImageUploads(
+    id: string,
+    file: Express.Multer.File): Promise<any>;
 }

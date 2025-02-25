@@ -160,5 +160,42 @@ async addSchedule(scheduleData: Schedule): Promise<any> {
        }
    }
    
+   async getUsers(): Promise<any> {
+     try{
+        const result = await this.DoctorRepository.getUsers();
+        return result;
+     }catch(error: any){
+       throw new Error(error.message);
+     }
+   }
+
+   async chatImageUploads(id: string, file: Express.Multer.File): Promise<any> {
+    try {
+      if (!file) {
+        throw new Error('No file provided');
+      }
+
+      const chatData = await this.DoctorRepository.uploadChatImage(id, file);
+
+      const imageUrl = await this.fileUploadService.uploadChatImage(id, file);
+
+      const messageData = {
+        ...chatData.newMessage,
+        message: imageUrl
+      };
+
+      const savedMessage = await this.DoctorRepository.saveChatImageMessage(id, messageData);
+
+      return {
+        chatId: chatData.chatId,
+        messageId: savedMessage._id,
+        imageUrl: imageUrl,
+        createdAt: savedMessage.createdAt
+      };
+    } catch (error: any) {
+      throw new Error(`Failed to upload chat image: ${error.message}`);
+    }
+  }
+  
   
 }

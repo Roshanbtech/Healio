@@ -1,18 +1,18 @@
 import React, { useState } from "react";
-// import { format } from "date-fns";
 import axiosInstance from "../../utils/axiosInterceptors";
+import { toast } from "react-toastify";
 import { ISchedule } from "../doctorComponents/Schedules";
 
-interface IBreak {
-  startTime: string;
-  endTime: string;
-}
+// interface IBreak {
+//   startTime: string;
+//   endTime: string;
+// }
 
-interface IException {
-  date: string;
-  isOff: boolean;
-  overrideSlotDuration?: number;
-}
+// interface IException {
+//   date: string;
+//   isOff: boolean;
+//   overrideSlotDuration?: number;
+// }
 
 interface IAddScheduleModalProps {
   onClose: () => void;
@@ -31,17 +31,17 @@ const AddScheduleModal: React.FC<IAddScheduleModalProps> = ({
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [defaultSlotDuration, setDefaultSlotDuration] = useState<number>(20);
-  const [breaks, setBreaks] = useState<IBreak[]>([]);
-  const [exceptions, setExceptions] = useState<IException[]>([]);
+  // const [breaks, setBreaks] = useState<IBreak[]>([]);
+  // const [exceptions, setExceptions] = useState<IException[]>([]);
 
   // For adding breaks
-  const [breakStart, setBreakStart] = useState("");
-  const [breakEnd, setBreakEnd] = useState("");
+  // const [breakStart, setBreakStart] = useState("");
+  // const [breakEnd, setBreakEnd] = useState("");
 
-  // For adding exceptions
-  const [exceptionDate, setExceptionDate] = useState("");
-  const [exceptionIsOff, setExceptionIsOff] = useState(false);
-  const [exceptionOverride, setExceptionOverride] = useState<number | "">("");
+  // // For adding exceptions
+  // const [exceptionDate, setExceptionDate] = useState("");
+  // const [exceptionIsOff, setExceptionIsOff] = useState(false);
+  // const [exceptionOverride, setExceptionOverride] = useState<number | "">("");
 
   // Recurrence-specific states:
   // The doctor selects recurrence days and an "until" datetime.
@@ -52,59 +52,108 @@ const AddScheduleModal: React.FC<IAddScheduleModalProps> = ({
 
   const handleToggleDay = (day: string) => {
     setRecurrenceDays((prev) =>
-      prev.includes(day)
-        ? prev.filter((d) => d !== day)
-        : [...prev, day]
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
     );
   };
 
-  const handleAddBreak = () => {
-    if (!breakStart || !breakEnd) return;
-    setBreaks((prev) => [
-      ...prev,
-      { startTime: breakStart, endTime: breakEnd },
-    ]);
-    setBreakStart("");
-    setBreakEnd("");
-  };
+  // const handleAddBreak = () => {
+  //   if (!breakStart || !breakEnd) return;
+  //   setBreaks((prev) => [
+  //     ...prev,
+  //     { startTime: breakStart, endTime: breakEnd },
+  //   ]);
+  //   setBreakStart("");
+  //   setBreakEnd("");
+  // };
 
-  const handleAddException = () => {
-    if (!exceptionDate) return;
-    setExceptions((prev) => [
-      ...prev,
-      {
-        date: exceptionDate,
-        isOff: exceptionIsOff,
-        overrideSlotDuration:
-          exceptionOverride === "" ? undefined : Number(exceptionOverride),
-      },
-    ]);
-    setExceptionDate("");
-    setExceptionIsOff(false);
-    setExceptionOverride("");
-  };
+  // const handleAddException = () => {
+  //   if (!exceptionDate) return;
+  //   setExceptions((prev) => [
+  //     ...prev,
+  //     {
+  //       date: exceptionDate,
+  //       isOff: exceptionIsOff,
+  //       overrideSlotDuration:
+  //         exceptionOverride === "" ? undefined : Number(exceptionOverride),
+  //     },
+  //   ]);
+  //   setExceptionDate("");
+  //   setExceptionIsOff(false);
+  //   setExceptionOverride("");
+  // };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validate start and end times for the schedule.
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    if (start >= end) {
+      toast.error("Start time must be before end time.");
+      return;
+    }
+
+    // For recurring schedules, validate recurrence fields.
     if (isRecurring) {
       if (!startTime || !recurrenceUntil || recurrenceDays.length === 0) {
-        alert("Please fill in all recurrence details.");
+        toast.error("Please fill in all recurrence details.");
+        return;
+      }
+      const recUntil = new Date(recurrenceUntil);
+      if (start >= recUntil) {
+        toast.error("Start time must be before the recurrence end date.");
         return;
       }
     }
 
-    // Send extra recurrence fields to the backend;
-    // the backend will generate the recurrenceRule from these.
+    // Validate each break.
+    // for (const brk of breaks) {
+    //   const brkStart = new Date(brk.startTime);
+    //   const brkEnd = new Date(brk.endTime);
+    //   if (brkStart >= brkEnd) {
+    //     toast.error("Each break's start time must be before its end time.");
+    //     return;
+    //   }
+    //   // Ensure break is within overall schedule time.
+    //   if (brkStart < start || brkEnd > end) {
+    //     toast.error("Break times must be within the schedule's start and end times.");
+    //     return;
+    //   }
+    // }
+
+    // (Optional) Validate exceptions if needed.
+    // For example, you could check if exception dates are within the schedule period.
+
+    // Pre-check: fetch existing schedules to see if one is already active.
+    try {
+      const checkRes = await axiosInstance.get(`/doctor/schedule/${doctor}`);
+      const existingSchedules: ISchedule[] = checkRes.data.data.schedule;
+      const now = new Date();
+      // Check if any active schedule exists (not expired).
+      const activeSchedule = existingSchedules.find(
+        (sched) => new Date(sched.endTime) > now
+      );
+      if (activeSchedule) {
+        toast.error(
+          "A schedule is already present and active. Please wait until it expires before adding a new one."
+        );
+        return;
+      }
+    } catch (error) {
+      console.error("Error checking existing schedules", error);
+      // Optionally, decide whether to continue if the check fails.
+    }
+
+    // Prepare schedule data; backend will generate recurrenceRule if needed.
     const scheduleData = {
       doctor,
       isRecurring,
       recurrenceRule: null, // backend will generate if recurring
-      startTime: startTime ? new Date(startTime).toISOString() : "",
-      endTime: endTime ? new Date(endTime).toISOString() : "",
+      startTime: startTime ? start.toISOString() : "",
+      endTime: endTime ? end.toISOString() : "",
       defaultSlotDuration,
-      breaks,
-      exceptions,
+      // breaks,
+      // exceptions,
       // Extra fields for recurrence generation on the backend:
       recurrenceDays,
       recurrenceUntil,
@@ -120,9 +169,10 @@ const AddScheduleModal: React.FC<IAddScheduleModalProps> = ({
       }
       onScheduleAdded(savedSchedule);
       onClose();
+      toast.success("Schedule added successfully!");
     } catch (error: any) {
       console.error("Error saving schedule:", error);
-      alert("Failed to save schedule. Please try again.");
+      toast.error("Failed to save schedule. Please try again.");
     }
   };
 
@@ -142,7 +192,9 @@ const AddScheduleModal: React.FC<IAddScheduleModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4 p-6 bg-white">
           {/* Recurring Toggle */}
           <div className="flex items-center gap-2">
-            <label className="block font-medium text-green-800">Recurring?</label>
+            <label className="block font-medium text-green-800">
+              Recurring?
+            </label>
             <input
               type="checkbox"
               checked={isRecurring}
@@ -159,7 +211,10 @@ const AddScheduleModal: React.FC<IAddScheduleModalProps> = ({
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {daysOfWeek.map((day) => (
-                    <label key={day} className="flex items-center gap-1 text-green-800">
+                    <label
+                      key={day}
+                      className="flex items-center gap-1 text-green-800"
+                    >
                       <input
                         type="checkbox"
                         checked={recurrenceDays.includes(day)}
@@ -227,94 +282,6 @@ const AddScheduleModal: React.FC<IAddScheduleModalProps> = ({
               }
               required
             />
-          </div>
-
-          {/* Breaks */}
-          <div>
-            <label className="block font-medium mb-1 text-green-800">Breaks</label>
-            <div className="flex gap-2 mb-2">
-              <input
-                type="datetime-local"
-                className="border p-2 rounded w-full bg-green-100 text-green-800"
-                placeholder="Break Start"
-                value={breakStart}
-                onChange={(e) => setBreakStart(e.target.value)}
-              />
-              <input
-                type="datetime-local"
-                className="border p-2 rounded w-full bg-green-100 text-green-800"
-                placeholder="Break End"
-                value={breakEnd}
-                onChange={(e) => setBreakEnd(e.target.value)}
-              />
-              <button
-                type="button"
-                className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-500 transition"
-                onClick={handleAddBreak}
-              >
-                Add
-              </button>
-            </div>
-            {breaks.length > 0 && (
-              <ul className="list-disc ml-6 text-sm text-green-800">
-                {breaks.map((b, idx) => (
-                  <li key={idx}>
-                    {b.startTime} - {b.endTime}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {/* Exceptions */}
-          <div>
-            <label className="block font-medium mb-1 text-green-800">Exceptions</label>
-            <div className="flex flex-col md:flex-row gap-2 mb-2">
-              <input
-                type="date"
-                className="border p-2 rounded w-full bg-green-100 text-green-800"
-                value={exceptionDate}
-                onChange={(e) => setExceptionDate(e.target.value)}
-              />
-              <label className="flex items-center gap-1 text-green-800">
-                <input
-                  type="checkbox"
-                  checked={exceptionIsOff}
-                  onChange={(e) => setExceptionIsOff(e.target.checked)}
-                />
-                <span>Is Off?</span>
-              </label>
-              <input
-                type="number"
-                className="border p-2 rounded w-full bg-green-100 text-green-800"
-                placeholder="Override Slot Duration"
-                value={exceptionOverride}
-                onChange={(e) =>
-                  setExceptionOverride(
-                    e.target.value === "" ? "" : Number(e.target.value)
-                  )
-                }
-              />
-              <button
-                type="button"
-                className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-500 transition"
-                onClick={handleAddException}
-              >
-                Add
-              </button>
-            </div>
-            {exceptions.length > 0 && (
-              <ul className="list-disc ml-6 text-sm text-green-800">
-                {exceptions.map((ex, idx) => (
-                  <li key={idx}>
-                    Date: {ex.date}, Off: {ex.isOff ? "Yes" : "No"}{" "}
-                    {ex.overrideSlotDuration
-                      ? `Override: ${ex.overrideSlotDuration} min`
-                      : ""}
-                  </li>
-                ))}
-              </ul>
-            )}
           </div>
 
           {/* Submit Button */}

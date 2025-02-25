@@ -12,6 +12,7 @@ import { createServer } from "http";
 
 //custom modules
 import connectDB from "./src/config/db"; //database connection
+import {initSocket} from "./src/config/socketioConfig";// socket.io configuration
 import userRoutes from "./src/routes/userRoutes"; //user routes
 import doctorRoutes from "./src/routes/doctorRoutes"; //doctor routes
 import adminRoutes from "./src/routes/adminRoutes"; //admin routes
@@ -57,7 +58,7 @@ app.use(
 //middleware to allow cross-origin requests
 
 const corsOptions = {
-  origin: "http://localhost:5173", // Frontend origin
+  origin: process.env.FRONTEND_URL, // Frontend origin
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], // Allowed HTTP methods
   allowedHeaders: ["Origin", "Content-Type", "Accept", "Authorization"], // Allowed headers
   credentials: true, // Allow credentials (cookies, authorization headers, etc.)
@@ -71,6 +72,9 @@ app.use("/auth", protectedRoutes);
 app.use("/admin", adminRoutes); //admin routes
 app.use("/doctor", doctorRoutes); //doctor routes
 app.use("/", userRoutes); //user routes
+
+// -----------------------SOCKET.IO-----------------------
+const io = initSocket(server);
 
 //-----------------------SERVER-----------------------
 //set port

@@ -10,6 +10,7 @@ import {
 import { IUserRepository } from "../../interface/user/User.repository.interface";
 import { paginate, PaginationOptions } from "../../helper/pagination";
 import bcrypt from "bcrypt";
+import ChatModel from "../../model/chatModel";
 
 export class UserRepository implements IUserRepository {
   async getDoctors(options: PaginationOptions): Promise<any> {
@@ -99,6 +100,53 @@ export class UserRepository implements IUserRepository {
       return schedules;
     } catch (error: any) {
       throw new Error(error.message);
+    }
+  }
+
+  async uploadChatImage(chatId: string, file: Express.Multer.File): Promise<any> {
+    try {
+      const chat = await ChatModel.findById(chatId);
+      
+      if (!chat) {
+        throw new Error('Chat not found');
+      }
+
+      const newMessage = {
+        sender: 'user',
+        message: '',
+        type: 'img',
+        deleted: false,
+        read: false
+      };
+
+      return {
+        chatId: chat._id,
+        doctorId: chat.doctorId,
+        userId: chat.userId,
+        newMessage
+      };
+    } catch (error) {
+      console.error('Error in chatImageUploads repository:', error);
+      throw error;
+    }
+  }
+
+  async saveChatImageMessage(chatId: string, messageData: any): Promise<any> {
+    try {
+      const updatedChat = await ChatModel.findByIdAndUpdate(
+        chatId,
+        { $push: { messages: messageData } },
+        { new: true }
+      );
+
+      if (!updatedChat) {
+        throw new Error('Failed to save chat message');
+      }
+
+      return updatedChat.messages[updatedChat.messages.length - 1];
+    } catch (error) {
+      console.error('Error saving chat image message:', error);
+      throw error;
     }
   }
   

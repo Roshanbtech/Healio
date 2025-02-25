@@ -87,4 +87,14 @@ route.get(
   "/schedule/:id",
   DoctorControllerInstance.getSchedule.bind(DoctorControllerInstance)
 )
+route.get(
+  "/users",
+  DoctorControllerInstance.getUsers.bind(DoctorControllerInstance)
+)
+route.post(
+  "/chatImgUploads/:id",
+  upload.single("image"),
+  DoctorControllerInstance.chatImageUploads.bind(DoctorControllerInstance)
+)
+
 export default route;

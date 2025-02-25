@@ -31,6 +31,19 @@ export interface IDoctorInfo {
   docStatus: string;
 }
 
+export interface UserProfile {
+  _id: ObjectId;
+  userId: string;
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  DOB: Date;
+  address: string;
+  image: string;
+  isBlocked: boolean;
+  isVerified: boolean;
+}
 export interface DoctorResult {
   _id: any;
   name: string;

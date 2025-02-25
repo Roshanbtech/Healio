@@ -102,6 +102,7 @@ const Profile: React.FC = () => {
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
     setEditProfile((prev) => (prev ? { ...prev, image: url } : null));
+    setProfile((prev) => (prev ? { ...prev, image: url } : null)); 
   };
 
   // Submit the Edit Profile form
@@ -111,7 +112,6 @@ const Profile: React.FC = () => {
     setIsSubmittingProfile(true);
     try {
       const formData = new FormData();
-      // Append all fields except image, id and userId
       for (const key in editProfile) {
         if (key === "image" || key === "id" || key === "userId") continue;
         formData.append(key, String(editProfile[key as keyof UserProfile] || ""));
@@ -119,15 +119,14 @@ const Profile: React.FC = () => {
       if (selectedImage) {
         formData.append("image", selectedImage);
       }
-
-      await axiosInstance.patch(`/editProfile/${user}`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      const response = await axiosInstance.patch(`/editProfile/${user}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
-
-      setProfile(editProfile);
+      const editedProfile = response.data?.data?.result
+      setEditProfile(editedProfile);
+      setProfile(editedProfile);
       toast.success("Profile updated successfully!");
+      localStorage.setItem("image",response.data?.data?.result?.image );
     } catch (error) {
       setError("Error updating profile");
       toast.error("Error updating profile");
@@ -135,7 +134,7 @@ const Profile: React.FC = () => {
       setIsSubmittingProfile(false);
     }
   };
-
+  
   // Handle Change Password input changes
   const handleChangePasswordInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

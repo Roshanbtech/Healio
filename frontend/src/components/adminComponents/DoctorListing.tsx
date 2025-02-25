@@ -269,7 +269,6 @@ const DoctorList: React.FC = () => {
                 </div>
               </div>
             </div>
-
             <div className="mb-4 border-b border-gray-200">
               <nav className="-mb-px flex space-x-8" aria-label="Tabs">
                 <button
@@ -304,7 +303,6 @@ const DoctorList: React.FC = () => {
                 </button>
               </nav>
             </div>
-
             <div className="bg-white rounded-lg shadow overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
@@ -430,7 +428,6 @@ const DoctorList: React.FC = () => {
                 </table>
               </div>
             </div>
-
             {/* Verification Modal (Approve/Reject with certificate carousel and rejection input) */}
             {showModal && selectedDoctor && (
               <div className="fixed inset-0 flex items-center justify-center z-50">
@@ -520,19 +517,22 @@ const DoctorList: React.FC = () => {
                 </div>
               </div>
             )}
-
             {/* Info Modal for Rejected/Approved/Pending Doctor Details */}
             {showInfoModal && selectedInfoDoctor && (
               <div className="fixed inset-0 flex items-center justify-center z-50">
+                {/* Overlay */}
                 <div
                   className="absolute inset-0 bg-black opacity-50"
                   onClick={closeInfoModal}
                 ></div>
+
+                {/* Draggable Modal */}
                 <Draggable handle=".modal-header">
                   <div
                     className="relative bg-white rounded-lg shadow-2xl p-4 w-80 max-w-md transform transition-all duration-300"
                     style={{ animation: "popIn 0.3s ease-out" }}
                   >
+                    {/* Header */}
                     <div className="modal-header cursor-move flex justify-between items-center bg-red-600 p-3 rounded-t-lg">
                       <h2 className="text-white text-lg font-bold">
                         Doctor Info
@@ -544,7 +544,10 @@ const DoctorList: React.FC = () => {
                         &times;
                       </button>
                     </div>
-                    <div className="p-3 space-y-3">
+
+                    {/* Content */}
+                    <div className="p-4 space-y-4">
+                      {/* Doctor Details */}
                       <div className="flex items-center space-x-4">
                         <div className="relative">
                           <img
@@ -582,6 +585,8 @@ const DoctorList: React.FC = () => {
                           </p>
                         </div>
                       </div>
+
+                      {/* Additional Details */}
                       <div className="space-y-1 text-xs">
                         <p>
                           <span className="font-semibold text-green-700">
@@ -635,12 +640,70 @@ const DoctorList: React.FC = () => {
                             </p>
                           )}
                       </div>
+
+                      {/* Certificate Carousel */}
+                      <div className="mt-4">
+                        <h3 className="text-sm font-bold text-gray-700 mb-2">
+                          Certificates
+                        </h3>
+                        {selectedInfoDoctor.certificate &&
+                        selectedInfoDoctor.certificate.length > 0 ? (
+                          <div className="relative">
+                            <iframe
+                              src={
+                                selectedInfoDoctor.certificate[currentCertIndex]
+                              }
+                              title={`Certificate ${currentCertIndex + 1}`}
+                              className="w-full h-48 border border-gray-300 rounded"
+                              frameBorder="0"
+                              allowFullScreen
+                            ></iframe>
+                            {selectedInfoDoctor.certificate.length > 1 && (
+                              <>
+                                <button
+                                  onClick={() =>
+                                    setCurrentCertIndex(
+                                      (prev) =>
+                                        (prev -
+                                          1 +
+                                          selectedInfoDoctor.certificate!
+                                            .length) %
+                                        selectedInfoDoctor.certificate!.length
+                                    )
+                                  }
+                                  className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-600 text-white p-2 rounded-full hover:bg-gray-700 transition"
+                                >
+                                  &#8249;
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    setCurrentCertIndex(
+                                      (prev) =>
+                                        (prev + 1) %
+                                        selectedInfoDoctor.certificate!.length
+                                    )
+                                  }
+                                  className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-600 text-white p-2 rounded-full hover:bg-gray-700 transition"
+                                >
+                                  &#8250;
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center h-48 bg-gray-200 rounded">
+                            <span className="text-gray-600">
+                              No Certificates Found
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </Draggable>
               </div>
             )}
-
+            ;
             {totalPages > 1 && (
               <div className="mt-6 flex justify-center">
                 <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">

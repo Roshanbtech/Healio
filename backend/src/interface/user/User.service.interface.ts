@@ -8,8 +8,10 @@ export interface IUserService {
   editUserProfile(
     id: string,
     data: any,
-    file: Express.Multer.File
-  ): Promise<any>;
+    file: Express.Multer.File): Promise<any>;
   changePassword(id: string, oldPassword: any, newPassword: any): Promise<any>;
   getAvailableSlots(id: string): Promise<any>;
+  chatImageUploads(
+    id: string,
+    file: Express.Multer.File): Promise<any>;
 }

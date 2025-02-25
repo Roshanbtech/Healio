@@ -1,37 +1,39 @@
-// import { configureStore } from '@reduxjs/toolkit';
-// import { persistStore, persistReducer } from 'redux-persist';
-// import storage from 'redux-persist/lib/storage';
-// import { combineReducers } from 'redux';
-// // import userSlice from './Slice/userSlice';
-// // import doctorSlice from './Slice/doctorSlice';
-// // import adminSlice from './Slice/adminSlice';
+import { configureStore } from "@reduxjs/toolkit";
+import authReducer from "./Slice/authSlice";
+import { persistStore, persistReducer } from "redux-persist";
+import createWebStorage from "redux-persist/lib/storage/createWebStorage";
 
-// // Define persist configuration
-// const persistConfig = {
-//   key: 'root',
-//   storage,
-// };
+const createNoopStorage = () => ({
+  getItem: () => Promise.resolve(null),
+  setItem: () => Promise.resolve(),
+  removeItem: () => Promise.resolve(),
+});
 
-// // Combine reducers
-// const rootReducer = combineReducers({
-//   user: userSlice,
-//   doctor: doctorSlice,
-//   admin: adminSlice,
-// });
+const storage =
+  typeof window !== "undefined"
+    ? createWebStorage("local")
+    : createNoopStorage();
 
-// // Create persisted reducer
-// const persistedReducer = persistReducer(persistConfig, rootReducer);
+const persistConfig = {
+  key: "root",
+  storage,
+};
 
-// // Configure store
-// const store = configureStore({
-//   reducer: persistedReducer,
-// });
+const persistedReducer = persistReducer(persistConfig, authReducer);
 
-// // Create persistor
-// const persistor = persistStore(store);
+const createStore = () => {
+  const store = configureStore({
+    reducer: {
+      auth: persistedReducer,
+    },
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware({
+        serializableCheck: false,
+      }),
+  });
 
-// export type RootState = ReturnType<typeof store.getState>;
-// export type AppDispatch = typeof store.dispatch;
+  const persistor = persistStore(store);
+  return { store, persistor };
+};
 
-// // Named exports
-// export { store, persistor };
+export default createStore;

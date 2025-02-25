@@ -15,4 +15,6 @@ export interface IUserRepository {
     editUserProfile(id: string, data: any): Promise<any>
     changePassword(id: string, oldPassword: any, newPassword: any): Promise<any>;
     getScheduleForDoctor(id: string): Promise<any>
+    uploadChatImage(chatId: string, file: Express.Multer.File): Promise<any>
+    saveChatImageMessage(chatId: string, messageData: any): Promise<any> 
 }

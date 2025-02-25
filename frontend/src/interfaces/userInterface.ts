@@ -22,3 +22,17 @@ export interface SignUpFormValues {
   password: string;
   confirmpassword: string;
 }
+
+export interface UserProfile {
+  _id: string;
+  userId: string;
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  DOB: Date;
+  address: string;
+  image: string;
+  isBlocked: boolean;
+  isVerified: boolean;
+}

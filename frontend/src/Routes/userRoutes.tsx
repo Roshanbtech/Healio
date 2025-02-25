@@ -13,13 +13,14 @@ import Profile from "../pages/userPages/Profile";
 import DoctorDetails from "../pages/userPages/DoctorDetails";
 import DoctorSlots from "../components/userComponents/AppointmentSlots";
 import BookAppointment from "../pages/userPages/BookAppointment";
+import Chat from "../components/userComponents/chats";
 // import Landing from "../pages/userPages/Landing";
 
 const UserRoutes = () => {
   const location = useLocation();
 
-  const showNavbar = !["/signup", "/login",'/otp','/forgot-password','/reset-password','/profile'].includes(location.pathname);
-  const showFooter = !["/signup", "/login",'/otp','/forgot-password','/reset-password'].includes(location.pathname);
+  const showNavbar = !["/signup", "/login",'/otp','/forgot-password','/reset-password','/profile','/chats'].includes(location.pathname);
+  const showFooter = !["/signup", "/login",'/otp','/forgot-password','/reset-password','/profile','/chats'].includes(location.pathname);
 
   return (
     <div className="mx-4 sm:mx-[10%]">
@@ -35,6 +36,7 @@ const UserRoutes = () => {
           <Route path="/doctorSlots/:id" element={<DoctorSlots/>}/>
           <Route path="/book-appointment/:id" element={<BookAppointment/>}/>
           <Route path="/profile" element={<Profile />} />
+          <Route path="/chats" element={<Chat />} />
         </Route>
         <Route path="/forgot-password" element={<ForgotPassword/>} />
         <Route path="/reset-password" element={<ResetPassword/>} />

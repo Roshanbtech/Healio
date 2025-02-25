@@ -2,14 +2,14 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { format, startOfDay } from "date-fns";
 import axiosInstance from "../../utils/axiosInterceptors";
-import { Clock, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { Clock, CheckCircle} from "lucide-react";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
 interface IAvailableSlot {
   slot: string;
-  datetime: string; // ISO string
+  datetime: string; 
 }
 
 interface IDoctor {

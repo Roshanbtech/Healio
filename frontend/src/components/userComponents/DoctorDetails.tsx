@@ -4,8 +4,8 @@ import {
   Award,
   GraduationCap,
   Building2,
-  Info,
-  Star,
+  // Info,
+  // Star,
   CheckCircle,
 } from "lucide-react";
 import { useParams } from "react-router-dom";

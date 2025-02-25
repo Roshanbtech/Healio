@@ -6,6 +6,7 @@ import { IAuthService } from "../../interface/user/Auth.service.interface";
 import { IAuthRepository } from "../../interface/user/Auth.repository.interface";
 //import user schema
 import sendMail from "../../config/emailConfig";
+import { admin } from "../../config/firebase";
 import {
   otpSetData,
   getOtpByEmail,
@@ -239,6 +240,49 @@ export class AuthService implements IAuthService {
       throw error;
     }
   }
+
+  async handleGoogleLogin(idToken: string): Promise<{ user: any; isNewUser: boolean; accessToken: string; refreshToken: string }> {
+    try {
+        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        console.log("Decoded Token:", decodedToken);
+
+        const { email, name, uid, picture } = decodedToken;
+        const userData:{
+          name: string,
+          email: string | undefined,
+          googleId: string,
+          isVerified: boolean,
+          image?: string 
+        }={
+            name,
+            email,
+            googleId: uid,
+            isVerified: true,
+        }
+        if(picture){
+          userData.image = picture;
+        }
+       
+        const { user, isNewUser } = await this.AuthRepository.handleGoogleLogin(userData);
+
+        const accessToken = jwt.sign(
+            { email, role: "user" },
+            process.env.ACCESS_TOKEN_SECRET!,
+            { expiresIn: "15m" }
+        );
+
+        const refreshToken = jwt.sign(
+            { email, role: "user" },
+            process.env.REFRESH_TOKEN_SECRET!,
+            { expiresIn: "30d" }
+        );
+
+        return { user, isNewUser, accessToken, refreshToken };
+    } catch (error: any) {
+        console.error("Google login error:", error);
+        throw new Error("Error handling Google login");
+    }
+}
 
   async logout(refreshToken: string): Promise<any> {
     try {

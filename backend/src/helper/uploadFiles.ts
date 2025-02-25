@@ -62,4 +62,28 @@ export class awsFileUpload {
     
     return profileUrl.split("?")[0];
   }
+
+  async uploadChatImage(chatId: string, image: Express.Multer.File): Promise<string> {
+    try {
+      console.log('Helper - Chat ID:', chatId);
+      const chatImageKey = `chat/${chatId}/images/`;
+      console.log('Helper - Chat Image Key:', chatImageKey);
+
+      const uploadedKey = await this.awsConfig.uploadFileToS3(chatImageKey, image);
+      console.log('Helper - Uploaded Key:', uploadedKey);
+
+      const imageUrl = await this.awsConfig.getfile(
+        uploadedKey.split("/").pop()!,
+        chatImageKey
+      );
+      console.log('Helper - Image URL:', imageUrl);
+
+      return imageUrl.split("?")[0];
+    } catch (error) {
+      console.error('Error uploading chat image:', error);
+      throw error;
+    }
+  }
+
+  
 }

@@ -93,6 +93,11 @@ route.get(
   UserControllerInstance.getAvailableSlots.bind(UserControllerInstance)
 );
 route.post(
+  "/chatImgUploads/:id",
+  upload.single("image"),
+  UserControllerInstance.chatImageUploads.bind(UserControllerInstance)
+)
+route.post(
   "/logout",
   AuthControllerInstance.logoutUser.bind(AuthControllerInstance)
 );
@@ -100,6 +105,7 @@ route.get(
   "/coupons",
   BookingControllerInstance.getCoupons.bind(BookingControllerInstance)
 );
+
 
 // route.get(
 //   "/bookings",
