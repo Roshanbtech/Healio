@@ -72,7 +72,7 @@ export class AuthService implements IAuthService {
     }
   }
 
-  async getUser(options:PaginationOptions): Promise<any> {
+  async getUser(options: PaginationOptions): Promise<any> {
     try {
       const users = await this.AuthRepository.getAllUsers(options);
       if (!users) {
@@ -183,18 +183,18 @@ export class AuthService implements IAuthService {
   }
 
   async toggleCoupon(id: string): Promise<any> {
-      try{
-        const coupon = await this.AuthRepository.toggleCoupon(id);
-        if(!coupon){
-          throw new Error("Coupon not updated")
-        }
-        const message = coupon.isActive
-        ? "Coupon enabled successfully"
-        : "Coupon disabled successfully"
-        return {status:true, message}
-      }catch(error: any){
-        throw new Error(error.message);
+    try {
+      const coupon = await this.AuthRepository.toggleCoupon(id);
+      if (!coupon) {
+        throw new Error("Coupon not updated");
       }
+      const message = coupon.isActive
+        ? "Coupon enabled successfully"
+        : "Coupon disabled successfully";
+      return { status: true, message };
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
   }
 
   async getService(): Promise<any> {
@@ -242,16 +242,14 @@ export class AuthService implements IAuthService {
     }
   }
 
-  async createCoupon(
-   couponData: any
-  ): Promise<any> {
+  async createCoupon(couponData: any): Promise<any> {
     try {
-     const { code } = couponData;
-     let existingCode = await this.AuthRepository.existCoupon(code);
-     if(existingCode){
-       throw new Error("Coupon code already exists");
-     }
-     const coupon = await this.AuthRepository.createCoupon(couponData);
+      const { code } = couponData;
+      let existingCode = await this.AuthRepository.existCoupon(code);
+      if (existingCode) {
+        throw new Error("Coupon code already exists");
+      }
+      const coupon = await this.AuthRepository.createCoupon(couponData);
       if (!coupon) {
         return { status: false, message: "Coupon not created" };
       }
@@ -262,15 +260,15 @@ export class AuthService implements IAuthService {
   }
 
   async editCoupon(id: string, couponData: any): Promise<any> {
-      try{
-        const coupon = await this.AuthRepository.editCoupon(id, couponData);
-        if(!coupon){
-          throw new Error("Coupon not updated")
-        }
-        return {status:true, message:"Coupon updated successfully", coupon}
-      }catch(error: any){
-        throw new Error(error.message);
+    try {
+      const coupon = await this.AuthRepository.editCoupon(id, couponData);
+      if (!coupon) {
+        throw new Error("Coupon not updated");
       }
+      return { status: true, message: "Coupon updated successfully", coupon };
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
   }
 
   async getCoupons(): Promise<any> {

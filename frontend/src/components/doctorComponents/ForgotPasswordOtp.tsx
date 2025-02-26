@@ -1,114 +1,123 @@
-"use client"
+"use client";
 
-import React, { useState, useRef, useEffect } from "react"
-import { assets } from "../../assets/assets"
-import { backendUrl } from "../../utils/backendUrl"
-import { toast } from "react-toastify"
-import { useNavigate } from "react-router-dom"
+import React, { useState, useRef, useEffect } from "react";
+import { assets } from "../../assets/assets";
+import { backendUrl } from "../../utils/backendUrl";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 interface ForgotPasswordOTPProps {
-  email: string
+  email: string;
 }
 
 const ForgotPasswordOtp: React.FC<ForgotPasswordOTPProps> = ({ email }) => {
-  const [otp, setOtp] = useState<string[]>(["", "", "", ""])
-  const [timeLeft, setTimeLeft] = useState(60)
-  const [canResend, setCanResend] = useState(false)
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
-  const navigate = useNavigate()
+  const [otp, setOtp] = useState<string[]>(["", "", "", ""]);
+  const [timeLeft, setTimeLeft] = useState(60);
+  const [canResend, setCanResend] = useState(false);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (timeLeft === 0) {
-      setCanResend(true)
-      return
+      setCanResend(true);
+      return;
     }
     const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1)
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [timeLeft])
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [timeLeft]);
 
   const handleChange = (index: number, value: string) => {
-    if (!/^\d*$/.test(value)) return
+    if (!/^\d*$/.test(value)) return;
 
     if (value.length > 1) {
-      value = value[0]
+      value = value[0];
     }
 
-    const newOtp = [...otp]
-    newOtp[index] = value
-    setOtp(newOtp)
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
 
     // Move to next input if value is entered
     if (value && index < otp.length - 1) {
-      inputRefs.current[index + 1]?.focus()
+      inputRefs.current[index + 1]?.focus();
     }
-  }
+  };
 
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
     // Move to previous input on backspace if current input is empty
     if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus()
+      inputRefs.current[index - 1]?.focus();
     }
-  }
+  };
 
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault()
-    const pastedData = e.clipboardData.getData("text")
-    const pastedNumbers = pastedData.replace(/\D/g, "").split("").slice(0, 4)
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text");
+    const pastedNumbers = pastedData.replace(/\D/g, "").split("").slice(0, 4);
 
-    const newOtp = [...otp]
+    const newOtp = [...otp];
     pastedNumbers.forEach((num, idx) => {
-      newOtp[idx] = num
-    })
-    setOtp(newOtp)
+      newOtp[idx] = num;
+    });
+    setOtp(newOtp);
 
     // Focus the next empty input or the last one
-    const lastFilledIndex = newOtp.findIndex((val) => !val)
-    const focusIndex = lastFilledIndex === -1 ? otp.length - 1 : lastFilledIndex
-    inputRefs.current[focusIndex]?.focus()
-  }
+    const lastFilledIndex = newOtp.findIndex((val) => !val);
+    const focusIndex =
+      lastFilledIndex === -1 ? otp.length - 1 : lastFilledIndex;
+    inputRefs.current[focusIndex]?.focus();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const otpValue = otp.join("")
+    e.preventDefault();
+    const otpValue = otp.join("");
     if (otpValue.length === 4) {
-      console.log("OTP submitted:", otpValue)
+      console.log("OTP submitted:", otpValue);
       try {
-        const response = await fetch(`${backendUrl}/doctor/forgot-password/verifyOtp`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email, otp: otpValue }),
-          credentials: "include",
-        })
+        const response = await fetch(
+          `${backendUrl}/doctor/forgot-password/verifyOtp`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email, otp: otpValue }),
+            credentials: "include",
+          }
+        );
 
-        const data = await response.json()
-        console.log(data, "data")
+        const data = await response.json();
+        console.log(data, "data");
         if (!response.ok) {
-          throw new Error(data.message || "OTP verification failed")
+          throw new Error(data.message || "OTP verification failed");
         }
 
         if (data.status === true) {
-          toast.success(data.message || "OTP verified successfully!")
+          toast.success(data.message || "OTP verified successfully!");
           // Navigate to reset password page (pass the email if needed)
-          navigate("/doctor/reset-password", { state: { email } })
+          navigate("/doctor/reset-password", { state: { email } });
         } else {
-          toast.error(data.message || "OTP verification failed")
+          toast.error(data.message || "OTP verification failed");
         }
       } catch (error: any) {
-        console.error("Error verifying OTP:", error)
-        toast.error(error.message || "An error occurred during OTP verification")
+        console.error("Error verifying OTP:", error);
+        toast.error(
+          error.message || "An error occurred during OTP verification"
+        );
       }
     }
-  }
+  };
 
   const handleResend = async () => {
     if (canResend) {
-      setTimeLeft(60) // Reset timer
-      setCanResend(false) // Disable resend until timer is up
-      setOtp(["", "", "", ""]) // Clear the OTP fields
+      setTimeLeft(60); // Reset timer
+      setCanResend(false); // Disable resend until timer is up
+      setOtp(["", "", "", ""]); // Clear the OTP fields
 
       try {
         const response = await fetch(`${backendUrl}/doctor/resendOtp`, {
@@ -118,20 +127,20 @@ const ForgotPasswordOtp: React.FC<ForgotPasswordOTPProps> = ({ email }) => {
           },
           body: JSON.stringify({ email }),
           credentials: "include",
-        })
+        });
 
-        const data = await response.json()
+        const data = await response.json();
         if (response.ok) {
-          toast.success(data.message || "OTP resent successfully!")
+          toast.success(data.message || "OTP resent successfully!");
         } else {
-          toast.error(data.message || "Failed to resend OTP")
+          toast.error(data.message || "Failed to resend OTP");
         }
       } catch (error) {
-        console.error("Error resending OTP:", error)
-        toast.error("An error occurred while resending OTP")
+        console.error("Error resending OTP:", error);
+        toast.error("An error occurred while resending OTP");
       }
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col">
@@ -152,7 +161,8 @@ const ForgotPasswordOtp: React.FC<ForgotPasswordOTPProps> = ({ email }) => {
             <div className="max-w-[400px] mx-auto">
               <h2 className="text-2xl font-semibold mb-1">Enter OTP</h2>
               <p className="text-gray-600 text-sm mb-6">
-                Enter the OTP sent to your email. The OTP is valid for a limited time.
+                Enter the OTP sent to your email. The OTP is valid for a limited
+                time.
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -216,7 +226,7 @@ const ForgotPasswordOtp: React.FC<ForgotPasswordOTPProps> = ({ email }) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ForgotPasswordOtp
+export default ForgotPasswordOtp;

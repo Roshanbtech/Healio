@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import React, { useState } from "react";
 import { Sidebar } from "../common/doctorCommon/Sidebar";
 import { DashboardStats } from "../common/doctorCommon/Dashboard-stats";
@@ -9,8 +9,9 @@ const Home: React.FC = () => {
 
   return (
     <div className="min-h-screen flex bg-white">
-      
-      <div className={`${sidebarCollapsed ? "w-16" : "w-64"} bg-white shadow-lg`}>
+      <div
+        className={`${sidebarCollapsed ? "w-16" : "w-64"} bg-white shadow-lg`}
+      >
         <Sidebar onCollapse={setSidebarCollapsed} />
       </div>
 

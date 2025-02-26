@@ -1,11 +1,11 @@
-import SignUpPage from '../../components/doctorComponents/SignUp.tsx';
+import SignUpPage from "../../components/doctorComponents/SignUp.tsx";
 
 const SignUp = () => {
   return (
     <>
-        <SignUpPage />
+      <SignUpPage />
     </>
-  )
-}
+  );
+};
 
-export default SignUp
+export default SignUp;

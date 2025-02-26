@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import HTTP_statusCode from "../../enums/httpStatusCode";
 import { IDoctorService } from "../../interface/doctor/Auth.service.interface";
-import Doctor from "../../model/doctorModel";
 
 export class DoctorController {
   private doctorService: IDoctorService;
@@ -87,11 +86,11 @@ export class DoctorController {
     try {
       const { id } = req.params;
       const data = req.body;
-      const file = req.file as Express.Multer.File; 
-      console.log('Controller - Data:', data, 'ID:', id);
-      
+      const file = req.file as Express.Multer.File;
+      console.log("Controller - Data:", data, "ID:", id);
+
       const result = await this.doctorService.editDoctorProfile(id, data, file);
-      
+
       return res.status(HTTP_statusCode.OK).json({
         status: true,
         data: { result },
@@ -105,18 +104,22 @@ export class DoctorController {
       });
     }
   }
-  
+
   async changePassword(req: Request, res: Response): Promise<any> {
-    try{
-       const { id} = req.params;
-       const { oldPassword, newPassword } = req.body;
-       const result = await this.doctorService.changePassword(id, oldPassword, newPassword);
-       return res.status(HTTP_statusCode.OK).json({
-          status: true,
-          data: { result },
-          message: "Password updated successfully",
-        });
-    }catch(error: any){
+    try {
+      const { id } = req.params;
+      const { oldPassword, newPassword } = req.body;
+      const result = await this.doctorService.changePassword(
+        id,
+        oldPassword,
+        newPassword
+      );
+      return res.status(HTTP_statusCode.OK).json({
+        status: true,
+        data: { result },
+        message: "Password updated successfully",
+      });
+    } catch (error: any) {
       console.error("Error in changePassword:", error);
       return res.status(HTTP_statusCode.InternalServerError).json({
         status: false,
@@ -136,7 +139,7 @@ export class DoctorController {
         data: { result },
         message: "Schedule added successfully",
       });
-    }catch(error: any){
+    } catch (error: any) {
       console.error("Error in addSchedule:", error);
       return res.status(HTTP_statusCode.InternalServerError).json({
         status: false,
@@ -146,7 +149,7 @@ export class DoctorController {
   }
 
   async getSchedule(req: Request, res: Response): Promise<any> {
-    try{
+    try {
       const { id } = req.params;
       const schedule = await this.doctorService.getSchedule(id);
       return res.status(HTTP_statusCode.OK).json({
@@ -154,7 +157,7 @@ export class DoctorController {
         data: { schedule },
         message: "Schedule fetched successfully",
       });
-    }catch(error: any){
+    } catch (error: any) {
       console.error("Error in getSchedule:", error);
       return res.status(HTTP_statusCode.InternalServerError).json({
         status: false,
@@ -164,14 +167,14 @@ export class DoctorController {
   }
 
   async getUsers(req: Request, res: Response): Promise<any> {
-    try{
+    try {
       const users = await this.doctorService.getUsers();
       return res.status(HTTP_statusCode.OK).json({
         status: true,
         data: { users },
         message: "Users fetched successfully",
       });
-    }catch(error: any){
+    } catch (error: any) {
       console.error("Error in getUsers:", error);
       return res.status(HTTP_statusCode.InternalServerError).json({
         status: false,
@@ -182,26 +185,26 @@ export class DoctorController {
 
   async chatImageUploads(req: Request, res: Response): Promise<any> {
     try {
-      const { id } = req.params; 
+      const { id } = req.params;
       const file = req.file as Express.Multer.File;
 
       if (!id || !file) {
         return res.status(HTTP_statusCode.BadRequest).json({
           status: false,
-          message: "Chat ID and image file are required"
+          message: "Chat ID and image file are required",
         });
       }
 
       const result = await this.doctorService.chatImageUploads(id, file);
-      return res.status(HTTP_statusCode.OK).json({ 
-        status: true, 
-        result 
+      return res.status(HTTP_statusCode.OK).json({
+        status: true,
+        result,
       });
     } catch (error: any) {
       console.log("error in uploading chat image", error);
       return res.status(HTTP_statusCode.InternalServerError).json({
         status: false,
-        message: "Something went wrong, please try again later."
+        message: "Something went wrong, please try again later.",
       });
     }
   }

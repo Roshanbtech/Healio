@@ -2,7 +2,11 @@ import doctorModel from "../../model/doctorModel";
 import serviceModel from "../../model/serviceModel";
 import slotModel from "../../model/slotModel";
 import { IDoctorRepository } from "../../interface/doctor/Auth.repository.interface";
-import { Service, Schedule, UserProfile } from "../../interface/doctorInterface/Interface";
+import {
+  Service,
+  Schedule,
+  UserProfile,
+} from "../../interface/doctorInterface/Interface";
 import bcrypt from "bcrypt";
 import userModel from "../../model/userModel";
 import ChatModel from "../../model/chatModel";
@@ -130,30 +134,33 @@ export class DoctorRepository implements IDoctorRepository {
     }
   }
 
-  async uploadChatImage(chatId: string, file: Express.Multer.File): Promise<any> {
+  async uploadChatImage(
+    chatId: string,
+    file: Express.Multer.File
+  ): Promise<any> {
     try {
       const chat = await ChatModel.findById(chatId);
-      
+
       if (!chat) {
-        throw new Error('Chat not found');
+        throw new Error("Chat not found");
       }
 
       const newMessage = {
-        sender: 'doctor',
-        message: '',
-        type: 'img',
+        sender: "doctor",
+        message: "",
+        type: "img",
         deleted: false,
-        read: false
+        read: false,
       };
 
       return {
         chatId: chat._id,
         doctorId: chat.doctorId,
         userId: chat.userId,
-        newMessage
+        newMessage,
       };
     } catch (error) {
-      console.error('Error in chatImageUploads repository:', error);
+      console.error("Error in chatImageUploads repository:", error);
       throw error;
     }
   }
@@ -167,12 +174,12 @@ export class DoctorRepository implements IDoctorRepository {
       );
 
       if (!updatedChat) {
-        throw new Error('Failed to save chat message');
+        throw new Error("Failed to save chat message");
       }
 
       return updatedChat.messages[updatedChat.messages.length - 1];
     } catch (error) {
-      console.error('Error saving chat image message:', error);
+      console.error("Error saving chat image message:", error);
       throw error;
     }
   }

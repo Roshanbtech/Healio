@@ -78,7 +78,6 @@ route.patch(
 route.patch(
   "/editCoupon/:id",
   AuthControllerInstance.editCoupon.bind(AuthControllerInstance)
-)
-
+);
 
 export default route;

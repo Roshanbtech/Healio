@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, Document } from "mongoose";
 
 export interface Iuser {
   _id: string;
@@ -17,44 +17,22 @@ export interface ICoupon extends Document {
 
 const couponSchema = new Schema<ICoupon>(
   {
-    name: {
-      type: String,
-      required: true,
-    },
-    code: {
-      type: String,
-      required: true,
-      unique: true
-    },
-    discount: {
-      type: Number,
-      required: true,
-    },
-    startDate: {
-      type: Date,
-      required: true,
-    },
-    expirationDate: {
-      type: Date,
-      required: true,
-    },
-    isActive: {
-      type: Boolean,
-      default: false,
-    },
-    usedBy: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-    },
+    name: { type: String, required: true },
+    code: { type: String, required: true, unique: true },
+    discount: { type: Number, required: true },
+    startDate: { type: Date, required: true },
+    expirationDate: { type: Date, required: true },
+    isActive: { type: Boolean, default: false },
+    usedBy: { type: Schema.Types.ObjectId, ref: "User" },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
+
 couponSchema.path("expirationDate").validate(function (value: Date) {
   return value > this.startDate;
 }, "Expiration date must be after the start date.");
+
 couponSchema.index({ expirationDate: 1 }, { expireAfterSeconds: 0 });
 
-const CouponS = model<ICoupon>("Coupon", couponSchema);
-export default CouponS;
+const CouponModel = model<ICoupon>("Coupon", couponSchema);
+export default CouponModel;

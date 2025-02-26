@@ -4,7 +4,7 @@ import HTTP_statusCode from "../enums/httpStatusCode";
 
 const refresh = (req: Request, res: Response): any => {
   console.log("Incoming Cookies Object:", req.cookies); // Debugging all cookies
-  const refreshToken = req.cookies.refreshToken; 
+  const refreshToken = req.cookies.refreshToken;
   console.log("Extracted Refresh Token:", refreshToken);
 
   if (!refreshToken) {
@@ -24,7 +24,7 @@ const refresh = (req: Request, res: Response): any => {
     console.log("Decoded Refresh Token:", decoded);
 
     const accessToken = jwt.sign(
-      { email: decoded.email, role: decoded.role }, 
+      { email: decoded.email, role: decoded.role },
       process.env.ACCESS_TOKEN_SECRET!,
       { expiresIn: "15m" }
     );
@@ -45,6 +45,5 @@ const refresh = (req: Request, res: Response): any => {
     });
   }
 };
-
 
 export default refresh;

@@ -139,10 +139,7 @@ const Profile: React.FC = () => {
           const specialityId = specialityObj?._id || specialityObj?.id || "";
           formData.append(key, specialityId);
         } else {
-          formData.append(
-            key,
-            String(editProfile[key as keyof DoctorProfile])
-          );
+          formData.append(key, String(editProfile[key as keyof DoctorProfile]));
         }
       }
 
@@ -165,7 +162,9 @@ const Profile: React.FC = () => {
   };
 
   // Handle Change Password input
-  const handleChangePasswordInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangePasswordInput = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const { name, value } = e.target;
     setChangePassword((prev) => ({ ...prev, [name]: value }));
   };
@@ -304,7 +303,9 @@ const Profile: React.FC = () => {
                     {profile?.hospital || "N/A"}
                   </p>
                   <p>
-                    <span className="font-semibold text-green-700">Degree:</span>{" "}
+                    <span className="font-semibold text-green-700">
+                      Degree:
+                    </span>{" "}
                     {profile?.degree || "N/A"}
                   </p>
                   <p>

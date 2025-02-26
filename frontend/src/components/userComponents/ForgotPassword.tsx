@@ -51,7 +51,6 @@ const ForgotPassword: React.FC = () => {
       setIsLoading(true);
       const result = await handleForgotPassword(values.email);
       if (result?.status) {
-        // If OTP is sent successfully, store the email and show the OTP component
         setEmailData(values.email);
         setOtpPage(true);
       }

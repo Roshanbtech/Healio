@@ -4,7 +4,6 @@ import jwt from "jsonwebtoken";
 import { userType } from "../../interface/userInterface/interface";
 import { IAuthService } from "../../interface/user/Auth.service.interface";
 import { IAuthRepository } from "../../interface/user/Auth.repository.interface";
-//import user schema
 import sendMail from "../../config/emailConfig";
 import { admin } from "../../config/firebase";
 import {
@@ -146,19 +145,19 @@ export class AuthService implements IAuthService {
     if (!userExist.existEmail) {
       throw new Error("Email not found");
     }
-  
+
     const otp = await resendOtpUtil(email);
     if (!otp) {
       throw new Error("OTP not sent");
     }
-  
+
     const subject = "OTP Verification";
     const text = `Hello,\n\nYour OTP for password reset is ${otp}. It is valid for 1 minute.\n\nThank you.`;
     await sendMail(email, subject, text);
-  
+
     return { status: true, message: "OTP sent successfully" };
   }
-  
+
   async verifyForgotPasswordOtp(email: string, otp: string): Promise<any> {
     const storedOtp = await getOtpByEmail(email);
     if (!storedOtp) {
@@ -167,37 +166,37 @@ export class AuthService implements IAuthService {
     if (storedOtp !== otp) {
       throw new Error("Incorrect OTP");
     }
-  
+
     await otpSetData(email, "");
     return { status: true, message: "OTP verified successfully" };
   }
-  
+
   async resetPassword(email: string, password: string): Promise<any> {
     const userExist = await this.AuthRepository.existUser(email);
     console.log("User exist:", userExist);
     if (!userExist.existEmail) {
       throw new Error("Email not found");
     }
-   console.log("Password:",
-    password,email);
+    console.log("Password:", password, email);
     const saltRounds: number = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
-    console.log("Hashed password:", hashedPassword,password);
-  
-    const response = await this.AuthRepository.updatePassword(email, hashedPassword);
+    console.log("Hashed password:", hashedPassword, password);
+
+    const response = await this.AuthRepository.updatePassword(
+      email,
+      hashedPassword
+    );
     console.log("Response:", response);
     if (!response || response.modifiedCount === 0) {
       throw new Error("Password not updated");
     }
     return { status: true, message: "Password updated successfully" };
   }
-  
+
   async login(userData: {
     email: string;
     password: string;
-  }): Promise<
-    { accessToken: string; refreshToken: string, user: any }
-  > {
+  }): Promise<{ accessToken: string; refreshToken: string; user: any }> {
     try {
       const { email, password } = userData;
       const check = await this.AuthRepository.existUser(email);
@@ -211,7 +210,7 @@ export class AuthService implements IAuthService {
         throw new Error("User not found.");
       }
 
-      if(user.isBlocked){
+      if (user.isBlocked) {
         throw new Error("User is blocked. Ask admin for access.");
       }
 
@@ -241,48 +240,57 @@ export class AuthService implements IAuthService {
     }
   }
 
-  async handleGoogleLogin(idToken: string): Promise<{ user: any; isNewUser: boolean; accessToken: string; refreshToken: string }> {
+  async handleGoogleLogin(
+    idToken: string
+  ): Promise<{
+    user: any;
+    isNewUser: boolean;
+    accessToken: string;
+    refreshToken: string;
+  }> {
     try {
-        const decodedToken = await admin.auth().verifyIdToken(idToken);
-        console.log("Decoded Token:", decodedToken);
+      const decodedToken = await admin.auth().verifyIdToken(idToken);
+      console.log("Decoded Token:", decodedToken);
 
-        const { email, name, uid, picture } = decodedToken;
-        const userData:{
-          name: string,
-          email: string | undefined,
-          googleId: string,
-          isVerified: boolean,
-          image?: string 
-        }={
-            name,
-            email,
-            googleId: uid,
-            isVerified: true,
-        }
-        if(picture){
-          userData.image = picture;
-        }
-       
-        const { user, isNewUser } = await this.AuthRepository.handleGoogleLogin(userData);
+      const { email, name, uid, picture } = decodedToken;
+      const userData: {
+        name: string;
+        email: string | undefined;
+        googleId: string;
+        isVerified: boolean;
+        image?: string;
+      } = {
+        name,
+        email,
+        googleId: uid,
+        isVerified: true,
+      };
+      if (picture) {
+        userData.image = picture;
+      }
 
-        const accessToken = jwt.sign(
-            { email, role: "user" },
-            process.env.ACCESS_TOKEN_SECRET!,
-            { expiresIn: "15m" }
-        );
+      const { user, isNewUser } = await this.AuthRepository.handleGoogleLogin(
+        userData
+      );
 
-        const refreshToken = jwt.sign(
-            { email, role: "user" },
-            process.env.REFRESH_TOKEN_SECRET!,
-            { expiresIn: "30d" }
-        );
+      const accessToken = jwt.sign(
+        { email, role: "user" },
+        process.env.ACCESS_TOKEN_SECRET!,
+        { expiresIn: "15m" }
+      );
 
-        return { user, isNewUser, accessToken, refreshToken };
+      const refreshToken = jwt.sign(
+        { email, role: "user" },
+        process.env.REFRESH_TOKEN_SECRET!,
+        { expiresIn: "30d" }
+      );
+
+      return { user, isNewUser, accessToken, refreshToken };
     } catch (error: any) {
-        console.error("Google login error:", error);
-        throw new Error("Error handling Google login");
+      console.error("Google login error:", error);
+      throw new Error("Error handling Google login");
     }
-}
+  }
 
   async logout(refreshToken: string): Promise<any> {
     try {
@@ -294,4 +302,3 @@ export class AuthService implements IAuthService {
     }
   }
 }
-

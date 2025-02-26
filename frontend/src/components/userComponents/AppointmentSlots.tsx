@@ -2,14 +2,14 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { format, startOfDay } from "date-fns";
 import axiosInstance from "../../utils/axiosInterceptors";
-import { Clock, CheckCircle} from "lucide-react";
+import { Clock, CheckCircle } from "lucide-react";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
 interface IAvailableSlot {
   slot: string;
-  datetime: string; 
+  datetime: string;
 }
 
 interface IDoctor {
@@ -225,13 +225,17 @@ const Appointment: React.FC = () => {
       <div className="mt-8 text-center">
         {selectedDate && selectedTime && (
           <button
-          onClick={() => navigate(`/book-appointment/${id}`, { state: { selectedDate, selectedTime } })}
-          className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full transition-all transform hover:scale-105 shadow-xl"
-        >
-          Book Appointment Now
-        </button>
+            onClick={() => {
+              window.scrollTo(0, 0);
+              navigate(`/book-appointment/${id}`, {
+                state: { selectedDate, selectedTime },
+              });
+            }}
+            className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full transition-all transform hover:scale-105 shadow-xl"
+          >
+            Book Appointment Now
+          </button>
         )}
-        
       </div>
     </div>
   );

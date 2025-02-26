@@ -1,12 +1,11 @@
 import HomePage from "../../components/doctorComponents/Home";
 
-
 const Home = () => {
   return (
     <>
-        <HomePage/>
+      <HomePage />
     </>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;

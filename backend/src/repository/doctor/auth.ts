@@ -39,9 +39,12 @@ export class AuthRepository implements IAuthRepository {
 
   async updatePassword(email: string, hashedPassword: string): Promise<any> {
     try {
-      console.log('1', email, hashedPassword);
-      return await doctorModel.updateOne({ email }, { $set: { password: hashedPassword } });
-      console.log('2');
+      console.log("1", email, hashedPassword);
+      return await doctorModel.updateOne(
+        { email },
+        { $set: { password: hashedPassword } }
+      );
+      console.log("2");
     } catch (error: any) {
       console.error("Error updating password:", error);
       throw new Error("Error updating password");
@@ -66,35 +69,37 @@ export class AuthRepository implements IAuthRepository {
         isVerified: doctorData.isVerified,
         image: doctorData.image || "",
         isDoctor: doctorData.isDoctor,
-        docStatus: doctorData.docStatus
+        docStatus: doctorData.docStatus,
       };
     } catch (error: any) {
       throw new Error(error.message);
     }
   }
 
-  async handleGoogleLogin(doctorData: any): Promise<{ doctor: any; isNewDoctor: boolean }> {
+  async handleGoogleLogin(
+    doctorData: any
+  ): Promise<{ doctor: any; isNewDoctor: boolean }> {
     try {
-        const { email, name, googleId, isVerified, image } = doctorData;
-        let doctor = await doctorModel.findOne({ email });
-        let isNewDoctor = false;
+      const { email, name, googleId, isVerified, image } = doctorData;
+      let doctor = await doctorModel.findOne({ email });
+      let isNewDoctor = false;
 
-        if (!doctor) {
-            doctor = new doctorModel({
-                name,
-                email,
-                googleId,
-                isVerified,
-                image,
-            });
-            await doctor.save();
-            isNewDoctor = true;
-        }
+      if (!doctor) {
+        doctor = new doctorModel({
+          name,
+          email,
+          googleId,
+          isVerified,
+          image,
+        });
+        await doctor.save();
+        isNewDoctor = true;
+      }
 
-        return { doctor, isNewDoctor };
+      return { doctor, isNewDoctor };
     } catch (error: any) {
-        console.error("Error in Google login repository:", error);
-        throw new Error("DB error while handling Google login");
+      console.error("Error in Google login repository:", error);
+      throw new Error("DB error while handling Google login");
     }
-}
+  }
 }

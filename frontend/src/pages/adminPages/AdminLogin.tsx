@@ -1,8 +1,6 @@
-import LoginPage from "../../components/adminComponents/AdminLogin.tsx"
+import LoginPage from "../../components/adminComponents/AdminLogin.tsx";
 const Login = () => {
-  return (
-      <LoginPage />
-  )
-}
+  return <LoginPage />;
+};
 
-export default Login
+export default Login;

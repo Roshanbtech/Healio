@@ -82,7 +82,8 @@ const Coupon: React.FC = () => {
     if (!coupon.expirationDate.trim()) return "Expiration date is required.";
     const expDate = new Date(coupon.expirationDate);
     if (isNaN(expDate.getTime())) return "Invalid expiration date.";
-    if (expDate <= new Date()) return "Expiration date should be in the future.";
+    if (expDate <= new Date())
+      return "Expiration date should be in the future.";
     return null;
   };
 
@@ -94,7 +95,8 @@ const Coupon: React.FC = () => {
     if (!coupon.expirationDate) return "Expiration date is required.";
     const expDate = new Date(coupon.expirationDate);
     if (isNaN(expDate.getTime())) return "Invalid expiration date.";
-    if (expDate <= new Date()) return "Expiration date should be in the future.";
+    if (expDate <= new Date())
+      return "Expiration date should be in the future.";
     return null;
   };
 
@@ -171,7 +173,9 @@ const Coupon: React.FC = () => {
   // Toggle coupon active/inactive status.
   const handleToggleCoupon = async (couponId: string) => {
     try {
-      const response = await axiosInstance.patch(`/admin/toggleCoupon/${couponId}`);
+      const response = await axiosInstance.patch(
+        `/admin/toggleCoupon/${couponId}`
+      );
       if (response.data?.status) {
         setCoupons((prevCoupons) =>
           prevCoupons.map((coupon) => {
@@ -195,7 +199,11 @@ const Coupon: React.FC = () => {
     <div className="flex min-h-screen">
       <Sidebar onCollapse={setSidebarCollapsed} />
 
-      <div className={`flex-1 transition-all duration-300 ${sidebarCollapsed ? "ml-16" : "ml-64"}`}>
+      <div
+        className={`flex-1 transition-all duration-300 ${
+          sidebarCollapsed ? "ml-16" : "ml-64"
+        }`}
+      >
         <div className="p-8">
           {/* Header & Search */}
           <div className="flex justify-between items-center mb-8 bg-white p-6 rounded-lg shadow-sm">
@@ -246,20 +254,39 @@ const Coupon: React.FC = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead>
                   <tr className="bg-red-600">
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">No</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Code</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Discount</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Start Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Expiration Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Action</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                      No
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                      Code
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                      Discount
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                      Start Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                      Expiration Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                      Action
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {currentCoupons.length > 0 ? (
                     currentCoupons.map((coupon, index) => (
-                      <tr key={coupon._id} className="hover:bg-gray-50 transition duration-150 ease-in-out">
+                      <tr
+                        key={coupon._id}
+                        className="hover:bg-gray-50 transition duration-150 ease-in-out"
+                      >
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {(currentPage - 1) * itemsPerPage + index + 1}
                         </td>
@@ -273,7 +300,9 @@ const Coupon: React.FC = () => {
                           {coupon.discount}%
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {coupon.startDate ? new Date(coupon.startDate).toLocaleDateString() : "N/A"}
+                          {coupon.startDate
+                            ? new Date(coupon.startDate).toLocaleDateString()
+                            : "N/A"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {new Date(coupon.expirationDate).toLocaleDateString()}
@@ -285,7 +314,9 @@ const Coupon: React.FC = () => {
                           <div className="flex items-center space-x-4">
                             <ToggleButton
                               isBlocked={!coupon.isActive}
-                              onClick={() => coupon._id && handleToggleCoupon(coupon._id)}
+                              onClick={() =>
+                                coupon._id && handleToggleCoupon(coupon._id)
+                              }
                             />
                             <button
                               onClick={() => handleEditClick(coupon)}
@@ -299,7 +330,10 @@ const Coupon: React.FC = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
+                      <td
+                        colSpan={8}
+                        className="px-6 py-4 text-center text-gray-500"
+                      >
                         No coupons found
                       </td>
                     </tr>
@@ -314,7 +348,9 @@ const Coupon: React.FC = () => {
             <div className="mt-6 flex justify-center">
               <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
                 <button
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
                   disabled={currentPage === 1}
                   className="relative inline-flex items-center px-4 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
@@ -334,7 +370,9 @@ const Coupon: React.FC = () => {
                   </button>
                 ))}
                 <button
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
                   disabled={currentPage === totalPages}
                   className="relative inline-flex items-center px-4 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
@@ -351,7 +389,9 @@ const Coupon: React.FC = () => {
         <div className="fixed inset-0 z-50 bg-gray-900 bg-opacity-50 flex items-center justify-center">
           <div className="bg-white rounded-lg shadow-lg w-96">
             <div className="bg-red-600 rounded-t-lg p-4">
-              <h2 className="text-lg font-semibold text-white text-center">Add Coupon</h2>
+              <h2 className="text-lg font-semibold text-white text-center">
+                Add Coupon
+              </h2>
             </div>
             <div className="p-6 space-y-3">
               <input
@@ -377,7 +417,10 @@ const Coupon: React.FC = () => {
                 placeholder="Discount (%)"
                 value={newCoupon.discount}
                 onChange={(e) =>
-                  setNewCoupon({ ...newCoupon, discount: Number(e.target.value) })
+                  setNewCoupon({
+                    ...newCoupon,
+                    discount: Number(e.target.value),
+                  })
                 }
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
               />
@@ -390,7 +433,9 @@ const Coupon: React.FC = () => {
                 }
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
               />
-              {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
+              {errorMessage && (
+                <p className="text-red-500 text-sm">{errorMessage}</p>
+              )}
               <div className="flex justify-end space-x-2 pt-2">
                 <button
                   onClick={() => setIsAddModalOpen(false)}
@@ -415,7 +460,9 @@ const Coupon: React.FC = () => {
         <div className="fixed inset-0 z-50 bg-gray-900 bg-opacity-50 flex items-center justify-center">
           <div className="bg-white rounded-lg shadow-lg w-96">
             <div className="bg-red-600 rounded-t-lg p-4">
-              <h2 className="text-lg font-semibold text-white text-center">Edit Coupon</h2>
+              <h2 className="text-lg font-semibold text-white text-center">
+                Edit Coupon
+              </h2>
             </div>
             <div className="p-6 space-y-3">
               <input
@@ -441,7 +488,10 @@ const Coupon: React.FC = () => {
                 placeholder="Discount (%)"
                 value={selectedCoupon.discount}
                 onChange={(e) =>
-                  setSelectedCoupon({ ...selectedCoupon, discount: Number(e.target.value) })
+                  setSelectedCoupon({
+                    ...selectedCoupon,
+                    discount: Number(e.target.value),
+                  })
                 }
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
               />
@@ -450,7 +500,9 @@ const Coupon: React.FC = () => {
                 placeholder="Expiration Date"
                 value={
                   selectedCoupon.expirationDate
-                    ? new Date(selectedCoupon.expirationDate).toISOString().split("T")[0]
+                    ? new Date(selectedCoupon.expirationDate)
+                        .toISOString()
+                        .split("T")[0]
                     : ""
                 }
                 onChange={(e) =>
@@ -461,7 +513,9 @@ const Coupon: React.FC = () => {
                 }
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
               />
-              {editErrorMessage && <p className="text-red-500 text-sm">{editErrorMessage}</p>}
+              {editErrorMessage && (
+                <p className="text-red-500 text-sm">{editErrorMessage}</p>
+              )}
               <div className="flex justify-end space-x-2 pt-2">
                 <button
                   onClick={() => {

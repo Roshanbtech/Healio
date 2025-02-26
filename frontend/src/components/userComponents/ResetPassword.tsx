@@ -25,14 +25,20 @@ const ResetPassword: React.FC = () => {
     onSubmit: async (values, { setSubmitting }) => {
       setSubmitting(true);
       try {
-        const response = await axiosInstance.post("/forgot-password/reset", {values, email: localStorage.getItem("forgotPasswordEmail")});
+        const response = await axiosInstance.post("/forgot-password/reset", {
+          values,
+          email: localStorage.getItem("forgotPasswordEmail"),
+        });
         console.log("Reset password response:", response.data);
 
         toast.success("Password reset successfully!");
         navigate("/login");
       } catch (error: any) {
         console.error("Error during password reset:", error);
-        toast.error(error.response?.data?.message || "An error occurred during password reset");
+        toast.error(
+          error.response?.data?.message ||
+            "An error occurred during password reset"
+        );
       } finally {
         setSubmitting(false);
       }
@@ -87,11 +93,12 @@ const ResetPassword: React.FC = () => {
                     className="w-full px-4 py-3.5 rounded-lg bg-[#e8f8e8] border-transparent focus:border-green-500 focus:bg-white focus:ring-0 transition-colors"
                     required
                   />
-                  {formik.touched.confirmPassword && formik.errors.confirmPassword && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {formik.errors.confirmPassword}
-                    </p>
-                  )}
+                  {formik.touched.confirmPassword &&
+                    formik.errors.confirmPassword && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formik.errors.confirmPassword}
+                      </p>
+                    )}
                 </div>
 
                 <button

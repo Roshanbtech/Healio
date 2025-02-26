@@ -15,10 +15,16 @@ interface AppContextProviderProps {
   children: ReactNode;
 }
 
-const AppContextProvider: React.FC<AppContextProviderProps> = ({ children }) => {
+const AppContextProvider: React.FC<AppContextProviderProps> = ({
+  children,
+}) => {
   // Initialize token and userImage from localStorage
-  const [token, setToken] = useState<string | null>(localStorage.getItem("authToken"));
-  const [userImage, setUserImage] = useState<string | null>(localStorage.getItem("image"));
+  const [token, setToken] = useState<string | null>(
+    localStorage.getItem("authToken")
+  );
+  const [userImage, setUserImage] = useState<string | null>(
+    localStorage.getItem("image")
+  );
 
   const currencySymbol = "₹";
 

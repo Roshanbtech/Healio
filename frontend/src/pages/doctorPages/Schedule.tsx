@@ -1,10 +1,7 @@
-import React from 'react'
-import SchedulePage from "../../components/doctorComponents/Schedules"
+import SchedulePage from "../../components/doctorComponents/Schedules";
 
 const Schedule = () => {
-  return (
-    <SchedulePage/>
-  )
-}
+  return <SchedulePage />;
+};
 
-export default Schedule
+export default Schedule;

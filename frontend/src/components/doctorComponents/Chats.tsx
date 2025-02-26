@@ -71,7 +71,12 @@ export default function DoctorChat() {
     });
 
     s.on("chat:history", (chat) => {
-      if (chat && chat._id && selectedUser && chat.userId === selectedUser._id) {
+      if (
+        chat &&
+        chat._id &&
+        selectedUser &&
+        chat.userId === selectedUser._id
+      ) {
         setChatId(chat._id);
         setCurrentMessages(chat.messages || []);
       }
@@ -418,8 +423,9 @@ export default function DoctorChat() {
                     Doctor's Portal
                   </h1>
                   <p className="text-gray-600 mb-6">
-                    Select a patient conversation from the left to start chatting. 
-                    All medical conversations are secure, encrypted, and HIPAA compliant.
+                    Select a patient conversation from the left to start
+                    chatting. All medical conversations are secure, encrypted,
+                    and HIPAA compliant.
                   </p>
                   <div className="text-left bg-white p-4 rounded-lg shadow-md border border-green-100">
                     <h3 className="font-medium text-green-700 mb-2">
@@ -427,8 +433,13 @@ export default function DoctorChat() {
                     </h3>
                     <ul className="text-gray-600 space-y-2 text-sm">
                       <li>• Maintain professional boundaries at all times</li>
-                      <li>• Verify patient identity before sharing sensitive information</li>
-                      <li>• Document all medical advice provided in the chat</li>
+                      <li>
+                        • Verify patient identity before sharing sensitive
+                        information
+                      </li>
+                      <li>
+                        • Document all medical advice provided in the chat
+                      </li>
                       <li>• Use secure file transfer for medical documents</li>
                     </ul>
                   </div>

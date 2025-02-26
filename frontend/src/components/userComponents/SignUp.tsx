@@ -1,4 +1,4 @@
-import React,{useEffect} from "react";
+import React, { useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
@@ -70,13 +70,13 @@ const Signup: React.FC = () => {
       .oneOf([Yup.ref("password")], "Passwords must match")
       .required("Confirm password is required"),
   });
-   const navigate = useNavigate();
-    useEffect(() => {
-      const token = localStorage.getItem("authToken");
-      if (token) {
-        navigate("/home");
-      }
-    }, []);
+  const navigate = useNavigate();
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      navigate("/home");
+    }
+  }, []);
 
   const formik = useFormik({
     initialValues: {
@@ -88,7 +88,7 @@ const Signup: React.FC = () => {
     },
     validationSchema,
     onSubmit: async (values) => {
-      if (isSubmitting) return; // Prevent double submission
+      if (isSubmitting) return;
       setIsSubmitting(true);
       try {
         console.log("Submitting:", values);
@@ -196,10 +196,10 @@ const Signup: React.FC = () => {
                   className={`w-full px-4 py-3 rounded-md bg-[#f0fdf4] border-2 focus:ring-2 focus:ring-green-100 
             ${
               formik.touched.email && formik.errors.email
-                ? "border-red-500" // Red border for errors
+                ? "border-red-500"
                 : formik.touched.email && !formik.errors.email
-                ? "border-green-400" // Green border for valid input
-                : "border-transparent" // Default state
+                ? "border-green-400"
+                : "border-transparent"
             }`}
                 />
                 {formik.touched.email && formik.errors.email && (

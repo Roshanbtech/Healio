@@ -24,7 +24,7 @@ const serviceSchema = new Schema<Iservice>(
     isActive: {
       type: Boolean,
       default: true,
-    }
+    },
   },
   { timestamps: true }
 );

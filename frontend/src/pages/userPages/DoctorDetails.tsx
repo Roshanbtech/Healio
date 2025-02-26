@@ -1,9 +1,7 @@
-import DoctorDetailsPage from '../../components/userComponents/DoctorDetails'
+import DoctorDetailsPage from "../../components/userComponents/DoctorDetails";
 
 const DoctorDetails = () => {
-  return (
-    < DoctorDetailsPage />
-  )
-}
+  return <DoctorDetailsPage />;
+};
 
-export default DoctorDetails
+export default DoctorDetails;

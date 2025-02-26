@@ -1,8 +1,16 @@
-import CouponModel from "../../model/couponModel";
-import { IBookingRepository, Coupon } from "../../interface/user/Booking.repository.interface";
+import { GenericRepository } from "../GenericRepository";
+import CouponModel, { ICoupon } from "../../model/couponModel";
+import { IBookingRepository } from "../../interface/user/Booking.repository.interface";
 
-export class BookingRepository implements IBookingRepository {
-    getCoupons(): Promise<Coupon[]> {
-        return CouponModel.find({ isActive: true });
-    }
+export class BookingRepository
+  extends GenericRepository<ICoupon>
+  implements IBookingRepository
+{
+  constructor() {
+    super(CouponModel);
+  }
+
+  async getCoupons(): Promise<ICoupon[]> {
+    return this.findAll({ isActive: true }); 
+  }
 }

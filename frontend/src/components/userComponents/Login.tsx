@@ -42,23 +42,20 @@ const Login: React.FC = () => {
         const { data } = await axiosInstance.post("/login", values);
 
         localStorage.setItem("authToken", data.accessToken);
-       
+
         localStorage.setItem("userId", data.user._id);
         localStorage.setItem("image", data.user.image);
-    
-      
 
         const decodedToken = jwtDecode(data.accessToken) as { role: string };
-        localStorage.setItem("userRole", decodedToken.role); 
+        localStorage.setItem("userRole", decodedToken.role);
         console.log("Decoded role:", decodedToken.role);
-        
 
         toast.success("Login Successful");
 
         navigate("/home");
       } catch (error: any) {
         console.error("Login error:", error);
-        toast.error(error?.response?.data?.message || "Login failed")
+        toast.error(error?.response?.data?.message || "Login failed");
       } finally {
         setIsSubmitting(false);
       }
@@ -175,7 +172,6 @@ const Login: React.FC = () => {
                 {isSubmitting ? "Logging in..." : "Login"}
               </button>
 
-            
               <Google />
 
               {/* Signup Link */}

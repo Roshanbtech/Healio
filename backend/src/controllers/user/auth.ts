@@ -1,8 +1,6 @@
 import HTTP_statusCode from "../../enums/httpStatusCode";
 import { IAuthService } from "../../interface/user/Auth.service.interface";
 import { Request, Response } from "express";
-import { admin } from "../../config/firebase";
-import User from "../../model/userModel";
 import { HttpStatusCode } from "axios";
 import jwt from "jsonwebtoken";
 
@@ -87,39 +85,11 @@ export class AuthController {
 
   async handleGoogleLogin(req: Request, res: Response): Promise<any> {
     try {
-        const { idToken } = req.body;
-        console.log("Received ID Token:", idToken);
+      const { idToken } = req.body;
+      console.log("Received ID Token:", idToken);
 
-        const { user, isNewUser, accessToken, refreshToken } = await this.authService.handleGoogleLogin(idToken);
-
-        res.cookie("refreshToken", refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-            path: "/auth/refresh",
-            expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
-        });
-
-        return res.status(isNewUser ? HttpStatusCode.Created : HttpStatusCode.Accepted).json({
-            message: isNewUser ? "User created successfully" : "User login successful",
-            accessToken,
-            user
-        });
-    } catch (error) {
-        console.error("Google Login Error:", error);
-        if (!res.headersSent) {
-            return res.status(HttpStatusCode.InternalServerError).json({ message: "Authentication failed" });
-        }
-    }
-}
-
-  async loginUser(req: Request, res: Response): Promise<any> {
-    try {
-      const data = req.body;
-      const { accessToken, refreshToken, user } = await this.authService.login(data);
-      
-      if(accessToken && refreshToken && user){
-
+      const { user, isNewUser, accessToken, refreshToken } =
+        await this.authService.handleGoogleLogin(idToken);
 
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
@@ -128,16 +98,51 @@ export class AuthController {
         path: "/auth/refresh",
         expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
       });
-      console.log("🔹 Refresh Token:", res.getHeader("Set-Cookie"));
-      res.status(HTTP_statusCode.OK).json({
-        status: true,
-        message: "User logged in successfully",
-        accessToken,
-        user,
-      });
-      console.log("Login response sent to client")
-    } 
-    } catch (error:any) {
+
+      return res
+        .status(isNewUser ? HttpStatusCode.Created : HttpStatusCode.Accepted)
+        .json({
+          message: isNewUser
+            ? "User created successfully"
+            : "User login successful",
+          accessToken,
+          user,
+        });
+    } catch (error) {
+      console.error("Google Login Error:", error);
+      if (!res.headersSent) {
+        return res
+          .status(HttpStatusCode.InternalServerError)
+          .json({ message: "Authentication failed" });
+      }
+    }
+  }
+
+  async loginUser(req: Request, res: Response): Promise<any> {
+    try {
+      const data = req.body;
+      const { accessToken, refreshToken, user } = await this.authService.login(
+        data
+      );
+
+      if (accessToken && refreshToken && user) {
+        res.cookie("refreshToken", refreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+          path: "/auth/refresh",
+          expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
+        });
+        console.log("🔹 Refresh Token:", res.getHeader("Set-Cookie"));
+        res.status(HTTP_statusCode.OK).json({
+          status: true,
+          message: "User logged in successfully",
+          accessToken,
+          user,
+        });
+        console.log("Login response sent to client");
+      }
+    } catch (error: any) {
       console.error(error);
 
       if (!res.headersSent) {

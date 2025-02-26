@@ -90,7 +90,6 @@ export default function Chat() {
         return [...prev, message];
       });
     });
-    
 
     s.on("doctor:status", (data: { doctorId: string; isOnline: boolean }) => {
       setDoctors((prevDoctors) =>
@@ -144,23 +143,22 @@ export default function Chat() {
     setSelectedDoctor(doctor);
   };
 
- const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-  const files = Array.from(event.target.files || []);
-  setSelectedFiles((prevFiles) => {
-    const newFiles = files.filter(
-      (file) =>
-        !prevFiles.some(
-          (prevFile) =>
-            prevFile.name === file.name &&
-            prevFile.lastModified === file.lastModified
-        )
-    );
-    return [...prevFiles, ...newFiles];
-  });
-  // Clear the file input to allow re-selection of the same file if needed.
-  event.target.value = "";
-};
-
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    setSelectedFiles((prevFiles) => {
+      const newFiles = files.filter(
+        (file) =>
+          !prevFiles.some(
+            (prevFile) =>
+              prevFile.name === file.name &&
+              prevFile.lastModified === file.lastModified
+          )
+      );
+      return [...prevFiles, ...newFiles];
+    });
+    // Clear the file input to allow re-selection of the same file if needed.
+    event.target.value = "";
+  };
 
   const handleRemoveFile = (index: number) => {
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
@@ -457,16 +455,19 @@ export default function Chat() {
                     </h3>
                     <ul className="text-gray-600 space-y-2 text-sm">
                       <li>
-                        • Upload photos to help your doctor better understand your condition
+                        • Upload photos to help your doctor better understand
+                        your condition
                       </li>
                       <li>
-                        • All conversations are stored securely for future reference
+                        • All conversations are stored securely for future
+                        reference
                       </li>
                       <li>
                         • You can schedule video consultations through chat
                       </li>
                       <li>
-                        • Receive prescription updates directly in your conversations
+                        • Receive prescription updates directly in your
+                        conversations
                       </li>
                     </ul>
                   </div>

@@ -23,8 +23,7 @@ const Login: React.FC = () => {
     email: Yup.string()
       .email("Invalid email address")
       .required("Email is required"),
-    password: Yup.string()
-      .required("Password is required"),
+    password: Yup.string().required("Password is required"),
   });
 
   const formik = useFormik({

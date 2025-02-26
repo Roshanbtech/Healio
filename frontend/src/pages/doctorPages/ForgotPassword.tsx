@@ -1,8 +1,6 @@
-import ForgotPasswordPage from '../../components/doctorComponents/ForgotPassword'
+import ForgotPasswordPage from "../../components/doctorComponents/ForgotPassword";
 const ForgotPassword = () => {
-  return (
-    <ForgotPasswordPage />
-  )
-}
+  return <ForgotPasswordPage />;
+};
 
-export default ForgotPassword
+export default ForgotPassword;

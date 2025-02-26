@@ -1,10 +1,10 @@
-import DoctorList from "../../components/adminComponents/DoctorListing"
+import DoctorList from "../../components/adminComponents/DoctorListing";
 const DoctorListing = () => {
   return (
-   <>
-   <DoctorList />
-   </>
-)
-}
+    <>
+      <DoctorList />
+    </>
+  );
+};
 
-export default DoctorListing
+export default DoctorListing;

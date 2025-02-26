@@ -41,8 +41,8 @@ export class AuthController {
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
         path: "/auth/refresh",
-        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),     
-       });
+        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
+      });
 
       // Set authorization header with access token
       res.setHeader("Authorization", `Bearer ${accessToken}`);
@@ -87,8 +87,13 @@ export class AuthController {
       const page = parseInt(req.query.page as string, 10) || 1;
       const limit = parseInt(req.query.limit as string, 10) || 10;
       const search = req.query.search as string;
-      const speciality = req.query.category as string;    
-      const userList = await this.authService.getUser({page,limit,search,speciality});
+      const speciality = req.query.category as string;
+      const userList = await this.authService.getUser({
+        page,
+        limit,
+        search,
+        speciality,
+      });
       return res.status(HTTP_statusCode.OK).json({ status: true, ...userList });
     } catch (error: any) {
       console.error("Error in getUserList:", error);
@@ -262,7 +267,7 @@ export class AuthController {
     try {
       const { id } = req.params;
       const { reason } = req.body;
-      const doctor = await this.authService.rejectDoctor(id,reason);
+      const doctor = await this.authService.rejectDoctor(id, reason);
       return res.status(HTTP_statusCode.OK).json({ status: true, doctor });
     } catch (error: any) {
       console.error("Error in rejectDoctor:", error);

@@ -1,4 +1,7 @@
-import { doctorType, Schedule } from "../../interface/doctorInterface/Interface";
+import {
+  doctorType,
+  Schedule,
+} from "../../interface/doctorInterface/Interface";
 import { IDoctorService } from "../../interface/doctor/Auth.service.interface";
 import { IDoctorRepository } from "../../interface/doctor/Auth.repository.interface";
 import { Service } from "../../interface/doctorInterface/Interface";
@@ -88,91 +91,105 @@ export class DoctorService implements IDoctorService {
     }
   }
 
-  async editDoctorProfile(id: string, data: any, file: Express.Multer.File): Promise<any> {
+  async editDoctorProfile(
+    id: string,
+    data: any,
+    file: Express.Multer.File
+  ): Promise<any> {
     try {
       let image: string | undefined = undefined;
-      console.log('Service - Received file:', file);
-      
+      console.log("Service - Received file:", file);
+
       if (file) {
         image = await this.fileUploadService.uploadDoctorProfileImage(id, file);
       }
-      
+
       const updatedData = { ...data, image };
-      const updatedDoctor = await this.DoctorRepository.editDoctorProfile(id, updatedData);
-      
+      const updatedDoctor = await this.DoctorRepository.editDoctorProfile(
+        id,
+        updatedData
+      );
+
       return updatedDoctor;
     } catch (error: any) {
       throw new Error(error.message);
     }
   }
 
-  async changePassword(id: string, oldPassword: any, newPassword: any): Promise<any> {
+  async changePassword(
+    id: string,
+    oldPassword: any,
+    newPassword: any
+  ): Promise<any> {
     try {
-      const result = await this.DoctorRepository.changePassword(id, oldPassword, newPassword);
+      const result = await this.DoctorRepository.changePassword(
+        id,
+        oldPassword,
+        newPassword
+      );
       return result;
     } catch (error: any) {
       throw new Error(error.message);
-  }
-}
-
-async addSchedule(scheduleData: Schedule): Promise<any> {
-  try {
-    if (scheduleData.isRecurring) {
-      // Cast to access extra fields provided by the frontend.
-      const extra = scheduleData as any;
-      if (!scheduleData.recurrenceRule) {
-        if (
-          !extra.recurrenceDays ||
-          extra.recurrenceDays.length === 0 ||
-          !extra.recurrenceUntil
-        ) {
-          throw new Error(
-            "Missing recurrence details: recurrenceDays and recurrenceUntil are required for recurring schedules."
-          );
-        }
-        const weekdays: Weekday[] = extra.recurrenceDays.map(
-          (day: string) => RRule[day as keyof typeof RRule]
-        );
-        const dtstart = new Date(scheduleData.startTime);
-        const until = new Date(extra.recurrenceUntil);
-        const rule = new RRule({
-          freq: RRule.WEEKLY,
-          byweekday: weekdays,
-          dtstart,
-          until,
-        });
-        scheduleData.recurrenceRule = rule.toString();
-      }
     }
-    const result = await this.DoctorRepository.addSchedule(scheduleData);
-    return result;
-  } catch (error: any) {
-    throw new Error(error.message);
   }
-}
 
-   async getSchedule(id: string): Promise<any> {
-       try{
-          const result = await this.DoctorRepository.getSchedule(id);
-          return result;
-       }catch(error: any){
-         throw new Error(error.message);
-       }
-   }
-   
-   async getUsers(): Promise<any> {
-     try{
-        const result = await this.DoctorRepository.getUsers();
-        return result;
-     }catch(error: any){
-       throw new Error(error.message);
-     }
-   }
+  async addSchedule(scheduleData: Schedule): Promise<any> {
+    try {
+      if (scheduleData.isRecurring) {
+        const extra = scheduleData as any;
+        if (!scheduleData.recurrenceRule) {
+          if (
+            !extra.recurrenceDays ||
+            extra.recurrenceDays.length === 0 ||
+            !extra.recurrenceUntil
+          ) {
+            throw new Error(
+              "Missing recurrence details: recurrenceDays and recurrenceUntil are required for recurring schedules."
+            );
+          }
+          const weekdays: Weekday[] = extra.recurrenceDays.map(
+            (day: string) => RRule[day as keyof typeof RRule]
+          );
+          const dtstart = new Date(scheduleData.startTime);
+          const until = new Date(extra.recurrenceUntil);
+          const rule = new RRule({
+            freq: RRule.WEEKLY,
+            byweekday: weekdays,
+            dtstart,
+            until,
+          });
+          scheduleData.recurrenceRule = rule.toString();
+        }
+      }
+      const result = await this.DoctorRepository.addSchedule(scheduleData);
+      return result;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
 
-   async chatImageUploads(id: string, file: Express.Multer.File): Promise<any> {
+  async getSchedule(id: string): Promise<any> {
+    try {
+      const result = await this.DoctorRepository.getSchedule(id);
+      return result;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+
+  async getUsers(): Promise<any> {
+    try {
+      const result = await this.DoctorRepository.getUsers();
+      return result;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+
+  async chatImageUploads(id: string, file: Express.Multer.File): Promise<any> {
     try {
       if (!file) {
-        throw new Error('No file provided');
+        throw new Error("No file provided");
       }
 
       const chatData = await this.DoctorRepository.uploadChatImage(id, file);
@@ -181,21 +198,22 @@ async addSchedule(scheduleData: Schedule): Promise<any> {
 
       const messageData = {
         ...chatData.newMessage,
-        message: imageUrl
+        message: imageUrl,
       };
 
-      const savedMessage = await this.DoctorRepository.saveChatImageMessage(id, messageData);
+      const savedMessage = await this.DoctorRepository.saveChatImageMessage(
+        id,
+        messageData
+      );
 
       return {
         chatId: chatData.chatId,
         messageId: savedMessage._id,
         imageUrl: imageUrl,
-        createdAt: savedMessage.createdAt
+        createdAt: savedMessage.createdAt,
       };
     } catch (error: any) {
       throw new Error(`Failed to upload chat image: ${error.message}`);
     }
   }
-  
-  
 }

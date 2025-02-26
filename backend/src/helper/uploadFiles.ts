@@ -23,67 +23,77 @@ export class awsFileUpload {
     return uploadedCertificates;
   }
 
-  async uploadDoctorProfileImage(doctorId: string, profilePicture: Express.Multer.File) {
-    console.log('Helper - Doctor ID:', doctorId);
+  async uploadDoctorProfileImage(
+    doctorId: string,
+    profilePicture: Express.Multer.File
+  ) {
+    console.log("Helper - Doctor ID:", doctorId);
     const profileKey = `doctor/profile/${doctorId}/`;
-    console.log('Helper - Profile Key:', profileKey);
-    
+    console.log("Helper - Profile Key:", profileKey);
+
     const uploadedKey = await this.awsConfig.uploadFileToS3(
       profileKey,
       profilePicture
     );
-    console.log('Helper - Uploaded Key:', uploadedKey);
-    
+    console.log("Helper - Uploaded Key:", uploadedKey);
+
     const profileUrl = await this.awsConfig.getfile(
       uploadedKey.split("/").pop()!,
       profileKey
     );
-    console.log('Helper - Profile URL:', profileUrl);
-    
+    console.log("Helper - Profile URL:", profileUrl);
+
     return profileUrl.split("?")[0];
   }
-  
-  async uploadUserProfileImage(userId: string, profilePicture: Express.Multer.File) {
-    console.log('Helper - User ID:', userId);
+
+  async uploadUserProfileImage(
+    userId: string,
+    profilePicture: Express.Multer.File
+  ) {
+    console.log("Helper - User ID:", userId);
     const profileKey = `user/profile/${userId}/`;
-    console.log('Helper - Profile Key:', profileKey);
-    
+    console.log("Helper - Profile Key:", profileKey);
+
     const uploadedKey = await this.awsConfig.uploadFileToS3(
       profileKey,
       profilePicture
     );
-    console.log('Helper - Uploaded Key:', uploadedKey);
-    
+    console.log("Helper - Uploaded Key:", uploadedKey);
+
     const profileUrl = await this.awsConfig.getfile(
       uploadedKey.split("/").pop()!,
       profileKey
     );
-    console.log('Helper - Profile URL:', profileUrl);
-    
+    console.log("Helper - Profile URL:", profileUrl);
+
     return profileUrl.split("?")[0];
   }
 
-  async uploadChatImage(chatId: string, image: Express.Multer.File): Promise<string> {
+  async uploadChatImage(
+    chatId: string,
+    image: Express.Multer.File
+  ): Promise<string> {
     try {
-      console.log('Helper - Chat ID:', chatId);
+      console.log("Helper - Chat ID:", chatId);
       const chatImageKey = `chat/${chatId}/images/`;
-      console.log('Helper - Chat Image Key:', chatImageKey);
+      console.log("Helper - Chat Image Key:", chatImageKey);
 
-      const uploadedKey = await this.awsConfig.uploadFileToS3(chatImageKey, image);
-      console.log('Helper - Uploaded Key:', uploadedKey);
+      const uploadedKey = await this.awsConfig.uploadFileToS3(
+        chatImageKey,
+        image
+      );
+      console.log("Helper - Uploaded Key:", uploadedKey);
 
       const imageUrl = await this.awsConfig.getfile(
         uploadedKey.split("/").pop()!,
         chatImageKey
       );
-      console.log('Helper - Image URL:', imageUrl);
+      console.log("Helper - Image URL:", imageUrl);
 
       return imageUrl.split("?")[0];
     } catch (error) {
-      console.error('Error uploading chat image:', error);
+      console.error("Error uploading chat image:", error);
       throw error;
     }
   }
-
-  
 }

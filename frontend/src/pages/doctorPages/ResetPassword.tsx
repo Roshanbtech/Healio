@@ -1,8 +1,6 @@
-import ResetPasswordPage from "../../components/doctorComponents/ResetPassword"
+import ResetPasswordPage from "../../components/doctorComponents/ResetPassword";
 const ResetPassword = () => {
-  return (
-    <ResetPasswordPage />
-  )
-}
+  return <ResetPasswordPage />;
+};
 
-export default ResetPassword
+export default ResetPassword;

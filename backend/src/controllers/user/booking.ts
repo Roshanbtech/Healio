@@ -3,11 +3,11 @@ import { Request, Response } from "express";
 import { IBookingService } from "../../interface/user/Booking.service.interface";
 
 export class BookingController {
-  private bookingService: IBookingService
+  private bookingService: IBookingService;
 
   constructor(bookingServiceInstance: IBookingService) {
     this.bookingService = bookingServiceInstance;
-  } 
+  }
 
   async getCoupons(req: Request, res: Response): Promise<any> {
     try {

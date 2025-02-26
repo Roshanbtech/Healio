@@ -1,14 +1,12 @@
-import type React from "react"
-import { useState, useRef, useEffect } from "react"
-import { assets } from "../../assets/assets"
-import { toast } from "react-toastify"
-import { useNavigate } from "react-router-dom"
-import axiosUrl from "../../utils/axios"
-import { backendUrl } from "../../utils/backendUrl"
-import axiosInstance from "../../utils/axiosInterceptors"
+import type React from "react";
+import { useState, useRef, useEffect } from "react";
+import { assets } from "../../assets/assets";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import axiosInstance from "../../utils/axiosInterceptors";
 
 interface OTPProps {
-  onSubmit?: (otp: string) => void
+  onSubmit?: (otp: string) => void;
   onResend?: () => void;
   formData?: {
     name: string;
@@ -16,71 +14,74 @@ interface OTPProps {
     phone: string;
     password: string;
     confirmpassword: string;
-  }; 
+  };
 }
 
 const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
-  const [otp, setOtp] = useState<string[]>(["", "", "", ""])
-  const [timeLeft, setTimeLeft] = useState(30)
-  const [canResend, setCanResend] = useState(false)
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+  const [otp, setOtp] = useState<string[]>(["", "", "", ""]);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [canResend, setCanResend] = useState(false);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!timeLeft) {
-      setCanResend(true)
-      return
+      setCanResend(true);
+      return;
     }
 
     const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1)
-    }, 1000)
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
 
-    return () => clearInterval(timer)
-  }, [timeLeft])
+    return () => clearInterval(timer);
+  }, [timeLeft]);
 
   const handleChange = (index: number, value: string) => {
     // Only allow numbers
-    if (!/^\d*$/.test(value)) return
+    if (!/^\d*$/.test(value)) return;
 
     if (value.length > 1) {
-      value = value[0]
+      value = value[0];
     }
 
-    const newOtp = [...otp]
-    newOtp[index] = value
-    setOtp(newOtp)
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
 
     // Move to next input if value is entered
     if (value && index < 3) {
-      inputRefs.current[index + 1]?.focus()
+      inputRefs.current[index + 1]?.focus();
     }
-  }
+  };
 
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
     // Move to previous input on backspace if current input is empty
     if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus()
+      inputRefs.current[index - 1]?.focus();
     }
-  }
+  };
 
   const handlePaste = (e: React.ClipboardEvent) => {
-    e.preventDefault()
-    const pastedData = e.clipboardData.getData("text")
-    const pastedNumbers = pastedData.replace(/\D/g, "").split("").slice(0, 4)
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text");
+    const pastedNumbers = pastedData.replace(/\D/g, "").split("").slice(0, 4);
 
-    const newOtp = [...otp]
+    const newOtp = [...otp];
     pastedNumbers.forEach((num, index) => {
-      if (index < 4) newOtp[index] = num
-    })
-    setOtp(newOtp)
+      if (index < 4) newOtp[index] = num;
+    });
+    setOtp(newOtp);
 
     // Focus last input or first empty input
-    const lastFilledIndex = newOtp.findIndex((val) => !val)
-    const focusIndex = lastFilledIndex === -1 ? 3 : lastFilledIndex
-    inputRefs.current[focusIndex]?.focus()
-  }
+    const lastFilledIndex = newOtp.findIndex((val) => !val);
+    const focusIndex = lastFilledIndex === -1 ? 3 : lastFilledIndex;
+    inputRefs.current[focusIndex]?.focus();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,7 +90,7 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
       onSubmit?.(otpValue);
       console.log("OTP submitted:", otpValue);
       console.log(formData, "values");
-  
+
       const formValues = {
         name: formData?.name,
         email: formData?.email,
@@ -97,24 +98,34 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
         phone: formData?.phone,
         otp: otpValue,
       };
-  
+
       try {
-        const response = await axiosInstance.post("/doctor/signUp", formValues, {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-  
+        const response = await axiosInstance.post(
+          "/doctor/signUp",
+          formValues,
+          {
+            withCredentials: true,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
         console.log(response.data, "data");
-  
+
         // Check for correct response structure
         if (response.data?.response?.status === true) {
           toast.success(response.data.response.message || "Signup successful!");
           navigate("/doctor/login");
         } else {
-          if (response.data.response?.message === "OTP does not match or is not found.") {
-            toast.error(response.data.response?.message || "OTP does not match or is not found.");
+          if (
+            response.data.response?.message ===
+            "OTP does not match or is not found."
+          ) {
+            toast.error(
+              response.data.response?.message ||
+                "OTP does not match or is not found."
+            );
           }
           toast.error(response.data.response?.message || "Signup failed");
         }
@@ -126,52 +137,32 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
       toast.error("Please enter a valid 4-digit OTP");
     }
   };
-  
+
   const handleResend = async () => {
-     if (canResend) {
-       setTimeLeft(60);  // Reset timer
-       setCanResend(false);  // Disable the resend button until time is up
-       setOtp(["", "", "", ""]);  // Clear the OTP input fields
- 
-       // Trigger the resend OTP request
-       if (formData?.email) {
-        try{
-         const response = await axiosInstance.post("/doctor/resendOtp", { email: formData.email });
-         console.log(response.data, "data");
-         if(response.data?.status){
-           toast.success(response.data.message || "OTP resent successfully!");
-         } else {
-           toast.error(response.data.message || "Failed to resend OTP");
-         }
-        }catch(error:any){
+    if (canResend) {
+      setTimeLeft(60); // Reset timer
+      setCanResend(false); // Disable the resend button until time is up
+      setOtp(["", "", "", ""]); // Clear the OTP input fields
+
+      // Trigger the resend OTP request
+      if (formData?.email) {
+        try {
+          const response = await axiosInstance.post("/doctor/resendOtp", {
+            email: formData.email,
+          });
+          console.log(response.data, "data");
+          if (response.data?.status) {
+            toast.success(response.data.message || "OTP resent successfully!");
+          } else {
+            toast.error(response.data.message || "Failed to resend OTP");
+          }
+        } catch (error: any) {
           console.log(error);
           toast.error(error.message || "An error occurred while resending OTP");
         }
-        //  try {
-        //    const response = await fetch(`${backendUrl}/doctor/resendOtp`, {
-        //      method: "POST",
-        //      headers: {
-        //        "Content-Type": "application/json",
-        //      },
-        //      body: JSON.stringify({ email: formData.email }),  // Send email to the backend
-        //    });
- 
-        //    const data = await response.json();
- 
-        //    if (response.ok) {
-        //      toast.success(data.message || "OTP resent successfully!");
-        //    } else {
-        //      toast.error(data.message || "Failed to resend OTP");
-        //    }
-        //  } catch (error) {
-        //    console.error("Error resending OTP:", error);
-        //    toast.error("An error occurred while resending OTP");
-        //  }
-       }
-     }
-   };
- 
- 
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col">
@@ -191,10 +182,12 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
           <div className="w-full md:w-1/2 p-8">
             <div className="max-w-[400px] mx-auto">
               <h2 className="text-2xl font-semibold mb-1">OTP</h2>
-              <p className="text-gray-600 text-sm mb-6">Enter the otp before the timer runs out</p>
+              <p className="text-gray-600 text-sm mb-6">
+                Enter the otp before the timer runs out
+              </p>
 
               <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="flex gap-2 justify-center">
+                <div className="flex gap-2 justify-center">
                   {otp.map((digit, index) => (
                     <input
                       key={index}
@@ -214,7 +207,9 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
                 </div>
 
                 <div className="text-center text-sm text-gray-500">
-                  {timeLeft > 0 ? `00:${timeLeft.toString().padStart(2, "0")} sec` : "Time's up!"}
+                  {timeLeft > 0
+                    ? `00:${timeLeft.toString().padStart(2, "0")} sec`
+                    : "Time's up!"}
                 </div>
 
                 <button
@@ -229,7 +224,9 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
                   type="button"
                   onClick={handleResend}
                   className={`w-full text-center text-sm ${
-                    canResend ? "text-blue-600 hover:underline cursor-pointer" : "text-gray-400 cursor-not-allowed"
+                    canResend
+                      ? "text-blue-600 hover:underline cursor-pointer"
+                      : "text-gray-400 cursor-not-allowed"
                   }`}
                   disabled={!canResend}
                 >
@@ -250,8 +247,7 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default OTP
-
+export default OTP;

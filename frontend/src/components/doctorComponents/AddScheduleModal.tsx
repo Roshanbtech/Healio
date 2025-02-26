@@ -164,7 +164,11 @@ const AddScheduleModal: React.FC<IAddScheduleModalProps> = ({
       console.log("API response:", res.data);
       // Assumes backend returns the saved schedule in res.data.data.result.data
       const savedSchedule = res.data.data.result.data;
-      if (!savedSchedule || !savedSchedule.startTime || !savedSchedule.endTime) {
+      if (
+        !savedSchedule ||
+        !savedSchedule.startTime ||
+        !savedSchedule.endTime
+      ) {
         throw new Error("Invalid schedule data returned from API");
       }
       onScheduleAdded(savedSchedule);
@@ -277,9 +281,7 @@ const AddScheduleModal: React.FC<IAddScheduleModalProps> = ({
               type="number"
               className="border w-full p-2 rounded bg-green-100 text-green-800"
               value={defaultSlotDuration}
-              onChange={(e) =>
-                setDefaultSlotDuration(Number(e.target.value))
-              }
+              onChange={(e) => setDefaultSlotDuration(Number(e.target.value))}
               required
             />
           </div>

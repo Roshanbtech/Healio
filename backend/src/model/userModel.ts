@@ -9,7 +9,7 @@ interface Iuser extends Document {
   DOB: Date;
   age?: number;
   address: string;
-  gender?:"male" | "female" | "other";
+  gender?: "male" | "female" | "other";
   image?: string;
   lastLogin: Date;
   isBlocked: boolean;

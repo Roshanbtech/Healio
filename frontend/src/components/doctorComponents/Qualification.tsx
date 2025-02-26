@@ -45,7 +45,6 @@ export const QualificationForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [submittedData, setSubmittedData] =
     useState<QualificationDetails | null>(null);
-  // State to track whether the sidebar is collapsed
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const leftFields: FormField[] = [

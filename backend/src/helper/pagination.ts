@@ -1,4 +1,4 @@
-import { Model } from 'mongoose';
+import { Model } from "mongoose";
 
 export interface PaginationOptions {
   page?: number;
@@ -8,13 +8,6 @@ export interface PaginationOptions {
   populate?: any;
 }
 
-/**
- * Reusable pagination function.
- * @param model - The Mongoose model to query.
- * @param options - Pagination options including page, limit, search, speciality, and populate.
- * @param additionalQuery - Any additional query criteria (optional).
- * @returns An object containing paginated data and pagination metadata.
- */
 export const paginate = async <T>(
   model: Model<T>,
   options: PaginationOptions,
@@ -36,17 +29,15 @@ export const paginate = async <T>(
 
   if (options.search) {
     query.$or = [
-      { name: { $regex: options.search, $options: 'i' } },
-      { email: { $regex: options.search, $options: 'i' } },
+      { name: { $regex: options.search, $options: "i" } },
+      { email: { $regex: options.search, $options: "i" } },
     ];
   }
 
   if (options.speciality) {
-    // Ensure the field name matches your schema exactly
     query.speciality = options.speciality;
   }
 
-  // Build the query and apply population if provided.
   let queryBuilder = model.find(query).skip(skip).limit(limit);
   if (options.populate) {
     queryBuilder = queryBuilder.populate(options.populate);

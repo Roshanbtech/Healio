@@ -1,7 +1,6 @@
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
 import { assets } from "../../assets/assets";
-// import { backendUrl } from "../../utils/backendUrl";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInterceptors";
@@ -119,51 +118,6 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
         console.error("Error Response:", error);
         toast.error(error.message || "An error occurred during signup");
       }
-
-      // try {
-      //   const response = await fetch(`${backendUrl}/signUp`, {
-      //     method: "POST",
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //     },
-      //     body: JSON.stringify(formValues),
-      //     credentials: "include",
-      //   });
-
-      //   const data = await response.json();
-      //   console.log(data, "data");
-      //   if (!response.ok) {
-      //     throw new Error(data.message || "Signup failed");
-      //   }
-
-      //   if (data?.response?.status === true) {
-      //     toast.success(data.response.message || "Signup successful!");
-      //     navigate("/login");
-      //   } else {
-      //     if (
-      //       data.response?.message === "OTP does not match or is not found."
-      //     ) {
-      //       toast.error(
-      //         data.response?.message || "OTP does not match or is not found."
-      //       );
-      //     }
-      //     toast.error(data.response?.message || "Signup failed");
-      //   }
-
-      //   // Clear form
-      //   // formik.resetForm();
-
-      //   // Redirect to login page after successful signup
-      //   // setTimeout(() => {
-      //   //     navigate('/otp');
-      //   // }, 1500); // Give time for the success message to be seen
-      // } catch (error: any) {
-      //   console.error("Error Response:", error);
-      //   toast.error(error.message || "An error occurred during signup");
-      //   // } finally {
-      //   //     setIsSubmitting(false);
-      //   // }
-      // }
     }
   };
 
@@ -175,40 +129,20 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
 
       // Trigger the resend OTP request
       if (formData?.email) {
-        try{
-         const response = await axiosInstance.post("/resendOtp", {
-           email: formData.email
-         })
-         console.log(response.data, "data");
-         if (response.data?.status) {
-           toast.success(response.data.message || "OTP resent successfully!");
-         }else{
-           toast.error(response.data.message || "Failed to resend OTP");
-         }
-        }catch(error:any){
+        try {
+          const response = await axiosInstance.post("/resendOtp", {
+            email: formData.email,
+          });
+          console.log(response.data, "data");
+          if (response.data?.status) {
+            toast.success(response.data.message || "OTP resent successfully!");
+          } else {
+            toast.error(response.data.message || "Failed to resend OTP");
+          }
+        } catch (error: any) {
           console.log(error);
           toast.error(error.message || "An error occurred while resending OTP");
         }
-        // try {
-        //   const response = await fetch(`${backendUrl}/resendOtp`, {
-        //     method: "POST",
-        //     headers: {
-        //       "Content-Type": "application/json",
-        //     },
-        //     body: JSON.stringify({ email: formData.email }), // Send email to the backend
-        //   });
-
-        //   const data = await response.json();
-
-        //   if (response.ok) {
-        //     toast.success(data.message || "OTP resent successfully!");
-        //   } else {
-        //     toast.error(data.message || "Failed to resend OTP");
-        //   }
-        // } catch (error) {
-        //   console.error("Error resending OTP:", error);
-        //   toast.error("An error occurred while resending OTP");
-        // }
       }
     }
   };

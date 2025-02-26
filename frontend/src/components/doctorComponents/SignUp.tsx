@@ -2,18 +2,15 @@ import React from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { assets } from "../../assets/assets";
-// import { backendUrl } from "../../utils/backendUrl";
 import Otp from "../../components/doctorComponents/Otp";
 import { SignUpFormValues } from "../../interfaces/userInterface";
 import { Google } from "../common/doctorCommon/GoogleAuth";
-import axiosUrl from "../../utils/axios";
 import axiosInstance from "../../utils/axiosInterceptors";
 
 const Signup: React.FC = () => {
-  // const navigate = useNavigate();
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);

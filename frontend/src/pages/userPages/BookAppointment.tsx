@@ -1,8 +1,6 @@
-import BookAppointmentPage from "../../components/userComponents/BookAppointment"
+import BookAppointmentPage from "../../components/userComponents/BookAppointment";
 const BookAppointment = () => {
-  return (
-    <BookAppointmentPage />
-  )
-}
+  return <BookAppointmentPage />;
+};
 
-export default BookAppointment
+export default BookAppointment;

@@ -12,7 +12,7 @@ interface UserProfile {
   phone: string;
   address?: string;
   gender?: "male" | "female" | "other";
-  DOB?: string; 
+  DOB?: string;
   age?: number;
   image?: string;
   isBlocked?: boolean;
@@ -33,7 +33,9 @@ const Profile: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Tab state: 'editProfile' | 'changePassword'
-  const [activeTab, setActiveTab] = useState<"editProfile" | "changePassword">("editProfile");
+  const [activeTab, setActiveTab] = useState<"editProfile" | "changePassword">(
+    "editProfile"
+  );
 
   // Change Password form state
   const [changePassword, setChangePassword] = useState({
@@ -76,9 +78,10 @@ const Profile: React.FC = () => {
     }
   }, [user]);
 
-  // Handle input changes for the edit form
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setEditProfile((prev) =>
@@ -87,7 +90,9 @@ const Profile: React.FC = () => {
             ...prev,
             [name]:
               name === "age"
-                ? value === "" ? "" : parseInt(value, 10)
+                ? value === ""
+                  ? ""
+                  : parseInt(value, 10)
                 : value,
           }
         : null
@@ -102,7 +107,7 @@ const Profile: React.FC = () => {
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
     setEditProfile((prev) => (prev ? { ...prev, image: url } : null));
-    setProfile((prev) => (prev ? { ...prev, image: url } : null)); 
+    setProfile((prev) => (prev ? { ...prev, image: url } : null));
   };
 
   // Submit the Edit Profile form
@@ -114,19 +119,26 @@ const Profile: React.FC = () => {
       const formData = new FormData();
       for (const key in editProfile) {
         if (key === "image" || key === "id" || key === "userId") continue;
-        formData.append(key, String(editProfile[key as keyof UserProfile] || ""));
+        formData.append(
+          key,
+          String(editProfile[key as keyof UserProfile] || "")
+        );
       }
       if (selectedImage) {
         formData.append("image", selectedImage);
       }
-      const response = await axiosInstance.patch(`/editProfile/${user}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      const editedProfile = response.data?.data?.result
+      const response = await axiosInstance.patch(
+        `/editProfile/${user}`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      const editedProfile = response.data?.data?.result;
       setEditProfile(editedProfile);
       setProfile(editedProfile);
       toast.success("Profile updated successfully!");
-      localStorage.setItem("image",response.data?.data?.result?.image );
+      localStorage.setItem("image", response.data?.data?.result?.image);
     } catch (error) {
       setError("Error updating profile");
       toast.error("Error updating profile");
@@ -134,9 +146,11 @@ const Profile: React.FC = () => {
       setIsSubmittingProfile(false);
     }
   };
-  
+
   // Handle Change Password input changes
-  const handleChangePasswordInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangePasswordInput = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const { name, value } = e.target;
     setChangePassword((prev) => ({ ...prev, [name]: value }));
   };
@@ -184,7 +198,11 @@ const Profile: React.FC = () => {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className={`transition-all duration-300 ${sidebarCollapsed ? "w-16" : "w-64"}`}>
+      <div
+        className={`transition-all duration-300 ${
+          sidebarCollapsed ? "w-16" : "w-64"
+        }`}
+      >
         <Sidebar onCollapse={(collapsed) => setSidebarCollapsed(collapsed)} />
       </div>
 
@@ -239,7 +257,9 @@ const Profile: React.FC = () => {
                     Date of Birth
                   </h4>
                   <p className="text-gray-700 leading-relaxed">
-                    {profile?.DOB ? new Date(profile.DOB).toLocaleDateString() : "N/A"}
+                    {profile?.DOB
+                      ? new Date(profile.DOB).toLocaleDateString()
+                      : "N/A"}
                   </p>
                 </div>
                 <div className="mb-4">
@@ -255,7 +275,10 @@ const Profile: React.FC = () => {
                     Gender
                   </h4>
                   <p className="text-gray-700 leading-relaxed">
-                    {profile?.gender ? profile.gender.charAt(0).toUpperCase() + profile.gender.slice(1) : "N/A"}
+                    {profile?.gender
+                      ? profile.gender.charAt(0).toUpperCase() +
+                        profile.gender.slice(1)
+                      : "N/A"}
                   </p>
                 </div>
                 <div className="grid grid-cols-1 gap-y-2 text-base">
@@ -274,7 +297,9 @@ const Profile: React.FC = () => {
             <div className="bg-red-600 px-6 py-4 flex justify-center space-x-4">
               <button
                 className={`text-xl font-semibold text-white px-4 py-2 ${
-                  activeTab === "editProfile" ? "border-b-2 border-white" : "opacity-80"
+                  activeTab === "editProfile"
+                    ? "border-b-2 border-white"
+                    : "opacity-80"
                 }`}
                 onClick={() => setActiveTab("editProfile")}
               >
@@ -282,7 +307,9 @@ const Profile: React.FC = () => {
               </button>
               <button
                 className={`text-xl font-semibold text-white px-4 py-2 ${
-                  activeTab === "changePassword" ? "border-b-2 border-white" : "opacity-80"
+                  activeTab === "changePassword"
+                    ? "border-b-2 border-white"
+                    : "opacity-80"
                 }`}
                 onClick={() => setActiveTab("changePassword")}
               >
@@ -351,7 +378,9 @@ const Profile: React.FC = () => {
                       label="Age"
                       name="age"
                       type="number"
-                      value={editProfile?.age !== undefined ? editProfile.age : ""}
+                      value={
+                        editProfile?.age !== undefined ? editProfile.age : ""
+                      }
                       onChange={handleInputChange}
                       required
                     />
@@ -367,14 +396,19 @@ const Profile: React.FC = () => {
                       type="date"
                       value={
                         editProfile?.DOB
-                          ? new Date(editProfile.DOB).toISOString().split("T")[0]
+                          ? new Date(editProfile.DOB)
+                              .toISOString()
+                              .split("T")[0]
                           : ""
                       }
                       onChange={handleInputChange}
                     />
                     {/* Gender Dropdown - spanning both columns */}
                     <div className="col-span-2">
-                      <label htmlFor="gender" className="block text-sm font-medium text-gray-700">
+                      <label
+                        htmlFor="gender"
+                        className="block text-sm font-medium text-gray-700"
+                      >
                         Gender
                       </label>
                       <select
@@ -414,7 +448,9 @@ const Profile: React.FC = () => {
                       onChange={handleChangePasswordInput}
                       required
                       showPassword={showOldPassword}
-                      toggleShowPassword={() => setShowOldPassword((prev) => !prev)}
+                      toggleShowPassword={() =>
+                        setShowOldPassword((prev) => !prev)
+                      }
                     />
                     <FormField
                       label="New Password"
@@ -424,7 +460,9 @@ const Profile: React.FC = () => {
                       onChange={handleChangePasswordInput}
                       required
                       showPassword={showNewPassword}
-                      toggleShowPassword={() => setShowNewPassword((prev) => !prev)}
+                      toggleShowPassword={() =>
+                        setShowNewPassword((prev) => !prev)
+                      }
                     />
                     <FormField
                       label="Confirm New Password"
@@ -434,7 +472,9 @@ const Profile: React.FC = () => {
                       onChange={handleChangePasswordInput}
                       required
                       showPassword={showConfirmNewPassword}
-                      toggleShowPassword={() => setShowConfirmNewPassword((prev) => !prev)}
+                      toggleShowPassword={() =>
+                        setShowConfirmNewPassword((prev) => !prev)
+                      }
                     />
                   </div>
 

@@ -55,12 +55,10 @@ function generateTimeSlots(schedule: ISchedule): string[] {
   return slots;
 }
 
-/**
- * Helper to generate recurring time slots for a given schedule on a selected date.
- * This function uses the recurrence rule to check if the schedule occurs on the selected date.
- * If yes, it generates the time slots by replacing the date portion of the schedule’s start/end times.
- */
-function generateRecurringSlots(schedule: ISchedule, selectedDate: Date): string[] {
+function generateRecurringSlots(
+  schedule: ISchedule,
+  selectedDate: Date
+): string[] {
   if (!schedule.recurrenceRule) return [];
   // Parse the recurrence rule string using RRule.
   const rule = RRule.fromString(schedule.recurrenceRule);
@@ -221,7 +219,9 @@ const DoctorScheduleManagement: React.FC = () => {
                           <p className="text-sm font-medium text-green-800">
                             Recurrence Rule:
                           </p>
-                          <p className="text-gray-600">{sched.recurrenceRule}</p>
+                          <p className="text-gray-600">
+                            {sched.recurrenceRule}
+                          </p>
                         </div>
                         <div className="mb-4">
                           <p className="text-sm text-gray-600 mb-2">
@@ -310,7 +310,9 @@ const DoctorScheduleManagement: React.FC = () => {
                       <div className="border-t pt-4">
                         <div className="flex items-center gap-2 mb-3">
                           <AlertCircle className="h-5 w-5 text-green-800" />
-                          <h4 className="font-medium text-green-800">Exceptions</h4>
+                          <h4 className="font-medium text-green-800">
+                            Exceptions
+                          </h4>
                         </div>
                         {sched.exceptions.map((ex, idx) => (
                           <div

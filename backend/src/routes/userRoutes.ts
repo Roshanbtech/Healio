@@ -25,7 +25,6 @@ const BookingRepositoryInstance = new BookingRepository();
 const BookingServiceInstance = new BookingService(BookingRepositoryInstance);
 const BookingControllerInstance = new BookingController(BookingServiceInstance);
 
-
 route.post(
   "/signUp",
   AuthControllerInstance.createUser.bind(AuthControllerInstance)
@@ -96,7 +95,7 @@ route.post(
   "/chatImgUploads/:id",
   upload.single("image"),
   UserControllerInstance.chatImageUploads.bind(UserControllerInstance)
-)
+);
 route.post(
   "/logout",
   AuthControllerInstance.logoutUser.bind(AuthControllerInstance)
@@ -105,7 +104,6 @@ route.get(
   "/coupons",
   BookingControllerInstance.getCoupons.bind(BookingControllerInstance)
 );
-
 
 // route.get(
 //   "/bookings",

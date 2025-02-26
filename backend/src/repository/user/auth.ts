@@ -1,8 +1,6 @@
 import userModel from "../../model/userModel";
-import bcrypt from "bcrypt";
 import { UserProfile, userType } from "../../interface/userInterface/interface";
 import { Document, ObjectId } from "mongoose";
-import mongoose from "mongoose";
 import { IAuthRepository } from "../../interface/user/Auth.repository.interface";
 
 export class AuthRepository implements IAuthRepository {
@@ -62,35 +60,39 @@ export class AuthRepository implements IAuthRepository {
     }
   }
 
-  async handleGoogleLogin(userData: any): Promise<{ user: any; isNewUser: boolean }> {
+  async handleGoogleLogin(
+    userData: any
+  ): Promise<{ user: any; isNewUser: boolean }> {
     try {
-        const { email, name, googleId, isVerified, image } = userData;
-        let user = await userModel.findOne({ email });
-        let isNewUser = false;
+      const { email, name, googleId, isVerified, image } = userData;
+      let user = await userModel.findOne({ email });
+      let isNewUser = false;
 
-        if (!user) {
-            user = new userModel({
-                name,
-                email,
-                googleId,
-                isVerified,
-                image,
-            });
-            await user.save();
-            isNewUser = true;
-        }
+      if (!user) {
+        user = new userModel({
+          name,
+          email,
+          googleId,
+          isVerified,
+          image,
+        });
+        await user.save();
+        isNewUser = true;
+      }
 
-        return { user, isNewUser };
+      return { user, isNewUser };
     } catch (error: any) {
-        console.error("Error in Google login repository:", error);
-        throw new Error("DB error while handling Google login");
+      console.error("Error in Google login repository:", error);
+      throw new Error("DB error while handling Google login");
     }
-}
+  }
 
-  
   async updatePassword(email: string, hashedPassword: string): Promise<any> {
     try {
-      return await userModel.updateOne({ email }, { $set: { password: hashedPassword } });
+      return await userModel.updateOne(
+        { email },
+        { $set: { password: hashedPassword } }
+      );
     } catch (error: any) {
       console.error("Error updating password:", error);
       throw new Error("Error updating password");

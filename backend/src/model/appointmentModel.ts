@@ -5,7 +5,12 @@ export interface IAppointment extends Document {
   doctorId: mongoose.Types.ObjectId;
   date: Date;
   time: string;
-  status: "pending" | "prescription pending" | "completed" | "cancelled" | "cancelled by Dr";
+  status:
+    | "pending"
+    | "prescription pending"
+    | "completed"
+    | "cancelled"
+    | "cancelled by Dr";
   reason: string;
   patientName?: string;
   age?: number;
@@ -13,7 +18,12 @@ export interface IAppointment extends Document {
   locked?: mongoose.Types.ObjectId | null;
   fees?: number;
   paymentMethod?: "stripe";
-  paymentStatus?: "payment pending" | "payment completed" | "payment failed" | "refunded" | "anonymous";
+  paymentStatus?:
+    | "payment pending"
+    | "payment completed"
+    | "payment failed"
+    | "refunded"
+    | "anonymous";
   paymentId?: string | null;
   prescription?: mongoose.Types.ObjectId | null;
   review?: {
@@ -47,7 +57,13 @@ const AppointmentSchema = new Schema<IAppointment>(
     },
     status: {
       type: String,
-      enum: ["pending", "prescription pending", "completed", "cancelled", "cancelled by Dr"],
+      enum: [
+        "pending",
+        "prescription pending",
+        "completed",
+        "cancelled",
+        "cancelled by Dr",
+      ],
       required: true,
     },
     reason: {
@@ -77,7 +93,13 @@ const AppointmentSchema = new Schema<IAppointment>(
     },
     paymentStatus: {
       type: String,
-      enum: ["payment pending", "payment completed", "payment failed", "refunded", "anonymous"],
+      enum: [
+        "payment pending",
+        "payment completed",
+        "payment failed",
+        "refunded",
+        "anonymous",
+      ],
     },
     paymentId: {
       type: String,

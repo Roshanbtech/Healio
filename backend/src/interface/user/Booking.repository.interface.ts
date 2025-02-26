@@ -7,6 +7,9 @@ export interface Coupon {
     expirationDate: string;
     isActive: boolean;
   }
-export interface IBookingRepository {
-    getCoupons(): Promise<Coupon[]>;
-}
+  import { ICoupon } from "../../model/couponModel";
+
+  export interface IBookingRepository {
+    getCoupons(): Promise<ICoupon[]>;
+  }
+  

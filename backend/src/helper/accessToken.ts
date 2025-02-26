@@ -10,8 +10,14 @@ interface JwtPayload {
 }
 
 const verifyToken = (allowedRoles?: string[]): RequestHandler => {
-  return async (req: Request, res: Response, next: NextFunction): Promise<any> => {
-    const authHeader = req.headers.authorization as string || req.headers.Authorization as string;
+  return async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<any> => {
+    const authHeader =
+      (req.headers.authorization as string) ||
+      (req.headers.Authorization as string);
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(HTTP_statusCode.Unauthorized).json({
@@ -23,14 +29,19 @@ const verifyToken = (allowedRoles?: string[]): RequestHandler => {
     const token = authHeader.split(" ")[1];
 
     try {
-      const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!) as JwtPayload;
+      const decoded = jwt.verify(
+        token,
+        process.env.ACCESS_TOKEN_SECRET!
+      ) as JwtPayload;
       console.log("Access token decoded:", decoded);
 
       let user: any = null;
 
       if (decoded.role === "admin") {
-        // If the role is "admin", check if the email matches the one in the .env file
-        if (!process.env.ADMIN_EMAIL || decoded.email !== process.env.ADMIN_EMAIL) {
+        if (
+          !process.env.ADMIN_EMAIL ||
+          decoded.email !== process.env.ADMIN_EMAIL
+        ) {
           return res.status(HTTP_statusCode.Forbidden).json({
             status: false,
             message: "Access denied. Unauthorized admin account.",
@@ -52,7 +63,9 @@ const verifyToken = (allowedRoles?: string[]): RequestHandler => {
       if (user && user.isBlocked) {
         return res.status(HTTP_statusCode.Forbidden).json({
           status: false,
-          message: `Access denied. ${decoded.role.charAt(0).toUpperCase() + decoded.role.slice(1)} is blocked.`,
+          message: `Access denied. ${
+            decoded.role.charAt(0).toUpperCase() + decoded.role.slice(1)
+          } is blocked.`,
         });
       }
 

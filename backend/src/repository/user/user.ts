@@ -103,30 +103,33 @@ export class UserRepository implements IUserRepository {
     }
   }
 
-  async uploadChatImage(chatId: string, file: Express.Multer.File): Promise<any> {
+  async uploadChatImage(
+    chatId: string,
+    file: Express.Multer.File
+  ): Promise<any> {
     try {
       const chat = await ChatModel.findById(chatId);
-      
+
       if (!chat) {
-        throw new Error('Chat not found');
+        throw new Error("Chat not found");
       }
 
       const newMessage = {
-        sender: 'user',
-        message: '',
-        type: 'img',
+        sender: "user",
+        message: "",
+        type: "img",
         deleted: false,
-        read: false
+        read: false,
       };
 
       return {
         chatId: chat._id,
         doctorId: chat.doctorId,
         userId: chat.userId,
-        newMessage
+        newMessage,
       };
     } catch (error) {
-      console.error('Error in chatImageUploads repository:', error);
+      console.error("Error in chatImageUploads repository:", error);
       throw error;
     }
   }
@@ -140,14 +143,13 @@ export class UserRepository implements IUserRepository {
       );
 
       if (!updatedChat) {
-        throw new Error('Failed to save chat message');
+        throw new Error("Failed to save chat message");
       }
 
       return updatedChat.messages[updatedChat.messages.length - 1];
     } catch (error) {
-      console.error('Error saving chat image message:', error);
+      console.error("Error saving chat image message:", error);
       throw error;
     }
   }
-  
 }

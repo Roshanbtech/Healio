@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { assets } from "../../assets/assets";
 import axiosInstance from "../../utils/axiosInterceptors";
@@ -27,10 +27,13 @@ const ResetPassword: React.FC = () => {
     onSubmit: async (values, { setSubmitting }) => {
       setSubmitting(true);
       try {
-        const response = await axiosInstance.post("/doctor/forgot-password/reset", {
-          values,
-          email: localStorage.getItem("doctorForgotPasswordEmail"),
-        });
+        const response = await axiosInstance.post(
+          "/doctor/forgot-password/reset",
+          {
+            values,
+            email: localStorage.getItem("doctorForgotPasswordEmail"),
+          }
+        );
         console.log("Reset password response:", response.data);
 
         toast.success("Password reset successfully!");

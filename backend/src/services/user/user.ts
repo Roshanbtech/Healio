@@ -1,6 +1,9 @@
-import { userType,DoctorDetails } from "../../interface/userInterface/interface";
-import {IUserService} from "../../interface/user/User.service.interface";
-import {IUserRepository}  from "../../interface/user/User.repository.interface";
+import {
+  userType,
+  DoctorDetails,
+} from "../../interface/userInterface/interface";
+import { IUserService } from "../../interface/user/User.service.interface";
+import { IUserRepository } from "../../interface/user/User.repository.interface";
 import { awsFileUpload } from "../../helper/uploadFiles";
 import { AwsConfig } from "../../config/s3Config";
 import { PaginationOptions } from "../../helper/pagination";
@@ -17,13 +20,12 @@ export class UserService implements IUserService {
   private userData: userType | null = null;
   private fileUploadService: awsFileUpload;
 
-
   constructor(AuthRepository: IUserRepository) {
     this.UserRepository = AuthRepository;
     this.fileUploadService = new awsFileUpload(new AwsConfig());
   }
 
-  async getDoctors(options:PaginationOptions): Promise<any> {
+  async getDoctors(options: PaginationOptions): Promise<any> {
     try {
       const doctors = await this.UserRepository.getDoctors(options);
       if (!doctors) {
@@ -75,15 +77,18 @@ export class UserService implements IUserService {
   ): Promise<any> {
     try {
       let image: string | undefined = undefined;
-      console.log('Service - Received file:', file);
-      
+      console.log("Service - Received file:", file);
+
       if (file) {
         image = await this.fileUploadService.uploadUserProfileImage(id, file);
       }
-      
+
       const updatedData = { ...data, image };
-      const updatedUser = await this.UserRepository.editUserProfile(id, updatedData);
-      
+      const updatedUser = await this.UserRepository.editUserProfile(
+        id,
+        updatedData
+      );
+
       return updatedUser;
     } catch (error: any) {
       throw new Error(error.message);
@@ -93,7 +98,7 @@ export class UserService implements IUserService {
   async chatImageUploads(id: string, file: Express.Multer.File): Promise<any> {
     try {
       if (!file) {
-        throw new Error('No file provided');
+        throw new Error("No file provided");
       }
 
       const chatData = await this.UserRepository.uploadChatImage(id, file);
@@ -102,93 +107,99 @@ export class UserService implements IUserService {
 
       const messageData = {
         ...chatData.newMessage,
-        message: imageUrl
+        message: imageUrl,
       };
 
-      const savedMessage = await this.UserRepository.saveChatImageMessage(id, messageData);
+      const savedMessage = await this.UserRepository.saveChatImageMessage(
+        id,
+        messageData
+      );
 
       return {
         chatId: chatData.chatId,
         messageId: savedMessage._id,
         imageUrl: imageUrl,
-        createdAt: savedMessage.createdAt
+        createdAt: savedMessage.createdAt,
       };
     } catch (error: any) {
       throw new Error(`Failed to upload chat image: ${error.message}`);
     }
   }
-  
 
-  async changePassword(id: string, oldPassword: any, newPassword: any): Promise<any> {
+  async changePassword(
+    id: string,
+    oldPassword: any,
+    newPassword: any
+  ): Promise<any> {
     try {
-      const result = await this.UserRepository.changePassword(id, oldPassword, newPassword);
+      const result = await this.UserRepository.changePassword(
+        id,
+        oldPassword,
+        newPassword
+      );
       return result;
     } catch (error: any) {
       throw new Error(error.message);
-  }
-}
-
-async getAvailableSlots(id: string): Promise<Slot[]> {
-  try {
-    // Fetch schedules for the doctor (read-only repository call)
-    const schedules: Schedule[] = await this.UserRepository.getScheduleForDoctor(id);
-    if (!schedules || schedules.length === 0) {
-      return [];
     }
-    const sched = schedules[0];
-    const slots: Slot[] = [];
-    const windowDuration =
-      new Date(sched.endTime).getTime() - new Date(sched.startTime).getTime();
+  }
 
-    if (sched.isRecurring && sched.recurrenceRule) {
-      const rangeStart = new Date();
-      const rangeEnd = new Date();
-      rangeEnd.setDate(rangeEnd.getDate() + 14);
-
-      // Extract RRULE portion from stored recurrenceRule.
-      const lines = sched.recurrenceRule.split("\n");
-      let ruleStr = "";
-      for (const line of lines) {
-        if (line.startsWith("RRULE:")) {
-          ruleStr = line.substring(6);
-          break;
-        }
+  async getAvailableSlots(id: string): Promise<Slot[]> {
+    try {
+      const schedules: Schedule[] =
+        await this.UserRepository.getScheduleForDoctor(id);
+      if (!schedules || schedules.length === 0) {
+        return [];
       }
-      if (!ruleStr) ruleStr = sched.recurrenceRule;
+      const sched = schedules[0];
+      const slots: Slot[] = [];
+      const windowDuration =
+        new Date(sched.endTime).getTime() - new Date(sched.startTime).getTime();
 
-      const ruleOptions = RRule.parseString(ruleStr);
-      // Override dtstart with the schedule's startTime.
-      ruleOptions.dtstart = new Date(sched.startTime);
-      const rule = new RRule(ruleOptions);
-      const occurrences = rule.between(rangeStart, rangeEnd, true);
-      occurrences.forEach((occurrence: Date) => {
-        const occStart = new Date(occurrence);
-        const occEnd = new Date(occStart.getTime() + windowDuration);
-        let current = new Date(occStart);
-        while (isBefore(current, occEnd)) {
+      if (sched.isRecurring && sched.recurrenceRule) {
+        const rangeStart = new Date();
+        const rangeEnd = new Date();
+        rangeEnd.setDate(rangeEnd.getDate() + 14);
+
+        const lines = sched.recurrenceRule.split("\n");
+        let ruleStr = "";
+        for (const line of lines) {
+          if (line.startsWith("RRULE:")) {
+            ruleStr = line.substring(6);
+            break;
+          }
+        }
+        if (!ruleStr) ruleStr = sched.recurrenceRule;
+
+        const ruleOptions = RRule.parseString(ruleStr);
+        ruleOptions.dtstart = new Date(sched.startTime);
+        const rule = new RRule(ruleOptions);
+        const occurrences = rule.between(rangeStart, rangeEnd, true);
+        occurrences.forEach((occurrence: Date) => {
+          const occStart = new Date(occurrence);
+          const occEnd = new Date(occStart.getTime() + windowDuration);
+          let current = new Date(occStart);
+          while (isBefore(current, occEnd)) {
+            slots.push({
+              slot: format(current, "h:mma"),
+              datetime: new Date(current),
+            });
+            current = addMinutes(current, sched.defaultSlotDuration);
+          }
+        });
+      } else {
+        let current = new Date(sched.startTime);
+        const end = new Date(sched.endTime);
+        while (isBefore(current, end)) {
           slots.push({
             slot: format(current, "h:mma"),
             datetime: new Date(current),
           });
           current = addMinutes(current, sched.defaultSlotDuration);
         }
-      });
-    } else {
-      // Non-recurring schedule: generate slots from startTime to endTime.
-      let current = new Date(sched.startTime);
-      const end = new Date(sched.endTime);
-      while (isBefore(current, end)) {
-        slots.push({
-          slot: format(current, "h:mma"),
-          datetime: new Date(current),
-        });
-        current = addMinutes(current, sched.defaultSlotDuration);
       }
+      return slots;
+    } catch (error: any) {
+      throw new Error(error.message);
     }
-    return slots;
-  } catch (error: any) {
-    throw new Error(error.message);
   }
-}
-
 }

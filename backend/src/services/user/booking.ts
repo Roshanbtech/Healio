@@ -2,18 +2,17 @@ import { IBookingRepository } from "../../interface/user/Booking.repository.inte
 import { IBookingService } from "../../interface/user/Booking.service.interface";
 
 export class BookingService implements IBookingService {
-    private BookingRepository: IBookingRepository;
+  private bookingRepository: IBookingRepository;
 
-    constructor(BookingRepository: IBookingRepository) {
-        this.BookingRepository = BookingRepository;
-    }
+  constructor(bookingRepository: IBookingRepository) {
+    this.bookingRepository = bookingRepository;
+  }
 
-    async getCoupons(): Promise<any> {
-        try {
-            const coupons = await this.BookingRepository.getCoupons();
-            return coupons;
-        } catch (error: any) {
-            throw new Error(error.message);
-        }
+  async getCoupons(): Promise<any> {
+    try {
+      return await this.bookingRepository.getCoupons();
+    } catch (error: any) {
+      throw new Error(error.message);
     }
+  }
 }

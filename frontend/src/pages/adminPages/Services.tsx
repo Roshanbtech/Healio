@@ -1,8 +1,6 @@
 import ServicePage from "../../components/adminComponents/Service";
 const Services = () => {
-  return (
-    <ServicePage />
-  )
-}
+  return <ServicePage />;
+};
 
-export default Services
+export default Services;

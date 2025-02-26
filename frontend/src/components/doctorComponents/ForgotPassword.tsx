@@ -17,9 +17,12 @@ const ForgotPassword: React.FC = () => {
   // Function to send OTP to the provided doctor email
   const handleForgotPassword = async (email: string) => {
     try {
-      const response = await axiosInstance.post("doctor/forgot-password/sendOtp", {
-        email,
-      });
+      const response = await axiosInstance.post(
+        "doctor/forgot-password/sendOtp",
+        {
+          email,
+        }
+      );
       if (response.data.status) {
         console.log("OTP sent successfully");
         localStorage.setItem("doctorForgotPasswordEmail", email);
@@ -83,7 +86,8 @@ const ForgotPassword: React.FC = () => {
                 Doctor Forgot Password
               </h1>
               <p className="text-gray-600 text-sm mb-6">
-                Enter your registered doctor email. We'll send you a code to reset your password.
+                Enter your registered doctor email. We'll send you a code to
+                reset your password.
               </p>
 
               <form onSubmit={formik.handleSubmit} className="space-y-4">

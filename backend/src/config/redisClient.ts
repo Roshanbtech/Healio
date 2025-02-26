@@ -23,7 +23,7 @@ export const generateOTP = (): string => {
 export const otpSetData = async (email: string, otp: string): Promise<void> => {
   try {
     await client.del(email);
-    await client.hSet(email, { otp }); 
+    await client.hSet(email, { otp });
     await client.expire(email, 3000);
     console.log(`OTP stored for ${email}: ${otp}`);
   } catch (error) {
@@ -33,8 +33,8 @@ export const otpSetData = async (email: string, otp: string): Promise<void> => {
 
 export const getOtpByEmail = async (email: string): Promise<string | null> => {
   try {
-    const userData = await client.hGetAll(email); 
-    console.log(`Retrieved OTP for ${email}:`, userData); 
+    const userData = await client.hGetAll(email);
+    console.log(`Retrieved OTP for ${email}:`, userData);
     return userData.otp || null;
   } catch (error) {
     console.error("Error retrieving OTP:", error);
@@ -44,7 +44,7 @@ export const getOtpByEmail = async (email: string): Promise<string | null> => {
 
 export const resendOtpUtil = async (email: string): Promise<string | null> => {
   try {
-    const newOtp = generateOTP(); 
+    const newOtp = generateOTP();
     await otpSetData(email, newOtp);
     return newOtp;
   } catch (error) {
@@ -59,7 +59,7 @@ export const resendOtp = async (email: string): Promise<string | null> => {
 
     if (existingOtp) {
       console.log(`Existing OTP for ${email} is being deleted.`);
-      await client.del(email); 
+      await client.del(email);
     }
 
     const newOtp = generateOTP();

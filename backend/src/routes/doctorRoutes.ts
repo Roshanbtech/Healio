@@ -6,7 +6,7 @@ import { DoctorService } from "../services/doctor/doctor";
 import { DoctorController } from "../controllers/doctor/doctor";
 import { DoctorRepository } from "../repository/doctor/doctor";
 import { upload } from "../config/multerConfig";
-import verifyToken from '../helper/accessToken';
+import verifyToken from "../helper/accessToken";
 
 const route = Router();
 
@@ -17,7 +17,6 @@ const AuthControllerInstance = new AuthController(AuthServiceInstance);
 const DoctorRepositoryInstance = new DoctorRepository();
 const DoctorServiceInstance = new DoctorService(DoctorRepositoryInstance);
 const DoctorControllerInstance = new DoctorController(DoctorServiceInstance);
-
 
 route.post(
   "/signUp",
@@ -42,15 +41,15 @@ route.post(
 route.post(
   "/forgot-password/sendOtp",
   AuthControllerInstance.sendForgotPasswordOtp.bind(AuthControllerInstance)
-)
+);
 route.post(
   "/forgot-password/verifyOtp",
   AuthControllerInstance.verifyForgotPasswordOtp.bind(AuthControllerInstance)
-)
+);
 route.post(
   "/forgot-password/reset",
   AuthControllerInstance.resetPassword.bind(AuthControllerInstance)
-)
+);
 route.get(
   "/services",
   DoctorControllerInstance.getServices.bind(DoctorControllerInstance)
@@ -69,32 +68,32 @@ route.use(verifyToken(["doctor"]));
 route.get(
   "/profile/:id",
   DoctorControllerInstance.getDoctorProfile.bind(DoctorControllerInstance)
-)
+);
 route.patch(
   "/editProfile/:id",
   upload.single("image"),
   DoctorControllerInstance.editDoctorProfile.bind(DoctorControllerInstance)
-)
+);
 route.patch(
   "/changePassword/:id",
   DoctorControllerInstance.changePassword.bind(DoctorControllerInstance)
-)
+);
 route.post(
   "/addSchedule",
   DoctorControllerInstance.addSchedule.bind(DoctorControllerInstance)
-)
+);
 route.get(
   "/schedule/:id",
   DoctorControllerInstance.getSchedule.bind(DoctorControllerInstance)
-)
+);
 route.get(
   "/users",
   DoctorControllerInstance.getUsers.bind(DoctorControllerInstance)
-)
+);
 route.post(
   "/chatImgUploads/:id",
   upload.single("image"),
   DoctorControllerInstance.chatImageUploads.bind(DoctorControllerInstance)
-)
+);
 
 export default route;

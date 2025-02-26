@@ -4,7 +4,6 @@ import jwt from "jsonwebtoken";
 import { doctorType } from "../../interface/doctorInterface/Interface";
 import { IAuthService } from "../../interface/doctor/Auth.service.interface";
 import { IAuthRepository } from "../../interface/doctor/Auth.repository.interface";
-//import user schema
 import sendMail from "../../config/emailConfig";
 import {
   otpSetData,
@@ -145,19 +144,19 @@ export class AuthService implements IAuthService {
     if (!DoctorExist.existEmail) {
       throw new Error("Email not found");
     }
-  
+
     const otp = await resendOtpUtil(email);
     if (!otp) {
       throw new Error("OTP not sent");
     }
-  
+
     const subject = "OTP Verification";
     const text = `Hello,\n\nYour OTP for password reset is ${otp}. It is valid for 1 minute.\n\nThank you.`;
     await sendMail(email, subject, text);
-  
+
     return { status: true, message: "OTP sent successfully" };
   }
-  
+
   async verifyForgotPasswordOtp(email: string, otp: string): Promise<any> {
     const storedOtp = await getOtpByEmail(email);
     if (!storedOtp) {
@@ -166,31 +165,32 @@ export class AuthService implements IAuthService {
     if (storedOtp !== otp) {
       throw new Error("Incorrect OTP");
     }
-  
+
     await otpSetData(email, "");
     return { status: true, message: "OTP verified successfully" };
   }
-  
+
   async resetPassword(email: string, password: string): Promise<any> {
     const doctorExist = await this.AuthRepository.existDoctor(email);
-    console.log("User exist:",doctorExist);
+    console.log("User exist:", doctorExist);
     if (!doctorExist.existEmail) {
       throw new Error("Email not found");
     }
-   console.log("Password:",
-    password,email);
+    console.log("Password:", password, email);
     const saltRounds: number = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
-    console.log("Hashed password:", hashedPassword,password);
-  
-    const response = await this.AuthRepository.updatePassword(email, hashedPassword);
+    console.log("Hashed password:", hashedPassword, password);
+
+    const response = await this.AuthRepository.updatePassword(
+      email,
+      hashedPassword
+    );
     console.log("Response:", response);
     if (!response || response.modifiedCount === 0) {
       throw new Error("Password not updated");
     }
     return { status: true, message: "Password updated successfully" };
   }
-  
 
   async login(doctorData: {
     email: string;
@@ -212,9 +212,8 @@ export class AuthService implements IAuthService {
         return { error: "Doctor Not Found." };
       }
 
-
-      if(doctor.docStatus === "rejected"){
-        return {error: "Your account has been rejected"}
+      if (doctor.docStatus === "rejected") {
+        return { error: "Your account has been rejected" };
       }
 
       const isPasswordValid = await bcrypt.compare(password, doctor.password);
@@ -223,7 +222,7 @@ export class AuthService implements IAuthService {
       }
 
       const accessToken = jwt.sign(
-        { email, role: "doctor",doctorId:doctor._id },
+        { email, role: "doctor", doctorId: doctor._id },
         process.env.ACCESS_TOKEN_SECRET!,
         { expiresIn: "15m" }
       );
@@ -241,46 +240,54 @@ export class AuthService implements IAuthService {
     }
   }
 
-  async handleGoogleLogin(idToken: string): Promise<{ doctor: any; isNewDoctor: boolean; accessToken: string; refreshToken: string }> {
-      try {
-          const decodedToken = await admin.auth().verifyIdToken(idToken);
-          console.log("Decoded Token:", decodedToken);
-  
-          const { email, name, uid, picture } = decodedToken;
-          const doctorData:{
-            name: string,
-            email: string | undefined,
-            googleId: string,
-            isVerified: boolean,
-            image?: string 
-          }={
-              name,
-              email,
-              googleId: uid,
-              isVerified: true,
-          }
-          if(picture){
-            doctorData.image = picture;
-          }
-         
-          const { doctor, isNewDoctor } = await this.AuthRepository.handleGoogleLogin(doctorData);
-  
-          const accessToken = jwt.sign(
-              { email, role: "doctor" },
-              process.env.ACCESS_TOKEN_SECRET!,
-              { expiresIn: "15m" }
-          );
-  
-          const refreshToken = jwt.sign(
-              { email, role: "doctor" },
-              process.env.REFRESH_TOKEN_SECRET!,
-              { expiresIn: "30d" }
-          );
-  
-          return { doctor, isNewDoctor, accessToken, refreshToken };
-      } catch (error: any) {
-          console.error("Google login error:", error);
-          throw new Error("Error handling Google login");
+  async handleGoogleLogin(
+    idToken: string
+  ): Promise<{
+    doctor: any;
+    isNewDoctor: boolean;
+    accessToken: string;
+    refreshToken: string;
+  }> {
+    try {
+      const decodedToken = await admin.auth().verifyIdToken(idToken);
+      console.log("Decoded Token:", decodedToken);
+
+      const { email, name, uid, picture } = decodedToken;
+      const doctorData: {
+        name: string;
+        email: string | undefined;
+        googleId: string;
+        isVerified: boolean;
+        image?: string;
+      } = {
+        name,
+        email,
+        googleId: uid,
+        isVerified: true,
+      };
+      if (picture) {
+        doctorData.image = picture;
       }
+
+      const { doctor, isNewDoctor } =
+        await this.AuthRepository.handleGoogleLogin(doctorData);
+
+      const accessToken = jwt.sign(
+        { email, role: "doctor" },
+        process.env.ACCESS_TOKEN_SECRET!,
+        { expiresIn: "15m" }
+      );
+
+      const refreshToken = jwt.sign(
+        { email, role: "doctor" },
+        process.env.REFRESH_TOKEN_SECRET!,
+        { expiresIn: "30d" }
+      );
+
+      return { doctor, isNewDoctor, accessToken, refreshToken };
+    } catch (error: any) {
+      console.error("Google login error:", error);
+      throw new Error("Error handling Google login");
+    }
   }
 }

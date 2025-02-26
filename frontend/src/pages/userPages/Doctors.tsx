@@ -95,12 +95,16 @@ const Doctors: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-green-800 mb-6">Our Doctors</h1>
-      <p className="text-gray-600 mb-8">Browse through our specialist doctors.</p>
+      <p className="text-gray-600 mb-8">
+        Browse through our specialist doctors.
+      </p>
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Sidebar: Display the list of specialities */}
         <div className="lg:w-1/4">
           <div className="bg-white shadow-lg rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-green-800 mb-4">Specialities</h2>
+            <h2 className="text-xl font-semibold text-green-800 mb-4">
+              Specialities
+            </h2>
             <div className="space-y-2">
               {services.map((spec) => (
                 <button
