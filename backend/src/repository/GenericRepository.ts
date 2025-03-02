@@ -15,6 +15,12 @@ export class GenericRepository<T extends Document> {
     return this.model.findById(id).exec();
   }
 
+  //for appointment purpose only
+  async findOne(id: string): Promise<T | null> {
+    return this.model.findOne({appointmentId: id}).exec();
+  }
+  //
+
   async findAll(filter: FilterQuery<T> = {}): Promise<T[]> {
     return this.model.find(filter).exec();
   }
@@ -22,6 +28,12 @@ export class GenericRepository<T extends Document> {
   async update(id: string, data: Partial<T>): Promise<T | null> {
     return this.model.findByIdAndUpdate(id, data, { new: true }).exec();
   }
+
+  //for appointment purpose only
+  async updateOne(id: string, data: Partial<T>): Promise<T | null> {
+    return this.model.findOneAndUpdate({ appointmentId: id }, data, { new: true }).exec();
+  }
+  //
 
   async delete(id: string): Promise<boolean> {
     const result = await this.model.findByIdAndDelete(id).exec();

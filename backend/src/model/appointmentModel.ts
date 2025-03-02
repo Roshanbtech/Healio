@@ -1,42 +1,38 @@
 import mongoose, { Document, Schema, model } from "mongoose";
 
 export interface IAppointment extends Document {
+  appointmentId: string;
   patientId: mongoose.Types.ObjectId;
   doctorId: mongoose.Types.ObjectId;
   date: Date;
   time: string;
-  status:
-    | "pending"
-    | "prescription pending"
-    | "completed"
-    | "cancelled"
-    | "cancelled by Dr";
-  reason: string;
-  patientName?: string;
-  age?: number;
-  description?: string;
-  locked?: mongoose.Types.ObjectId | null;
+  status: "pending" | "prescription pending" | "completed" | "cancelled" | "cancelled by Dr";
+  reason?: string;
   fees?: number;
-  paymentMethod?: "stripe";
-  paymentStatus?:
-    | "payment pending"
-    | "payment completed"
-    | "payment failed"
-    | "refunded"
-    | "anonymous";
-  paymentId?: string | null;
+  paymentMethod?: "razorpay";
+  paymentStatus?: "payment pending" | "payment completed" | "payment failed" | "refunded" | "anonymous";
+  razorpay_order_id?: string;
+  razorpay_payment_id?: string;
+  razorpay_signature?: string;
   prescription?: mongoose.Types.ObjectId | null;
   review?: {
     rating?: number;
     description?: string;
   };
   medicalRecords?: string[];
+  couponCode?: string;
+  couponDiscount?: string;
+  isApplied?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 const AppointmentSchema = new Schema<IAppointment>(
   {
+    appointmentId: {
+      type: String,
+      required: true,
+    },
     patientId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -67,29 +63,14 @@ const AppointmentSchema = new Schema<IAppointment>(
       required: true,
     },
     reason: {
-      type: String,
-      required: true,
-    },
-    patientName: {
-      type: String,
-    },
-    age: {
-      type: Number,
-    },
-    description: {
-      type: String,
-    },
-    locked: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      default: null,
+      type: String
     },
     fees: {
       type: Number,
     },
     paymentMethod: {
       type: String,
-      enum: ["stripe"],
+      enum: ["razorpay"],
     },
     paymentStatus: {
       type: String,
@@ -101,9 +82,14 @@ const AppointmentSchema = new Schema<IAppointment>(
         "anonymous",
       ],
     },
-    paymentId: {
+    razorpay_order_id: {
       type: String,
-      default: null,
+    },
+    razorpay_payment_id: {
+      type: String,
+    },
+    razorpay_signature: {
+      type: String,
     },
     prescription: {
       type: mongoose.Schema.Types.ObjectId,
@@ -123,6 +109,19 @@ const AppointmentSchema = new Schema<IAppointment>(
     medicalRecords: {
       type: [String],
       default: [],
+    },
+    couponCode: {
+      type: String,
+      required: false,
+    },
+    couponDiscount: {
+      type: String,
+      required: false,
+    },
+    isApplied: {
+      type: Boolean,
+      default: false,
+      required: false,
     },
   },
   { timestamps: true }
