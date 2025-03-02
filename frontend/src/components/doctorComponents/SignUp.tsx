@@ -3,7 +3,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react";
 import { assets } from "../../assets/assets";
 import Otp from "../../components/doctorComponents/Otp";
 import { SignUpFormValues } from "../../interfaces/userInterface";
@@ -22,6 +22,7 @@ const Signup: React.FC = () => {
     password: "",
     confirmpassword: "",
   });
+
   const validationSchema = Yup.object({
     name: Yup.string()
       .trim()
@@ -80,7 +81,7 @@ const Signup: React.FC = () => {
     },
     validationSchema,
     onSubmit: async (values) => {
-      if (isSubmitting) return; // Prevent double submission
+      if (isSubmitting) return;
       setIsSubmitting(true);
       try {
         console.log("Submitting:", values);
@@ -95,7 +96,6 @@ const Signup: React.FC = () => {
 
         console.log(response.data, "data");
 
-        // Check for correct response structure
         if (response.data?.status === true) {
           toast.success(response.data.response.message || "Signup successful!");
           setOtpPage(true);
@@ -105,7 +105,6 @@ const Signup: React.FC = () => {
           );
         }
 
-        // Clear form
         formik.resetForm();
       } catch (error: any) {
         console.error("Error Response:", error);
@@ -116,219 +115,262 @@ const Signup: React.FC = () => {
     },
   });
 
-  return otpPage ? (
-    <Otp formData={formData} />
-  ) : (
+  if (otpPage) {
+    return <Otp formData={formData} />;
+  }
+
+  return (
     <>
-      {" "}
-      <header className="bg-white py-4 px-6 shadow-sm">
+      {/* Fixed Header */}
+      <header className="bg-white py-4 px-6 shadow-md fixed top-0 left-0 right-0 z-10">
         <div className="max-w-[1200px] mx-auto flex items-center justify-between">
-          <img src={assets.logo} alt="Healio Logo" className="h-12 w-auto" />
+          <div className="flex items-center">
+            <img src={assets.logo} alt="Healio Logo" className="h-10 w-auto" />
+          </div>
           <Link
             to="/signup"
-            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+            className="bg-white text-red-600 border border-red-600 px-4 py-2 rounded-lg hover:bg-red-50 transition duration-300 text-sm font-medium flex items-center"
           >
             Switch to User
           </Link>
         </div>
       </header>
-      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
-        <div className="w-full max-w-[1000px] bg-white rounded-[20px] shadow-lg flex overflow-hidden">
-          {/* Left Side - Doctor Image */}
-          <div className="hidden md:block w-1/2 p-6">
-            <img
-              src={assets.bg1}
-              alt="Doctor"
-              className="w-full h-full object-contain"
-            />
+
+      {/* Main Container */}
+      <div className="pt-20 pb-10 min-h-screen flex items-center justify-center px-4 sm:px-6 bg-white">
+        <div className="w-full max-w-[1100px] bg-white rounded-2xl shadow-xl flex flex-col md:flex-row overflow-hidden border border-gray-100">
+          {/* Left Side - Image Section */}
+          <div className="hidden md:block w-1/2 bg-gradient-to-br from-red-400 to-red-600 p-8 relative overflow-hidden">
+            <div className="absolute inset-0 bg-black opacity-20 z-0"></div>
+            <div className="relative z-10 h-full flex flex-col justify-between">
+              <div>
+                <h2 className="text-3xl font-bold text-white mb-3">
+                  Welcome, Doctor
+                </h2>
+                <p className="text-green-100 mb-6 max-w-md">
+                  Join our community to manage appointments and provide excellent care.
+                </p>
+              </div>
+              <div className="flex justify-center items-end h-full">
+                <img
+                  src={assets.bg1}
+                  alt="Doctor"
+                  className="max-h-80 object-contain filter drop-shadow-lg"
+                />
+              </div>
+              <div className="absolute bottom-6 left-8 right-8">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 rounded-full bg-white opacity-70"></div>
+                  <div className="w-3 h-3 rounded-full bg-white"></div>
+                  <div className="w-2 h-2 rounded-full bg-white opacity-70"></div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Right Side - Signup Form */}
-          <div className="w-full md:w-1/2 p-8">
-            <h1 className="text-2xl font-bold text-green-900">
-              Create Account
-            </h1>
-            <p className="text-gray-600 text-sm mb-6">
-              Sign Up to Manage Your Appointments and Care
-            </p>
+          <div className="w-full md:w-1/2 p-8 lg:p-12">
+            <div className="max-w-md mx-auto">
+              <div className="mb-8">
+                <h1 className="text-2xl lg:text-3xl font-bold text-gray-800">
+                  Create Account
+                </h1>
+                <p className="text-gray-600 mt-2">
+                  Sign up to manage your appointments and provide quality care.
+                </p>
+              </div>
 
-            <form onSubmit={formik.handleSubmit} className="space-y-4">
-              {/* Full Name */}
-              <div>
-                <input
-                  type="text"
-                  name="name"
-                  placeholder="Full Name"
-                  value={formik.values.name}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  className={`w-full px-4 py-3 rounded-md bg-[#f0fdf4] border-2 focus:ring-2 focus:ring-green-100
-                    ${
-                      formik.touched.name && formik.errors.name
-                        ? "border-red-500" // Red border for errors
-                        : formik.touched.name && !formik.errors.name
-                        ? "border-green-400" // Green border for valid input
-                        : "border-transparent" // Default state
+              <form onSubmit={formik.handleSubmit} className="space-y-5">
+                {/* Full Name */}
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <User className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    name="name"
+                    placeholder="Full Name"
+                    value={formik.values.name}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className={`w-full pl-10 pr-4 py-3 rounded-lg bg-gray-50 border focus:ring-2 focus:outline-none transition-colors ${
+                      formik.touched.name
+                        ? formik.errors.name
+                          ? "border-red-400 focus:ring-red-100"
+                          : "border-green-500 focus:ring-green-100 focus:border-green-500"
+                        : "border-gray-200"
                     }`}
-                />
-                {formik.touched.name && formik.errors.name && (
-                  <div className="text-red-500 text-xs mt-1">
-                    {formik.errors.name}
-                  </div>
-                )}
-              </div>
-
-              {/* Email */}
-              <div>
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Email"
-                  value={formik.values.email}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  className={`w-full px-4 py-3 rounded-md bg-[#f0fdf4] border-2 focus:ring-2 focus:ring-green-100 
-            ${
-              formik.touched.email && formik.errors.email
-                ? "border-red-500" // Red border for errors
-                : formik.touched.email && !formik.errors.email
-                ? "border-green-400" // Green border for valid input
-                : "border-transparent" // Default state
-            }`}
-                />
-                {formik.touched.email && formik.errors.email && (
-                  <div className="text-red-500 text-xs mt-1">
-                    {formik.errors.email}
-                  </div>
-                )}
-              </div>
-
-              {/* Phone */}
-              <div>
-                <input
-                  type="tel"
-                  name="phone"
-                  placeholder="Phone Number"
-                  value={formik.values.phone}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  className={`w-full px-4 py-3 rounded-md bg-[#f0fdf4] border-2 focus:ring-2 focus:ring-green-100 
-            ${
-              formik.touched.phone && formik.errors.phone
-                ? "border-red-500" // Red border for errors
-                : formik.touched.phone && !formik.errors.phone
-                ? "border-green-400" // Green border for valid input
-                : "border-transparent" // Default state
-            } `}
-                />
-                {formik.touched.phone && formik.errors.phone && (
-                  <div className="text-red-500 text-xs mt-1">
-                    {formik.errors.phone}
-                  </div>
-                )}
-              </div>
-
-              {/* Password */}
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  placeholder="Password"
-                  value={formik.values.password}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  className={`w-full px-4 py-3 rounded-md bg-[#f0fdf4] border-2 focus:ring-2 focus:ring-green-100
-                    ${
-                      formik.touched.password && formik.errors.password
-                        ? "border-red-500" // Red border for errors
-                        : formik.touched.password && !formik.errors.password
-                        ? "border-green-400" // Green border for valid input
-                        : "border-transparent" // Default state
-                    }`}
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-3"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400" />
-                  )}
-                </button>
-                {formik.touched.password && formik.errors.password && (
-                  <div className="text-red-500 text-xs mt-1">
-                    {formik.errors.password}
-                  </div>
-                )}
-              </div>
-
-              {/* Confirm Password */}
-              <div className="relative">
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  name="confirmpassword"
-                  placeholder="Confirm Password"
-                  value={formik.values.confirmpassword}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  className={`w-full px-4 py-3 rounded-md bg-[#f0fdf4] border-2 focus:ring-2 focus:ring-green-100
-                    ${
-                      formik.touched.confirmpassword &&
-                      formik.errors.confirmpassword
-                        ? "border-red-500" // Red border for errors
-                        : formik.touched.confirmpassword &&
-                          !formik.errors.confirmpassword
-                        ? "border-green-400" // Green border for valid input
-                        : "border-transparent" // Default state
-                    }`}
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-3"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400" />
-                  )}
-                </button>
-                {formik.touched.confirmpassword &&
-                  formik.errors.confirmpassword && (
-                    <div className="text-red-500 text-xs mt-1">
-                      {formik.errors.confirmpassword}
+                  />
+                  {formik.touched.name && formik.errors.name && (
+                    <div className="text-red-500 text-sm mt-1">
+                      {formik.errors.name}
                     </div>
                   )}
-              </div>
+                </div>
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className={`w-full ${
-                  isSubmitting ? "bg-red-400" : "bg-red-500 hover:bg-red-600"
-                } text-white py-3 rounded-md transition-colors`}
-              >
-                {isSubmitting ? "Creating Account..." : "Create Account"}
-              </button>
+                {/* Email */}
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Mail className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="yourname@example.com"
+                    value={formik.values.email}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className={`w-full pl-10 pr-4 py-3 rounded-lg bg-gray-50 border focus:ring-2 focus:outline-none transition-colors ${
+                      formik.touched.email
+                        ? formik.errors.email
+                          ? "border-red-400 focus:ring-red-100"
+                          : "border-green-500 focus:ring-green-100 focus:border-green-500"
+                        : "border-gray-200"
+                    }`}
+                  />
+                  {formik.touched.email && formik.errors.email && (
+                    <div className="text-red-500 text-sm mt-1">
+                      {formik.errors.email}
+                    </div>
+                  )}
+                </div>
 
-              {/* Google Signup */}
+                {/* Phone */}
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Phone className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="tel"
+                    name="phone"
+                    placeholder="Phone Number"
+                    value={formik.values.phone}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className={`w-full pl-10 pr-4 py-3 rounded-lg bg-gray-50 border focus:ring-2 focus:outline-none transition-colors ${
+                      formik.touched.phone
+                        ? formik.errors.phone
+                          ? "border-red-400 focus:ring-red-100"
+                          : "border-green-500 focus:ring-green-100 focus:border-green-500"
+                        : "border-gray-200"
+                    }`}
+                  />
+                  {formik.touched.phone && formik.errors.phone && (
+                    <div className="text-red-500 text-sm mt-1">
+                      {formik.errors.phone}
+                    </div>
+                  )}
+                </div>
 
-              <Google />
+                {/* Password */}
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    placeholder="Password"
+                    value={formik.values.password}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className={`w-full pl-10 pr-12 py-3 rounded-lg bg-gray-50 border focus:ring-2 focus:outline-none transition-colors ${
+                      formik.touched.password
+                        ? formik.errors.password
+                          ? "border-red-400 focus:ring-red-100"
+                          : "border-green-500 focus:ring-green-100 focus:border-green-500"
+                        : "border-gray-200"
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                  {formik.touched.password && formik.errors.password && (
+                    <div className="text-red-500 text-sm mt-1">
+                      {formik.errors.password}
+                    </div>
+                  )}
+                </div>
 
-              {/* Already have an account? */}
-              <p className="text-center text-sm text-gray-600 mt-6">
-                Already have an account?{" "}
-                <Link
-                  to="/doctor/login"
-                  className="text-green-600 hover:underline"
+                {/* Confirm Password */}
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="confirmpassword"
+                    placeholder="Confirm Password"
+                    value={formik.values.confirmpassword}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className={`w-full pl-10 pr-12 py-3 rounded-lg bg-gray-50 border focus:ring-2 focus:outline-none transition-colors ${
+                      formik.touched.confirmpassword &&
+                      formik.errors.confirmpassword
+                        ? "border-red-400 focus:ring-red-100"
+                        : formik.touched.confirmpassword &&
+                          !formik.errors.confirmpassword
+                        ? "border-green-500 focus:ring-green-100 focus:border-green-500"
+                        : "border-gray-200"
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    onClick={() =>
+                      setShowConfirmPassword(!showConfirmPassword)
+                    }
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                  {formik.touched.confirmpassword &&
+                    formik.errors.confirmpassword && (
+                      <div className="text-red-500 text-sm mt-1">
+                        {formik.errors.confirmpassword}
+                      </div>
+                    )}
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`w-full ${
+                    isSubmitting
+                      ? "bg-red-400"
+                      : "bg-red-600 hover:bg-red-700"
+                  } text-white py-3 rounded-lg transition-colors duration-300 font-medium flex items-center justify-center shadow-md`}
                 >
-                  Login here
-                </Link>
-              </p>
-            </form>
+                  {isSubmitting ? "Creating Account..." : "Create Account"}
+                </button>
+
+                {/* Google Signup */}
+                <Google />
+
+                {/* Already have an account? */}
+                <p className="text-center text-gray-600 mt-6">
+                  Already have an account?{" "}
+                  <Link
+                    to="/doctor/login"
+                    className="text-red-600 hover:text-red-800 font-medium"
+                  >
+                    Login here
+                  </Link>
+                </p>
+              </form>
+            </div>
           </div>
         </div>
       </div>

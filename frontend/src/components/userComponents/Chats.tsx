@@ -9,6 +9,12 @@ import {
   MessageSquare,
   Phone,
   Video,
+  Crown,
+  Search,
+  Filter,
+  Shield,
+  Clock,
+  Bell
 } from "lucide-react";
 import io, { Socket } from "socket.io-client";
 import axiosInstance from "../../utils/axiosInterceptors";
@@ -51,6 +57,9 @@ export default function Chat() {
   const [chatId, setChatId] = useState<string | null>(null);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showFilterOptions, setShowFilterOptions] = useState(false);
+  const [filterOption, setFilterOption] = useState("all");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -224,6 +233,23 @@ export default function Chat() {
     }
   };
 
+  const handleFilterChange = (option: string) => {
+    setFilterOption(option);
+    setShowFilterOptions(false);
+  };
+
+  const filteredDoctors = doctors.filter(doctor => {
+    // Name or speciality search filter
+    const matchesSearch = doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         doctor.speciality.toString().toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Status filter
+    if (filterOption === 'online' && !doctor.isOnline) return false;
+    if (filterOption === 'offline' && doctor.isOnline) return false;
+    
+    return matchesSearch;
+  });
+
   return (
     <div className="flex h-screen">
       <Sidebar onCollapse={setSidebarCollapsed} />
@@ -233,169 +259,268 @@ export default function Chat() {
           sidebarCollapsed ? "ml-16" : "ml-64"
         }`}
       >
-        <div className="flex flex-col md:flex-row w-full max-w-6xl h-[90vh] bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200 m-4">
-          <div className="w-full md:w-1/3 border-r border-gray-200 flex flex-col">
-            <div className="bg-red-600 p-4 shadow-md h-20 flex items-center">
-              <h2 className="text-white text-lg font-bold">Messages</h2>
+        <div className="flex flex-col md:flex-row w-full max-w-6xl h-[90vh] bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 m-4">
+          {/* Left sidebar with chat list */}
+          <div className="w-full md:w-1/3 border-r border-gray-200 flex flex-col bg-gradient-to-b from-white to-gray-50">
+            <div className="bg-gradient-to-r from-red-700 to-red-600 p-4 shadow-lg h-24 flex items-center justify-between">
+              <div className="flex items-center">
+                <h2 className="text-white text-xl font-bold">Healio Doctors</h2>
+              </div>
+              <button className="relative p-2 text-white rounded-full hover:bg-red-700 transition-colors">
+                <Bell size={22} />
+                <span className="absolute top-0 right-0 w-2 h-2 bg-yellow-300 rounded-full"></span>
+              </button>
             </div>
-            <div className="flex-1 overflow-y-auto">
-              {doctors.map((doctor) => (
-                <div
-                  key={doctor._id}
-                  className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors duration-200 relative 
-                    ${selectedDoctor?._id === doctor._id ? "bg-gray-100" : ""}`}
-                  onClick={() => handleDoctorSelect(doctor)}
-                >
-                  {selectedDoctor?._id === doctor._id && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-600"></div>
-                  )}
-                  <div className="flex items-center space-x-3">
-                    <div className="relative">
-                      <img
-                        src={doctor.image}
-                        alt={doctor.name}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-red-200"
-                      />
-                      {doctor.isOnline && (
-                        <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full border-2 border-white"></div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-baseline">
-                        <h3 className="font-medium text-green-800 truncate">
-                          {doctor.name}
-                        </h3>
-                        <span className="text-xs text-gray-500">
-                          {doctor.lastMessageTime}
+            
+            {/* Search and filter bar */}
+            <div className="p-3 bg-white shadow-sm">
+              <div className="flex items-center">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    placeholder="Search specialists..."
+                    className="w-full p-3 pl-10 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400 transition-all"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  <Search className="absolute left-3 top-3.5 text-gray-400" size={18} />
+                </div>
+                <div className="relative ml-2">
+                  <button 
+                    onClick={() => setShowFilterOptions(!showFilterOptions)}
+                    className={`p-3 rounded-lg transition-colors ${
+                      filterOption !== 'all' 
+                        ? 'bg-red-100 text-red-600 border border-red-200' 
+                        : 'bg-gray-50 text-gray-500 border border-gray-200 hover:border-red-300 hover:text-red-500'
+                    }`}
+                  >
+                    <Filter size={18} />
+                  </button>
+                  
+                  {showFilterOptions && (
+                    <div className="absolute right-0 mt-2 w-36 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                      <div 
+                        className="p-2 hover:bg-red-50 cursor-pointer border-b border-gray-100"
+                        onClick={() => handleFilterChange('all')}
+                      >
+                        <span className={`flex items-center ${filterOption === 'all' ? 'text-red-600 font-medium' : 'text-gray-700'}`}>
+                          {filterOption === 'all' && <span className="w-2 h-2 bg-red-600 rounded-full mr-2"></span>}
+                          All doctors
                         </span>
                       </div>
-                      <p className="text-sm text-gray-500 truncate">
-                        {doctor.lastMessage}
-                      </p>
+                      <div 
+                        className="p-2 hover:bg-red-50 cursor-pointer border-b border-gray-100"
+                        onClick={() => handleFilterChange('online')}
+                      >
+                        <span className={`flex items-center ${filterOption === 'online' ? 'text-red-600 font-medium' : 'text-gray-700'}`}>
+                          {filterOption === 'online' && <span className="w-2 h-2 bg-red-600 rounded-full mr-2"></span>}
+                          Online only
+                        </span>
+                      </div>
+                      <div 
+                        className="p-2 hover:bg-red-50 cursor-pointer"
+                        onClick={() => handleFilterChange('offline')}
+                      >
+                        <span className={`flex items-center ${filterOption === 'offline' ? 'text-red-600 font-medium' : 'text-gray-700'}`}>
+                          {filterOption === 'offline' && <span className="w-2 h-2 bg-red-600 rounded-full mr-2"></span>}
+                          Offline only
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              {filteredDoctors.length > 0 ? (
+                filteredDoctors.map((doctor) => (
+                  <div
+                    key={doctor._id}
+                    className={`p-4 border-b border-gray-100 hover:bg-red-50 cursor-pointer transition-all duration-200 relative 
+                      ${selectedDoctor?._id === doctor._id ? "bg-red-50" : ""}`}
+                    onClick={() => handleDoctorSelect(doctor)}
+                  >
+                    {selectedDoctor?._id === doctor._id && (
+                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-red-600 to-red-500 rounded-r-full"></div>
+                    )}
+                    <div className="flex items-center space-x-3">
+                      <div className="relative">
+                        <img
+                          src={doctor.image}
+                          alt={doctor.name}
+                          className="w-14 h-14 rounded-full object-cover border-2 border-red-200 shadow-md"
+                        />
+                        {doctor.isOnline && (
+                          <div className="absolute bottom-0 right-0 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-white shadow-lg"></div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-baseline">
+                          <h3 className="font-semibold text-green-800 truncate">
+                            {doctor.name}
+                          </h3>
+                          <span className="text-xs text-gray-500 font-medium">
+                            {doctor.lastMessageTime || "New"}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-500 truncate mt-0.5">
+                          {typeof doctor.speciality === "object" 
+                            ? doctor.speciality?.name 
+                            : doctor.speciality}
+                        </p>
+                        <p className="text-xs text-gray-400 truncate mt-1">
+                          {doctor.lastMessage || "Start a conversation"}
+                        </p>
+                      </div>
                     </div>
                   </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center h-40 text-gray-500">
+                  <Search size={24} className="mb-2 text-gray-400" />
+                  <p>No matching doctors found</p>
+                  <button 
+                    onClick={() => {setSearchQuery(''); setFilterOption('all');}}
+                    className="mt-2 text-red-600 hover:underline text-sm"
+                  >
+                    Clear filters
+                  </button>
                 </div>
-              ))}
+              )}
             </div>
-            <button className="m-4 p-3 text-gray-600 rounded-lg border border-gray-300 hover:bg-gray-50 flex items-center justify-center space-x-2 transition-colors duration-200 hover:text-red-600 hover:border-red-300">
+            <button className="m-4 p-3.5 text-gray-600 rounded-lg border border-gray-300 hover:bg-red-50 flex items-center justify-center space-x-2 transition-colors duration-200 hover:text-red-600 hover:border-red-400 shadow-sm">
               <ArrowLeft size={20} />
               <span className="font-medium">Back to Home</span>
             </button>
           </div>
 
-          <div className="flex-1 flex flex-col">
+          {/* Main chat area */}
+          <div className="flex-1 flex flex-col bg-white">
             {selectedDoctor ? (
               <>
-                <div className="bg-red-600 p-4 flex items-center shadow-md h-20">
+                <div className="bg-gradient-to-r from-red-600 to-red-500 p-4 flex items-center shadow-lg h-24">
                   <div className="relative">
                     <img
                       src={selectedDoctor.image}
                       alt={selectedDoctor.name}
-                      className="w-12 h-12 rounded-full object-cover border-2 border-white bg-green-100"
+                      className="w-14 h-14 rounded-full object-cover border-3 border-white bg-green-100 shadow-lg"
                     />
                     {selectedDoctor.isOnline && (
-                      <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full border-2 border-white"></div>
+                      <div className="absolute bottom-0 right-0 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-white shadow-lg"></div>
                     )}
                   </div>
-                  <div className="text-white ml-3">
-                    <h2 className="font-bold text-lg">{selectedDoctor.name}</h2>
+                  <div className="text-white ml-4">
+                    <h2 className="font-bold text-xl">{selectedDoctor.name}</h2>
                     {typeof selectedDoctor.speciality === "object" ? (
-                      <p className="text-sm opacity-90">
+                      <p className="text-sm opacity-90 flex items-center mt-0.5">
+                        <span className="w-2 h-2 bg-white rounded-full mr-1.5 opacity-75"></span>
                         {selectedDoctor.speciality?.name}
                       </p>
                     ) : (
-                      <p className="text-sm opacity-90">
+                      <p className="text-sm opacity-90 flex items-center mt-0.5">
+                        <span className="w-2 h-2 bg-white rounded-full mr-1.5 opacity-75"></span>
                         {selectedDoctor.speciality}
                       </p>
                     )}
                   </div>
-                  <div className="ml-auto flex items-center space-x-2">
+                  <div className="ml-auto flex items-center space-x-3">
                     <button
-                      onClick={() => {}}
-                      className="p-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors duration-200 shadow-md"
+                      onClick={() => toast.info("Audio call feature coming soon!")}
+                      className="p-2.5 bg-green-600 text-white rounded-full hover:bg-green-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                       title="Audio Call"
                     >
                       <Phone size={18} />
                     </button>
                     <button
-                      onClick={() => {}}
-                      className="p-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors duration-200 shadow-md"
+                      onClick={() => toast.info("Video call feature coming soon!")}
+                      className="p-2.5 bg-green-600 text-white rounded-full hover:bg-green-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                       title="Video Call"
                     >
                       <Video size={18} />
                     </button>
-                    <div className="px-2 py-1 bg-green-500 text-white text-xs rounded-full">
+                    <div className={`px-3 py-1.5 ${selectedDoctor.isOnline ? 'bg-green-500' : 'bg-gray-500'} text-white text-xs rounded-full font-medium shadow-md flex items-center`}>
+                      <span className={`w-2 h-2 ${selectedDoctor.isOnline ? 'bg-green-200' : 'bg-gray-300'} rounded-full mr-1.5 animate-pulse`}></span>
                       {selectedDoctor.isOnline ? "Online" : "Offline"}
                     </div>
                   </div>
                 </div>
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-green-100">
-                  {currentMessages.map((message) => (
-                    <div
-                      key={message._id}
-                      className={`flex ${
-                        message.sender === "user"
-                          ? "justify-end"
-                          : "justify-start"
-                      }`}
-                    >
+                <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-gradient-to-b from-green-50 to-green-100 custom-scrollbar">
+                  {currentMessages.length > 0 ? (
+                    currentMessages.map((message) => (
                       <div
-                        className={`max-w-[80%] rounded-2xl p-4 shadow-sm ${
-                          message.sender === "user"
-                            ? "bg-green-600 text-white rounded-tr-none"
-                            : "bg-white text-green-800 rounded-tl-none border border-gray-200"
-                        }`}
+                        key={message._id}
+                        className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
                       >
-                        {message.type === "img" ? (
-                          <img
-                            src={message.message}
-                            alt="Chat image"
-                            className="max-w-full rounded-lg border-2 border-white"
-                            onError={(e) => {
-                              e.currentTarget.src = "/placeholder-image.jpg";
-                            }}
-                          />
-                        ) : (
-                          <p className="text-base">{message.message}</p>
-                        )}
                         <div
-                          className={`text-xs mt-2 flex justify-end ${
+                          className={`max-w-[80%] rounded-2xl p-4 shadow-md ${
                             message.sender === "user"
-                              ? "text-green-100"
-                              : "text-gray-500"
+                              ? "bg-gradient-to-r from-green-600 to-green-500 text-white rounded-tr-none"
+                              : "bg-white text-green-800 rounded-tl-none border border-gray-200"
                           }`}
                         >
-                          {new Date(message.createdAt).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                          {message.type === "img" ? (
+                            <img
+                              src={message.message}
+                              alt="Chat image"
+                              className="max-w-full rounded-lg border-2 border-white shadow-sm"
+                              onError={(e) => {
+                                e.currentTarget.src = "/placeholder-image.jpg";
+                              }}
+                            />
+                          ) : (
+                            <p className="text-base">{message.message}</p>
+                          )}
+                          <div
+                            className={`text-xs mt-2 flex justify-end items-center ${
+                              message.sender === "user"
+                                ? "text-green-100"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            <Clock size={12} className="mr-1" />
+                            {new Date(message.createdAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </div>
                         </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                      <div className="bg-red-100 rounded-full p-8 mb-4">
+                        <MessageSquare size={40} className="text-red-600" />
+                      </div>
+                      <p className="text-lg font-medium text-gray-600">Start a conversation</p>
+                      <p className="text-sm text-gray-500 mt-1 text-center max-w-xs">
+                        Your conversation with Dr. {selectedDoctor.name} will appear here
+                      </p>
                     </div>
-                  ))}
+                  )}
                   <div ref={messagesEndRef} />
                 </div>
                 {selectedFiles.length > 0 && (
-                  <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex flex-wrap gap-2">
+                  <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex flex-wrap gap-3">
                     {selectedFiles.map((file, index) => (
                       <div key={index} className="relative group">
                         <img
                           src={URL.createObjectURL(file)}
                           alt={`Selected file ${index + 1}`}
-                          className="h-20 w-20 object-cover rounded-lg border-2 border-green-200"
+                          className="h-20 w-20 object-cover rounded-lg border-2 border-green-200 shadow-md transition-transform transform group-hover:scale-105"
                         />
                         <button
                           onClick={() => handleRemoveFile(index)}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg transform hover:scale-110"
                         >
-                          <X size={16} />
+                          <X size={14} />
                         </button>
                       </div>
                     ))}
                   </div>
                 )}
-                <div className="p-4 border-t border-gray-200 bg-white">
-                  <div className="flex items-center space-x-2">
+                <div className="p-5 border-t border-gray-200 bg-white shadow-inner">
+                  <div className="flex items-center space-x-3">
                     <input
                       type="file"
                       ref={fileInputRef}
@@ -406,7 +531,8 @@ export default function Chat() {
                     />
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="p-3 hover:bg-gray-100 text-gray-500 hover:text-green-600 rounded-full transition-colors duration-200"
+                      className="p-3.5 hover:bg-gray-100 text-gray-500 hover:text-green-600 rounded-full transition-all duration-200 transform hover:scale-110"
+                      title="Attach images"
                     >
                       <Paperclip size={22} />
                     </button>
@@ -415,18 +541,20 @@ export default function Chat() {
                       value={inputMessage}
                       onChange={(e) => setInputMessage(e.target.value)}
                       placeholder="Type your message here..."
-                      className="flex-1 p-3 border border-gray-300 rounded-full focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                      className="flex-1 p-4 bg-gray-50 border border-gray-300 rounded-full focus:outline-none focus:border-green-500 focus:ring-3 focus:ring-green-200"
                       onKeyDown={(e) =>
                         e.key === "Enter" && handleSendMessage()
                       }
                     />
                     <button
                       onClick={handleSendMessage}
-                      className={`p-3 rounded-full transition-colors duration-200 shadow-md ${
+                      disabled={!chatId}
+                      className={`p-4 rounded-full transition-all duration-200 shadow-lg transform hover:scale-105 ${
                         chatId
-                          ? "bg-green-600 text-white hover:bg-green-700"
+                          ? "bg-gradient-to-r from-green-600 to-green-500 text-white hover:shadow-xl"
                           : "bg-gray-400 text-gray-200 cursor-not-allowed"
                       }`}
+                      title="Send message"
                     >
                       <Send size={22} />
                     </button>
@@ -434,40 +562,42 @@ export default function Chat() {
                 </div>
               </>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center bg-green-50 p-8">
+              <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-b from-white to-green-50 p-8">
                 <div className="text-center max-w-md">
-                  <div className="flex justify-center mb-6">
-                    <div className="h-32 w-32 bg-green-600 rounded-full flex items-center justify-center shadow-lg">
+                  <div className="flex justify-center mb-8">
+                    <div className="h-36 w-36 bg-gradient-to-br from-red-600 to-red-500 rounded-full flex items-center justify-center shadow-xl">
                       <MessageSquare size={64} className="text-white" />
                     </div>
                   </div>
-                  <h1 className="text-green-800 text-2xl font-bold mb-4">
+                  <h1 className="text-green-800 text-3xl font-bold mb-4">
                     Welcome to Healio
                   </h1>
-                  <p className="text-gray-600 mb-6">
-                    Select a conversation from the left to start chatting with
-                    your healthcare provider. All your medical conversations are
-                    secure and encrypted.
+                  <p className="text-gray-600 mb-8 text-lg">
+                    Select a conversation from the left to start chatting with your healthcare specialist. All your medical conversations are secure and encrypted.
                   </p>
-                  <div className="text-left bg-white p-4 rounded-lg shadow-md border border-green-100">
-                    <h3 className="font-medium text-green-700 mb-2">
-                      Quick Tips:
-                    </h3>
-                    <ul className="text-gray-600 space-y-2 text-sm">
-                      <li>
-                        • Upload photos to help your doctor better understand
-                        your condition
+                  <div className="text-left bg-white p-6 rounded-xl shadow-xl border border-green-100">
+                    <div className="flex items-center mb-4">
+                      <Shield size={20} className="text-red-600 mr-2" />
+                      <h3 className="font-semibold text-green-700 text-lg">
+                        Premium Features:
+                      </h3>
+                    </div>
+                    <ul className="text-gray-600 space-y-3 text-md">
+                      <li className="flex items-center">
+                        <span className="w-2.5 h-2.5 bg-red-600 rounded-full mr-2"></span>
+                        Upload photos to help your doctor better understand your condition
                       </li>
-                      <li>
-                        • All conversations are stored securely for future
-                        reference
+                      <li className="flex items-center">
+                        <span className="w-2.5 h-2.5 bg-red-600 rounded-full mr-2"></span>
+                        All conversations are stored securely for future reference
                       </li>
-                      <li>
-                        • You can schedule video consultations through chat
+                      <li className="flex items-center">
+                        <span className="w-2.5 h-2.5 bg-red-600 rounded-full mr-2"></span>
+                        Schedule video consultations through chat
                       </li>
-                      <li>
-                        • Receive prescription updates directly in your
-                        conversations
+                      <li className="flex items-center">
+                        <span className="w-2.5 h-2.5 bg-red-600 rounded-full mr-2"></span>
+                        Receive prescription updates directly in your conversations
                       </li>
                     </ul>
                   </div>

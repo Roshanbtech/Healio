@@ -30,16 +30,12 @@ const ForgotPasswordOtp: React.FC<ForgotPasswordOTPProps> = ({ email }) => {
 
   const handleChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
-
     if (value.length > 1) {
       value = value[0];
     }
-
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
-
-    // Move to next input if value is entered
     if (value && index < otp.length - 1) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -49,7 +45,6 @@ const ForgotPasswordOtp: React.FC<ForgotPasswordOTPProps> = ({ email }) => {
     index: number,
     e: React.KeyboardEvent<HTMLInputElement>
   ) => {
-    // Move to previous input on backspace if current input is empty
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
@@ -59,17 +54,13 @@ const ForgotPasswordOtp: React.FC<ForgotPasswordOTPProps> = ({ email }) => {
     e.preventDefault();
     const pastedData = e.clipboardData.getData("text");
     const pastedNumbers = pastedData.replace(/\D/g, "").split("").slice(0, 4);
-
     const newOtp = [...otp];
     pastedNumbers.forEach((num, idx) => {
       newOtp[idx] = num;
     });
     setOtp(newOtp);
-
-    // Focus the next empty input or the last one
     const lastFilledIndex = newOtp.findIndex((val) => !val);
-    const focusIndex =
-      lastFilledIndex === -1 ? otp.length - 1 : lastFilledIndex;
+    const focusIndex = lastFilledIndex === -1 ? otp.length - 1 : lastFilledIndex;
     inputRefs.current[focusIndex]?.focus();
   };
 
@@ -90,16 +81,13 @@ const ForgotPasswordOtp: React.FC<ForgotPasswordOTPProps> = ({ email }) => {
             credentials: "include",
           }
         );
-
         const data = await response.json();
         console.log(data, "data");
         if (!response.ok) {
           throw new Error(data.message || "OTP verification failed");
         }
-
         if (data.status === true) {
           toast.success(data.message || "OTP verified successfully!");
-          // Navigate to reset password page (pass the email if needed)
           navigate("/doctor/reset-password", { state: { email } });
         } else {
           toast.error(data.message || "OTP verification failed");
@@ -110,15 +98,16 @@ const ForgotPasswordOtp: React.FC<ForgotPasswordOTPProps> = ({ email }) => {
           error.message || "An error occurred during OTP verification"
         );
       }
+    } else {
+      toast.error("Please enter a valid 4-digit OTP");
     }
   };
 
   const handleResend = async () => {
     if (canResend) {
-      setTimeLeft(60); // Reset timer
-      setCanResend(false); // Disable resend until timer is up
-      setOtp(["", "", "", ""]); // Clear the OTP fields
-
+      setTimeLeft(60);
+      setCanResend(false);
+      setOtp(["", "", "", ""]);
       try {
         const response = await fetch(`${backendUrl}/doctor/resendOtp`, {
           method: "POST",
@@ -128,7 +117,6 @@ const ForgotPasswordOtp: React.FC<ForgotPasswordOTPProps> = ({ email }) => {
           body: JSON.stringify({ email }),
           credentials: "include",
         });
-
         const data = await response.json();
         if (response.ok) {
           toast.success(data.message || "OTP resent successfully!");
@@ -143,28 +131,25 @@ const ForgotPasswordOtp: React.FC<ForgotPasswordOTPProps> = ({ email }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex flex-col">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white py-4 px-6 shadow-sm">
-        <div className="max-w-[1200px] mx-auto">
-          <div className="flex items-center gap-2">
-            <img src={assets.logo} alt="Healio Logo" className="h-8" />
-          </div>
+      <header className="bg-white py-4 px-6 shadow-sm fixed top-0 left-0 right-0 z-10">
+        <div className="max-w-[1200px] mx-auto flex items-center">
+          <img src={assets.logo} alt="Healio Logo" className="h-10 w-auto" />
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-[1000px] bg-white rounded-[20px] shadow-lg flex overflow-hidden">
-          {/* OTP Form Section */}
-          <div className="w-full md:w-1/2 p-8">
-            <div className="max-w-[400px] mx-auto">
+      <div className="pt-20 pb-10 min-h-screen flex items-center justify-center px-4 sm:px-6">
+        <div className="w-full max-w-[1100px] bg-white rounded-2xl shadow-xl flex flex-col md:flex-row overflow-hidden border border-gray-100">
+          {/* Left Side - OTP Form Section */}
+          <div className="w-full md:w-1/2 p-8 lg:p-12 flex items-center justify-center">
+            <div className="max-w-[400px] w-full">
               <h2 className="text-2xl font-semibold mb-1">Enter OTP</h2>
               <p className="text-gray-600 text-sm mb-6">
                 Enter the OTP sent to your email. The OTP is valid for a limited
                 time.
               </p>
-
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="flex gap-2 justify-center">
                   {otp.map((digit, index) => (
@@ -184,13 +169,11 @@ const ForgotPasswordOtp: React.FC<ForgotPasswordOTPProps> = ({ email }) => {
                     />
                   ))}
                 </div>
-
                 <div className="text-center text-sm text-gray-500">
                   {timeLeft > 0
                     ? `00:${timeLeft.toString().padStart(2, "0")} sec`
                     : "Time's up!"}
                 </div>
-
                 <button
                   type="submit"
                   disabled={otp.some((digit) => !digit)}
@@ -198,14 +181,13 @@ const ForgotPasswordOtp: React.FC<ForgotPasswordOTPProps> = ({ email }) => {
                 >
                   Submit OTP
                 </button>
-
                 <button
                   type="button"
                   onClick={handleResend}
                   disabled={!canResend}
                   className={`w-full text-center text-sm ${
                     canResend
-                      ? "text-blue-600 hover:underline cursor-pointer"
+                      ? "text-red-600 hover:underline cursor-pointer"
                       : "text-gray-400 cursor-not-allowed"
                   }`}
                 >
@@ -215,13 +197,24 @@ const ForgotPasswordOtp: React.FC<ForgotPasswordOTPProps> = ({ email }) => {
             </div>
           </div>
 
-          {/* Image Section */}
-          <div className="hidden md:block w-1/2 p-6">
-            <img
-              src={assets.bg2}
-              alt="Illustration for OTP verification"
-              className="w-full h-full object-contain"
-            />
+          {/* Right Side - Premium Gradient & Image Section */}
+          <div className="hidden md:block w-full md:w-1/2 bg-gradient-to-br from-red-400 to-red-600 p-8 relative overflow-hidden">
+            <div className="absolute inset-0 bg-black opacity-20 z-0"></div>
+            <div className="relative z-10 h-full flex flex-col justify-center items-center">
+              <h2 className="text-3xl font-bold text-white mb-3">
+                Secure Password Reset
+              </h2>
+              <p className="text-green-100 mb-6 text-center max-w-md">
+                Verify your identity by entering the OTP sent to your email and proceed to reset your password.
+              </p>
+              <div className="flex justify-center items-center">
+                <img
+                  src={assets.bg2}
+                  alt="OTP Verification Illustration"
+                  className="max-h-[400px] object-contain filter drop-shadow-lg"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>

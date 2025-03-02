@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -35,7 +37,6 @@ const ResetPassword: React.FC = () => {
           }
         );
         console.log("Reset password response:", response.data);
-
         toast.success("Password reset successfully!");
         navigate("/doctor/login");
       } catch (error: any) {
@@ -51,20 +52,20 @@ const ResetPassword: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white py-4 px-6 shadow-sm">
+      <header className="bg-white py-4 px-6 shadow-sm fixed top-0 left-0 right-0 z-10">
         <div className="max-w-[1200px] mx-auto flex items-center justify-between">
           <img src={assets.logo} alt="Healio Logo" className="h-12 w-auto" />
         </div>
       </header>
 
-      {/* Main content */}
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-6xl flex flex-col-reverse lg:flex-row items-center justify-between gap-10">
-          {/* Form Section */}
-          <div className="w-full max-w-md">
-            <div className="bg-white rounded-2xl shadow-lg p-8 md:p-10">
+      {/* Main Content */}
+      <div className="pt-20 pb-10 min-h-screen flex items-center justify-center px-4 sm:px-6">
+        <div className="w-full max-w-[1100px] bg-white rounded-2xl shadow-xl flex flex-col md:flex-row overflow-hidden border border-gray-100">
+          {/* Left Side - Form Section */}
+          <div className="w-full md:w-1/2 p-8 lg:p-12 flex items-center justify-center">
+            <div className="max-w-md w-full">
               <h1 className="text-2xl font-semibold text-gray-900 mb-6">
                 Reset Password
               </h1>
@@ -96,7 +97,6 @@ const ResetPassword: React.FC = () => {
                     </p>
                   )}
                 </div>
-
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
@@ -125,7 +125,6 @@ const ResetPassword: React.FC = () => {
                       </p>
                     )}
                 </div>
-
                 <button
                   type="submit"
                   disabled={formik.isSubmitting}
@@ -137,13 +136,24 @@ const ResetPassword: React.FC = () => {
             </div>
           </div>
 
-          {/* Doctor Image - Hidden on mobile */}
-          <div className="hidden lg:flex justify-center items-center">
-            <img
-              src={assets.docthink}
-              alt="Doctor"
-              className="w-[400px] object-contain"
-            />
+          {/* Right Side - Premium Gradient & Image Section */}
+          <div className="hidden md:block w-full md:w-1/2 bg-gradient-to-br from-red-400 to-red-600 p-8 relative overflow-hidden">
+            <div className="absolute inset-0 bg-black opacity-20 z-0"></div>
+            <div className="relative z-10 h-full flex flex-col justify-center items-center">
+              <h2 className="text-3xl font-bold text-white mb-3">
+                Secure Password Reset
+              </h2>
+              <p className="text-green-100 mb-6 text-center max-w-md">
+                Reset your password to regain access to your account with ease.
+              </p>
+              <div className="flex justify-center items-center">
+                <img
+                  src={assets.docthink}
+                  alt="Doctor Illustration"
+                  className="max-w-[400px] object-contain filter drop-shadow-lg"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>

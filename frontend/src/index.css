@@ -1,1 +1,43 @@
-@import "tailwindcss"
+@import "tailwindcss";
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1; /* Track color */
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #dc2626; /* Tailwind's red-600 */
+    border-radius: 4px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #ef4444; /* Tailwind's red-500 for hover */
+  }
+  
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1; /* light track color */
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background-color: #dc2626; /* Tailwind red-600 */
+    border-radius: 4px;
+    border: 2px solid #f1f1f1; /* creates a padding effect */
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: #ef4444; /* Tailwind red-500 */
+  }
+  
+  /* For Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #dc2626 #f1f1f1;
+  }

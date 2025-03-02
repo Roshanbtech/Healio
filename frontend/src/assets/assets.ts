@@ -72,7 +72,7 @@ export const assets = {
   google,
   userDefault1,
   doc11,
-  docthink
+  docthink,
 };
 
 // ✅ Define Speciality Type

@@ -64,7 +64,6 @@ export const initSocket = (server: HttpServer): SocketIOServer => {
         chat.messages.push(newMessage as any);
         await chat.save();
 
-        // Send the saved message, including _id and timestamp
         const savedMessage = chat.messages[chat.messages.length - 1];
         io.to(data.chatId).emit("message:receive", savedMessage);
       } catch (error) {

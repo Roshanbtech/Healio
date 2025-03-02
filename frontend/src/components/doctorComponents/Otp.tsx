@@ -22,7 +22,6 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
   const [timeLeft, setTimeLeft] = useState(30);
   const [canResend, setCanResend] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,27 +29,20 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
       setCanResend(true);
       return;
     }
-
     const timer = setInterval(() => {
       setTimeLeft((prev) => prev - 1);
     }, 1000);
-
     return () => clearInterval(timer);
   }, [timeLeft]);
 
   const handleChange = (index: number, value: string) => {
-    // Only allow numbers
     if (!/^\d*$/.test(value)) return;
-
     if (value.length > 1) {
       value = value[0];
     }
-
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
-
-    // Move to next input if value is entered
     if (value && index < 3) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -60,7 +52,6 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
     index: number,
     e: React.KeyboardEvent<HTMLInputElement>
   ) => {
-    // Move to previous input on backspace if current input is empty
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
@@ -70,14 +61,11 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
     e.preventDefault();
     const pastedData = e.clipboardData.getData("text");
     const pastedNumbers = pastedData.replace(/\D/g, "").split("").slice(0, 4);
-
     const newOtp = [...otp];
     pastedNumbers.forEach((num, index) => {
       if (index < 4) newOtp[index] = num;
     });
     setOtp(newOtp);
-
-    // Focus last input or first empty input
     const lastFilledIndex = newOtp.findIndex((val) => !val);
     const focusIndex = lastFilledIndex === -1 ? 3 : lastFilledIndex;
     inputRefs.current[focusIndex]?.focus();
@@ -90,7 +78,6 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
       onSubmit?.(otpValue);
       console.log("OTP submitted:", otpValue);
       console.log(formData, "values");
-
       const formValues = {
         name: formData?.name,
         email: formData?.email,
@@ -98,29 +85,18 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
         phone: formData?.phone,
         otp: otpValue,
       };
-
       try {
-        const response = await axiosInstance.post(
-          "/doctor/signUp",
-          formValues,
-          {
-            withCredentials: true,
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
+        const response = await axiosInstance.post("/doctor/signUp", formValues, {
+          withCredentials: true,
+          headers: { "Content-Type": "application/json" },
+        });
         console.log(response.data, "data");
-
-        // Check for correct response structure
         if (response.data?.response?.status === true) {
           toast.success(response.data.response.message || "Signup successful!");
           navigate("/doctor/login");
         } else {
           if (
-            response.data.response?.message ===
-            "OTP does not match or is not found."
+            response.data.response?.message === "OTP does not match or is not found."
           ) {
             toast.error(
               response.data.response?.message ||
@@ -140,11 +116,9 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
 
   const handleResend = async () => {
     if (canResend) {
-      setTimeLeft(60); // Reset timer
-      setCanResend(false); // Disable the resend button until time is up
-      setOtp(["", "", "", ""]); // Clear the OTP input fields
-
-      // Trigger the resend OTP request
+      setTimeLeft(60);
+      setCanResend(false);
+      setOtp(["", "", "", ""]);
       if (formData?.email) {
         try {
           const response = await axiosInstance.post("/doctor/resendOtp", {
@@ -158,32 +132,32 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
           }
         } catch (error: any) {
           console.log(error);
-          toast.error(error.message || "An error occurred while resending OTP");
+          toast.error(
+            error.message || "An error occurred while resending OTP"
+          );
         }
       }
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex flex-col">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white py-4 px-6 shadow-sm">
-        <div className="max-w-[1200px] mx-auto">
-          <div className="flex items-center gap-2">
-            <img src={assets.logo} alt="Healio Logo" className="h-8" />
-          </div>
+      <header className="bg-white py-4 px-6 shadow-md fixed top-0 left-0 right-0 z-10">
+        <div className="max-w-[1200px] mx-auto flex items-center justify-between">
+          <img src={assets.logo} alt="Healio Logo" className="h-10 w-auto" />
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-[1000px] bg-white rounded-[20px] shadow-lg flex overflow-hidden">
-          {/* OTP Form Section */}
-          <div className="w-full md:w-1/2 p-8">
+      <div className="pt-20 pb-10 min-h-screen flex items-center justify-center px-4 sm:px-6">
+        <div className="w-full max-w-[1100px] bg-white rounded-2xl shadow-xl flex flex-col md:flex-row overflow-hidden border border-gray-100">
+          {/* Left Side - OTP Form Section */}
+          <div className="w-full md:w-1/2 p-8 lg:p-12 flex items-center justify-center">
             <div className="max-w-[400px] mx-auto">
-              <h2 className="text-2xl font-semibold mb-1">OTP</h2>
+              <h2 className="text-2xl font-semibold mb-1">OTP Verification</h2>
               <p className="text-gray-600 text-sm mb-6">
-                Enter the otp before the timer runs out
+                Enter the OTP before the timer runs out.
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -230,19 +204,30 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
                   }`}
                   disabled={!canResend}
                 >
-                  Resend
+                  Resend OTP
                 </button>
               </form>
             </div>
           </div>
 
-          {/* Image Section */}
-          <div className="hidden md:block w-1/2 p-6">
-            <img
-              src={assets.bg2}
-              alt="Doctor pointing to OTP form"
-              className="w-full h-full object-contain"
-            />
+          {/* Right Side - Premium Gradient & Image Section */}
+          <div className="hidden md:block w-full md:w-1/2 bg-gradient-to-br from-red-400 to-red-600 p-8 relative overflow-hidden">
+            <div className="absolute inset-0 bg-black opacity-20 z-0"></div>
+            <div className="relative z-10 h-full flex flex-col justify-center">
+              <h2 className="text-3xl font-bold text-white mb-3">
+                Verify Your Account
+              </h2>
+              <p className="text-green-100 mb-6 max-w-md">
+                Please enter the 4-digit OTP sent to your email to verify your account.
+              </p>
+              <div className="flex justify-center items-center">
+                <img
+                  src={assets.bg2}
+                  alt="Verification Illustration"
+                  className="max-h-[400px] object-contain filter drop-shadow-lg"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
