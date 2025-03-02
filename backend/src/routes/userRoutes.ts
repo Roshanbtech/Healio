@@ -105,13 +105,16 @@ route.get(
   BookingControllerInstance.getCoupons.bind(BookingControllerInstance)
 );
 
-// route.get(
-//   "/bookings",
-//   UserControllerInstance.getBookings.bind(UserControllerInstance)
-// );
-// route.post(
-//   "/bookings",
-//   UserControllerInstance.createBooking.bind(UserControllerInstance)
-// );
+route.post(
+  "/bookings",
+  BookingControllerInstance.bookAppointment.bind(BookingControllerInstance)
+);
+route.post(
+  "/verifyBooking",
+  BookingControllerInstance.verifyBooking.bind(BookingControllerInstance)
+)
+// route.post("/getPatientAppointments", BookingControllerInstance.getPatientAppointments.bind(BookingControllerInstance));
+// route.post("/cancelAppointment", BookingControllerInstance.cancelAppointment.bind(BookingControllerInstance));
+
 
 export default route;
