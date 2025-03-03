@@ -3,7 +3,7 @@ import { useLocation, useParams, useNavigate } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInterceptors";
 import { toast } from "react-toastify";
 import { createAppointment, verifyAppointment } from "../../services/appointment";
-import Razorpay from "razorpay";
+// import Razorpay from "razorpay";
 import { assets } from "../../assets/assets";
 
 interface IDoctor {
@@ -61,7 +61,6 @@ const BookAppointment: React.FC = () => {
     payable: (consultingFees + 100) - discountAmount,
   };
 
-  // Fetch doctor details
   const fetchDoctorDetails = async () => {
     try {
       setLoading(true);
@@ -79,7 +78,6 @@ const BookAppointment: React.FC = () => {
     }
   };
 
-  // Fetch available coupons
   const fetchCoupons = async () => {
     try {
       const response = await axiosInstance.get("/coupons");
@@ -93,7 +91,6 @@ const BookAppointment: React.FC = () => {
     }
   };
 
-  // Fetch user profile using the /profile/:id route
   useEffect(() => {
     const userId = localStorage.getItem("userId");
     if (userId) {
@@ -176,9 +173,12 @@ const BookAppointment: React.FC = () => {
         color: string;
       };
     }
-
+    if (!window.Razorpay) {
+      toast.error("Razorpay SDK not loaded. Please try again.");
+      return;
+    }
     const options: RazorpayOptions = {
-      key: "rzp_test_o355ve5UjoMN7W",
+      key: import.meta.env.VITE_PAYMENT_KEY_ID,
       amount: appointmentData.amount,
       currency: appointmentData.currency,
       name: " HEALIO",
@@ -205,8 +205,8 @@ const BookAppointment: React.FC = () => {
         }
       },
       prefill: {
-        name: "Receiver Name",
-        email: "aOoV8@example.com",
+        name: userProfile?.name || "John Doe",
+        email: userProfile?.email || "john.doe@example.com",
       },
       theme: {
         color: "#dc2626",
