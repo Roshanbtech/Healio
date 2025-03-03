@@ -216,4 +216,15 @@ export class DoctorService implements IDoctorService {
       throw new Error(`Failed to upload chat image: ${error.message}`);
     }
   }
+
+  //get appointments related to a particular doctor
+  async getAppointments(id: string): Promise<any>{
+    try{
+      const appointments = await this.DoctorRepository.getAppointments(id);
+      return appointments;
+    }catch(error: any){
+      throw new Error(`Failed to get appointments: ${error.message}`);
+    }
+  }
+
 }

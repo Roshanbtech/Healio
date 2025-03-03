@@ -24,4 +24,5 @@ export interface IDoctorRepository{
   getUsers(): Promise<any>
   uploadChatImage(chatId: string, file: Express.Multer.File): Promise<any>
   saveChatImageMessage(chatId: string, messageData: any): Promise<any> 
+  getAppointments(id: string): Promise<any>
 }

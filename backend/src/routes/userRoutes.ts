@@ -113,7 +113,14 @@ route.post(
   "/verifyBooking",
   BookingControllerInstance.verifyBooking.bind(BookingControllerInstance)
 )
-// route.post("/getPatientAppointments", BookingControllerInstance.getPatientAppointments.bind(BookingControllerInstance));
+route.get(
+  "/appointments/:id",
+   BookingControllerInstance.getPatientAppointments.bind(BookingControllerInstance)
+  );
+route.patch(
+  "/appointments/:id/medical-records",
+  BookingControllerInstance.addMedicalRecord.bind(BookingControllerInstance)
+)
 // route.post("/cancelAppointment", BookingControllerInstance.cancelAppointment.bind(BookingControllerInstance));
 
 

@@ -208,4 +208,23 @@ export class DoctorController {
       });
     }
   }
+
+  //to get all appointments of a particular doctor
+  async getAppointments(req: Request, res: Response): Promise<any>{
+    try{
+       const { id } = req.params;
+       const appointments = await this.doctorService.getAppointments(id);
+       return res.status(HTTP_statusCode.OK).json({
+         status: true,
+         data: { appointments },
+         message: "Appointments fetched successfully",
+       })
+    }catch(error: any){
+      console.log("error in getting appointments", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: "Something went wrong, please try again later.",
+      })
+    }
+  }
 }

@@ -48,4 +48,5 @@ export interface IDoctorService {
   chatImageUploads(
     id: string,
     file: Express.Multer.File): Promise<any>;
+  getAppointments(id: string): Promise<any>;
 }

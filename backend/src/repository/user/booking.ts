@@ -43,10 +43,26 @@ export class BookingRepository implements IBookingRepository {
   ): Promise<IAppointment | null> {
     return this.appointmentRepo.updateOne(appointmentId, data);
   }
-  // async getPatientAppointments(patientId: string): Promise<IAppointment[]> {
-  //   return this.appointmentRepo.findAll({ patientId });
-  // }
-
+  async getPatientAppointments(id: string): Promise<IAppointment[]> {
+    return this.appointmentRepo
+      .findAllQuery({ patientId: id })
+      .populate("patientId", "name email phone")
+      .populate({
+        path: "doctorId",
+        select: "name image speciality", 
+        populate: {
+          path: "speciality", 
+          select: "name"      
+        }
+      })
+      // .populate("prescription")
+      .exec();
+  }
+  
+  async addMedicalRecord(appointmentId: string, newMedicalRecord: any): Promise<IAppointment | null> {
+    return this.appointmentRepo.updateWithOperators(appointmentId, { $push: { medicalRecords: newMedicalRecord } });
+  }
+  
   // // New: Cancel an appointment (updates its status)
   // async cancelAppointment(appointmentId: string): Promise<IAppointment | null> {
   //   return this.appointmentRepo.update(appointmentId, { status: "cancelled" });

@@ -127,13 +127,23 @@ export class BookingService implements IBookingService {
       throw new Error(error.message);
     }
   }
-  // async getPatientAppointments(patientId: string): Promise<IAppointment[]> {
-  //   try {
-  //     return await this.bookingRepository.getPatientAppointments(patientId);
-  //   } catch (error: any) {
-  //     throw new Error(error.message);
-  //   }
-  // }
+  async getPatientAppointments(id: string): Promise<IAppointment[]> {
+    try {
+      return await this.bookingRepository.getPatientAppointments(id);
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+
+  async addMedicalRecord(appointmentId: string, newMedicalRecord: any): Promise<IAppointment | null>{
+    try{
+     const updatedAppointment = await this.bookingRepository.addMedicalRecord(appointmentId, newMedicalRecord);
+     return updatedAppointment
+    }catch(error:any){
+      throw new Error(error.message);
+    }
+  }
+
 
   // // New: Cancel an appointment for a patient
   // async cancelAppointment(appointmentId: string): Promise<IAppointment> {

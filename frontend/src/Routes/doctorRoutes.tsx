@@ -8,6 +8,7 @@ import ForgotPassword from "../pages/doctorPages/ForgotPassword";
 import ResetPassword from "../pages/doctorPages/ResetPassword";
 import Schedule from "../pages/doctorPages/Schedule";
 import Chat from "../components/doctorComponents/Chats";
+import AppointmentsList from "../components/doctorComponents/Appointments";
 
 const DoctorRoutes = () => {
   return (
@@ -22,6 +23,7 @@ const DoctorRoutes = () => {
         <Route path="/qualifications" element={<Qualification />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/schedules" element={<Schedule />} />
+        <Route path="/appointments" element={<AppointmentsList />} />
         <Route path="/chats" element={<Chat />} />
       </Routes>
     </div>

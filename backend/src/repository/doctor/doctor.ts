@@ -10,6 +10,7 @@ import {
 import bcrypt from "bcrypt";
 import userModel from "../../model/userModel";
 import ChatModel from "../../model/chatModel";
+import AppointmentModel from "../../model/appointmentModel";
 
 export class DoctorRepository implements IDoctorRepository {
   async getServices(): Promise<Service[]> {
@@ -180,6 +181,19 @@ export class DoctorRepository implements IDoctorRepository {
       return updatedChat.messages[updatedChat.messages.length - 1];
     } catch (error) {
       console.error("Error saving chat image message:", error);
+      throw error;
+    }
+  }
+
+  async getAppointments(id: string): Promise<any> {
+    try {
+      const appointments = await AppointmentModel.find({ doctorId: id })
+        .populate('patientId', 'name email phone')  
+        .populate('doctorId', 'name specialty')  
+        .exec();
+      return appointments;
+    } catch (error: any) {
+      console.error("Error in getAppointments:", error);
       throw error;
     }
   }

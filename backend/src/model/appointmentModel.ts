@@ -6,7 +6,7 @@ export interface IAppointment extends Document {
   doctorId: mongoose.Types.ObjectId;
   date: Date;
   time: string;
-  status: "pending" | "prescription pending" | "completed" | "cancelled" | "cancelled by Dr";
+  status: "pending" | "accepted" | "completed" | "cancelled" | "cancelled by Dr";
   reason?: string;
   fees?: number;
   paymentMethod?: "razorpay";
@@ -19,7 +19,13 @@ export interface IAppointment extends Document {
     rating?: number;
     description?: string;
   };
-  medicalRecords?: string[];
+  medicalRecords?: {
+    recordDate?: Date;
+    condition?: string;
+    symptoms?: string[];
+    medications?: string[];
+    notes?: string;
+  }[];
   couponCode?: string;
   couponDiscount?: string;
   isApplied?: boolean;
@@ -55,7 +61,7 @@ const AppointmentSchema = new Schema<IAppointment>(
       type: String,
       enum: [
         "pending",
-        "prescription pending",
+        "accepted",
         "completed",
         "cancelled",
         "cancelled by Dr",
@@ -106,10 +112,15 @@ const AppointmentSchema = new Schema<IAppointment>(
         default: "",
       },
     },
-    medicalRecords: {
-      type: [String],
-      default: [],
-    },
+    medicalRecords: [
+      {
+        recordDate: { type: Date, default: Date.now },
+        condition: { type: String, required: true },
+        symptoms: { type: [String], default: [] },
+        medications: { type: [String], default: [] },
+        notes: { type: String, default: "" },
+      },
+    ],
     couponCode: {
       type: String,
       required: false,

@@ -96,4 +96,9 @@ route.post(
   DoctorControllerInstance.chatImageUploads.bind(DoctorControllerInstance)
 );
 
+route.get(
+  "/appointments/:id",
+  DoctorControllerInstance.getAppointments.bind(DoctorControllerInstance)
+)
+
 export default route;

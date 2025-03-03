@@ -110,28 +110,66 @@ export class BookingController {
     }
   }
 
-  // async getPatientAppointments(req: Request, res: Response): Promise<any> {
-  //   try {
-  //     const { patientId } = req.body;
-  //     if (!patientId) {
-  //       return res.status(HTTP_statusCode.BadRequest).json({
-  //         status: false,
-  //         message: "Patient ID is required.",
-  //       });
-  //     }
-  //     const appointments = await this.bookingService.getPatientAppointments(patientId);
-  //     return res.status(HTTP_statusCode.OK).json({
-  //       status: true,
-  //       appointments,
-  //     });
-  //   } catch (error: any) {
-  //     console.error("Error in getPatientAppointments:", error);
-  //     return res.status(HTTP_statusCode.InternalServerError).json({
-  //       status: false,
-  //       message: "Something went wrong, please try again later.",
-  //     });
-  //   }
-  // }
+  async getPatientAppointments(req: Request, res: Response): Promise<any> {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        return res.status(HTTP_statusCode.BadRequest).json({
+          status: false,
+          message: "Patient ID is required.",
+        });
+      }
+      const appointments = await this.bookingService.getPatientAppointments(id);
+      return res.status(HTTP_statusCode.OK).json({
+        status: true,
+        appointments,
+      });
+    } catch (error: any) {
+      console.error("Error in getPatientAppointments:", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: "Something went wrong, please try again later.",
+      });
+    }
+  }
+
+  async addMedicalRecord(req: Request, res: Response): Promise<any> {
+    try {
+       const appointmentId = req.params.id;
+       const { recordDate, condition, symptoms, medications, notes } = req.body;
+       if(!recordDate || !condition || !symptoms || !medications || !notes){
+        return res.status(HTTP_statusCode.BadRequest).json({
+          status: false,
+          message: "All required fields must be provided.",
+        });
+       }
+       const newMedicalRecord = {
+        recordDate: recordDate ? new Date(recordDate) : new Date(),
+        condition,
+        symptoms:
+          typeof symptoms === "string"
+          ? symptoms.split(",").map((symptom: string) => symptom.trim())
+          : symptoms,
+        medications:
+          typeof medications === "string"
+          ? medications.split(",").map((medication: string) => medication.trim())
+          : medications,
+        notes,
+       }
+       const medicalRecord = await this.bookingService.addMedicalRecord(appointmentId, newMedicalRecord);
+       return res.status(HTTP_statusCode.OK).json({
+        status: true,
+        message: "Medical record added successfully",
+        medicalRecord,
+       });
+    }catch(error: any){
+      console.error("Error in addMedicalRecord:", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: "Something went wrong, please try again later.",
+      });
+  }
+  }
 
   // // New: Cancel an appointment
   // async cancelAppointment(req: Request, res: Response): Promise<any> {
