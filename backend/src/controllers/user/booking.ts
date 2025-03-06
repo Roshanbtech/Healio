@@ -133,6 +133,23 @@ export class BookingController {
     }
   }
 
+  async getDoctorAppointments(req: Request, res: Response): Promise<any> {
+    try{
+       const { id } = req.params;
+       const docAppointment = await this.bookingService.getDoctorAppointments(id);
+       return res.status(HTTP_statusCode.OK).json({
+        status: true,
+        docAppointment,
+      });
+    }catch(error:any){
+      console.error("Error in getPatientAppointments:", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+      status: false,
+      message: "Something went wrong, please try again later.",
+    });
+  }
+  }
+
   async addMedicalRecord(req: Request, res: Response): Promise<any> {
     try {
        const appointmentId = req.params.id;
@@ -171,28 +188,27 @@ export class BookingController {
   }
   }
 
-  // // New: Cancel an appointment
-  // async cancelAppointment(req: Request, res: Response): Promise<any> {
-  //   try {
-  //     const { appointmentId } = req.body;
-  //     if (!appointmentId) {
-  //       return res.status(HTTP_statusCode.BadRequest).json({
-  //         status: false,
-  //         message: "Appointment ID is required.",
-  //       });
-  //     }
-  //     const appointment = await this.bookingService.cancelAppointment(appointmentId);
-  //     return res.status(HTTP_statusCode.OK).json({
-  //       status: true,
-  //       message: "Appointment cancelled successfully",
-  //       appointment,
-  //     });
-  //   } catch (error: any) {
-  //     console.error("Error in cancelAppointment:", error);
-  //     return res.status(HTTP_statusCode.InternalServerError).json({
-  //       status: false,
-  //       message: "Something went wrong, please try again later.",
-  //     });
-  //   }
-  // }
+  async cancelAppointment(req: Request, res: Response): Promise<any> {
+    try {
+      const appointmentId = req.params.id;
+      if (!appointmentId) {
+        return res.status(HTTP_statusCode.BadRequest).json({
+          status: false,
+          message: "Appointment ID is required.",
+        });
+      }
+      const appointment = await this.bookingService.cancelAppointment(appointmentId);
+      return res.status(HTTP_statusCode.OK).json({
+        status: true,
+        message: "Appointment cancelled successfully",
+        appointment,
+      });
+    } catch (error: any) {
+      console.error("Error in cancelAppointment:", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: "Something went wrong, please try again later.",
+      });
+    }
+  }
 }

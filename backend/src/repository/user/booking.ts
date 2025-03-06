@@ -33,9 +33,14 @@ export class BookingRepository implements IBookingRepository {
     return this.appointmentRepo.create(data);
   }
 
-  async findAppointmentById(appointmentId: string): Promise<IAppointment | null> {
+  async findAppointmentByPatientId(appointmentId: string): Promise<IAppointment | null> {
     return this.appointmentRepo.findOne(appointmentId);
   }
+
+  async findAppointmentById(appointmentId: string): Promise<IAppointment | null>{
+    return this.appointmentRepo.findById(appointmentId);
+  }
+
 
   async updateByAppointmentId(
     appointmentId: string,
@@ -63,8 +68,11 @@ export class BookingRepository implements IBookingRepository {
     return this.appointmentRepo.updateWithOperators(appointmentId, { $push: { medicalRecords: newMedicalRecord } });
   }
   
-  // // New: Cancel an appointment (updates its status)
-  // async cancelAppointment(appointmentId: string): Promise<IAppointment | null> {
-  //   return this.appointmentRepo.update(appointmentId, { status: "cancelled" });
-  // }
+  async cancelAppointment(appointmentId: string): Promise<IAppointment | null> {
+    return this.appointmentRepo.update(appointmentId, { status: "cancelled" });
+  }
+
+  async getDoctorAppointments(id: string): Promise<IAppointment[]> {
+    return this.appointmentRepo.findAll({ doctorId: id , status: { $in: ["pending", "accepted", "completed"] }});
+  }
 }

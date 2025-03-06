@@ -1,6 +1,13 @@
 import { Document, model, Schema } from "mongoose";
 
-interface Iuser extends Document {
+interface ITransaction {
+  amount: number;
+  transactionType: "credit" | "debit";
+  description: string;
+  date?: Date;
+}
+
+export interface Iuser extends Document {
   userId: string;
   name: string;
   email: string;
@@ -15,7 +22,18 @@ interface Iuser extends Document {
   isBlocked: boolean;
   isVerified: boolean;
   googleId?: string;
+  wallet?: {
+    balance: number;
+    transactions: ITransaction[];
+  };
 }
+
+const transactionSchema = new Schema<ITransaction>({
+  amount: { type: Number, required: true },
+  transactionType: { type: String, enum: ["credit", "debit"], required: true },
+  description: { type: String, required: true },
+  date: { type: Date, default: Date.now },
+});
 
 const userSchema = new Schema<Iuser>(
   {
@@ -71,6 +89,10 @@ const userSchema = new Schema<Iuser>(
     },
     googleId: {
       type: String,
+    },
+    wallet: {
+      balance: { type: Number, default: 0 },
+      transactions: [transactionSchema],
     },
   },
   { timestamps: true }

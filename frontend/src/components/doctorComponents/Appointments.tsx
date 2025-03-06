@@ -15,6 +15,7 @@ import {
 import { Sidebar } from "../common/doctorCommon/Sidebar";
 import { format } from "date-fns";
 import axiosInstance from "../../utils/axiosInterceptors";
+import { toast } from "react-toastify";
 
 // Custom Button Component (unchanged)
 interface CustomButtonProps {
@@ -252,10 +253,26 @@ const AppointmentsList: React.FC = () => {
   };
 
   // Action Handlers
-  const handleConfirmAppointment = (appointmentId: string) => {
-    console.log(`Confirming appointment ${appointmentId}`);
-    // Implement status update logic here (e.g. update to "accepted")
-  };
+  const handleConfirmAppointment = async (appointmentId: string) => {
+  try {
+    const response = await axiosInstance.patch(`/doctor/appointments/${appointmentId}/accept`);
+    if (response.data.status) {
+      setAppointments((prevAppointments) =>
+        prevAppointments.map((appointment) =>
+          appointment._id === appointmentId
+            ? { ...appointment, status: 'accepted' }
+            : appointment
+        )
+      );
+      toast.success('Appointment confirmed successfully');
+    } else {
+      toast.error('Failed to confirm appointment: ' + (response.data.message || 'Unknown error'));
+    }
+  } catch (error: any) {
+    console.error('Error confirming appointment:', error.message || error);
+    toast.error('Error confirming appointment');
+  }
+};
 
   const handleAddPrescription = (appointmentId: string) => {
     console.log(`Adding prescription for appointment ${appointmentId}`);
@@ -356,7 +373,6 @@ const AppointmentsList: React.FC = () => {
                   "accepted",
                   "completed",
                   "cancelled",
-                  "cancelled by Dr",
                 ].map((status) => (
                   <button
                     key={status}

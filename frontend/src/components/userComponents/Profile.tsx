@@ -118,7 +118,7 @@ const Profile: React.FC = () => {
     try {
       const formData = new FormData();
       for (const key in editProfile) {
-        if (key === "image" || key === "id" || key === "userId") continue;
+        if (key === "image" || key === "id" || key === "userId" || key === "wallet") continue;
         formData.append(
           key,
           String(editProfile[key as keyof UserProfile] || "")

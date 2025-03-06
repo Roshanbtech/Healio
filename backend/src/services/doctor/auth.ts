@@ -212,6 +212,10 @@ export class AuthService implements IAuthService {
         return { error: "Doctor Not Found." };
       }
 
+      if (doctor.isBlocked) {
+        return { error: "Doctor is blocked. Ask admin for access." };
+      }
+      
       if (doctor.docStatus === "rejected") {
         return { error: "Your account has been rejected" };
       }

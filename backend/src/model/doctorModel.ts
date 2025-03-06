@@ -1,7 +1,14 @@
 import mongoose, { Document, model, Schema, Types } from "mongoose";
 interface Qualification {}
 
-interface IDoctor extends Document {
+interface ITransaction {
+  amount: number;
+  transactionType: "credit" | "debit";
+  description: string;
+  date?: Date;
+}
+
+export interface IDoctor extends Document {
   name: string;
   email: string;
   phone: string;
@@ -22,7 +29,18 @@ interface IDoctor extends Document {
   docStatus?: "pending" | "approved" | "rejected";
   rejectionReason?: string;
   about?: string;
+  wallet?: {
+    balance: number;
+    transactions: ITransaction[];
+  };
 }
+
+const transactionSchema = new Schema<ITransaction>({
+  amount: { type: Number, required: true },
+  transactionType: { type: String, enum: ["credit", "debit"], required: true },
+  description: { type: String, required: true },
+  date: { type: Date, default: Date.now },
+});
 
 const doctorSchema = new Schema<IDoctor>(
   {
@@ -50,6 +68,10 @@ const doctorSchema = new Schema<IDoctor>(
     },
     rejectionReason: { type: String },
     about: { type: String },
+    wallet: {
+      balance: { type: Number, default: 0 },
+      transactions: [transactionSchema],
+    },
   },
   { timestamps: true }
 );

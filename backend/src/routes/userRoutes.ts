@@ -121,7 +121,15 @@ route.patch(
   "/appointments/:id/medical-records",
   BookingControllerInstance.addMedicalRecord.bind(BookingControllerInstance)
 )
-// route.post("/cancelAppointment", BookingControllerInstance.cancelAppointment.bind(BookingControllerInstance));
+route.patch(
+  "/appointments/:id/cancel", 
+  BookingControllerInstance.cancelAppointment.bind(BookingControllerInstance)
+);
+
+route.get(
+  "/appointments/doctor/:id",
+   BookingControllerInstance.getDoctorAppointments.bind(BookingControllerInstance)
+)
 
 
 export default route;

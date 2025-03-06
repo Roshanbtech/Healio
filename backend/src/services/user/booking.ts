@@ -1,4 +1,6 @@
 import { IBookingRepository } from "../../interface/user/Booking.repository.interface";
+import { DoctorRepository } from "../../repository/doctor/doctor";
+import { UserRepository } from "../../repository/user/user";
 import { IBookingService } from "../../interface/user/Booking.service.interface";
 import { razorPayInstance } from "../../config/razorpay";
 import { IAppointment } from "../../model/appointmentModel";
@@ -8,9 +10,13 @@ dotenv.config();
 
 export class BookingService implements IBookingService {
   private bookingRepository: IBookingRepository;
+  private doctorRepository: DoctorRepository;
+  private userRepository: UserRepository;
 
   constructor(bookingRepository: IBookingRepository) {
     this.bookingRepository = bookingRepository;
+    this.doctorRepository = new DoctorRepository();
+    this.userRepository = new UserRepository();
   }
 
   async getCoupons(): Promise<any> {
@@ -87,7 +93,7 @@ export class BookingService implements IBookingService {
         razorpay_signature, bookingId } = data;
       console.log("1",bookingId,razorpay_order_id,razorpay_payment_id,razorpay_signature)
 
-      const appointment = await this.bookingRepository.findAppointmentById(bookingId);
+      const appointment = await this.bookingRepository.findAppointmentByPatientId(bookingId);
       console.log("2")
 
       if (!appointment) {
@@ -122,6 +128,8 @@ export class BookingService implements IBookingService {
         throw new Error("Failed to update appointment");
       }
       console.log("6")
+      const { doctorId, fees, appointmentId } = updatedAppointment;
+      await this.doctorRepository.updateWalletTransaction(doctorId.toString(), fees ?? 0, appointmentId);
       return updatedAppointment;
     } catch (error: any) {
       throw new Error(error.message);
@@ -144,24 +152,49 @@ export class BookingService implements IBookingService {
     }
   }
 
+  async cancelAppointment(appointmentId: string): Promise<IAppointment> {
+    try {
+      console.log("cancelAppointment: Starting cancellation for appointmentId:", appointmentId);
+      const appointment = await this.bookingRepository.findAppointmentById(appointmentId);
+      console.log("cancelAppointment: Retrieved appointment:", appointment);
+      if (!appointment) {
+        throw new Error("Appointment not found");
+      }
+      if (appointment.status === "cancelled" || appointment.status === "cancelled by Dr") {
+        throw new Error("Appointment is already cancelled");
+      }
+      const isPending = appointment.status === "pending";
+      console.log("cancelAppointment: isPending =", isPending);
+      const updatedAppointment = await this.bookingRepository.cancelAppointment(appointmentId);
+      console.log("cancelAppointment: Updated appointment:", updatedAppointment);
+      if (!updatedAppointment) {
+        throw new Error("Failed to cancel appointment");
+      }
+      if (isPending) {
+        const refundAmount = appointment.fees || 0;
+        console.log("cancelAppointment: Refund amount =", refundAmount);
+        console.log("cancelAppointment: Calling refundToUser with patientId:", appointment.patientId);
+        await this.userRepository.refundToUser(appointment.patientId.toString(), refundAmount);
+        console.log("cancelAppointment: refundToUser completed");
+        console.log("cancelAppointment: Calling deductFromDoctorWallet with doctorId:", appointment.doctorId);
+        await this.doctorRepository.deductFromDoctorWallet(appointment.doctorId.toString(), refundAmount);
+        console.log("cancelAppointment: deductFromDoctorWallet completed");
+      }
+      return updatedAppointment;
+    } catch (error: any) {
+      console.error("cancelAppointment: Error:", error);
+      throw error;
+    }
+  }
 
-  // // New: Cancel an appointment for a patient
-  // async cancelAppointment(appointmentId: string): Promise<IAppointment> {
-  //   try {
-  //     const appointment = await this.bookingRepository.findAppointmentById(appointmentId);
-  //     if (!appointment) {
-  //       throw new Error("Appointment not found");
-  //     }
-  //     if (appointment.status === "cancelled" || appointment.status === "cancelled by Dr") {
-  //       throw new Error("Appointment is already cancelled");
-  //     }
-  //     const updatedAppointment = await this.bookingRepository.cancelAppointment(appointmentId);
-  //     if (!updatedAppointment) {
-  //       throw new Error("Failed to cancel appointment");
-  //     }
-  //     return updatedAppointment;
-  //   } catch (error: any) {
-  //     throw error;
-  //   }
-  // }
+  async getDoctorAppointments(id: string): Promise<IAppointment[]> {
+    try{
+      const docAppointment = await this.bookingRepository.getDoctorAppointments(id);
+      return docAppointment;
+    }catch(error:any){
+      throw new Error(error.message);
+    }
+  }
+  
+  
 }

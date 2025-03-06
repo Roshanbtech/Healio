@@ -5,5 +5,7 @@ export interface IBookingService {
     verifyBooking(data: any): Promise<IAppointment>;
     getPatientAppointments(id: string): Promise<IAppointment[]>;
     addMedicalRecord(appointmentId: string, newMedicalRecord: any): Promise<IAppointment | null>;
-    //   cancelAppointment(appointmentId: string): Promise<IAppointment>;
+    cancelAppointment(appointmentId: string): Promise<IAppointment>;
+    getDoctorAppointments(id: string): Promise<IAppointment[]>;
+
 }

@@ -1,4 +1,4 @@
-import doctorModel from "../../model/doctorModel";
+import doctorModel, { IDoctor } from "../../model/doctorModel";
 import serviceModel from "../../model/serviceModel";
 import slotModel from "../../model/slotModel";
 import { IDoctorRepository } from "../../interface/doctor/Auth.repository.interface";
@@ -10,7 +10,7 @@ import {
 import bcrypt from "bcrypt";
 import userModel from "../../model/userModel";
 import ChatModel from "../../model/chatModel";
-import AppointmentModel from "../../model/appointmentModel";
+import AppointmentModel, { IAppointment } from "../../model/appointmentModel";
 
 export class DoctorRepository implements IDoctorRepository {
   async getServices(): Promise<Service[]> {
@@ -197,4 +197,74 @@ export class DoctorRepository implements IDoctorRepository {
       throw error;
     }
   }
+
+  async acceptAppointment(id: string): Promise<IAppointment | null>{
+    try{
+     const accepted = await AppointmentModel.findByIdAndUpdate(
+      id,
+      {$set: {status: "accepted"}},
+      {new: true}
+     ).exec();
+     return accepted;
+    }catch(error:any){
+      console.error("Error in acceptAppointment:", error);
+      throw error;
+    }
+  }
+
+  // adding wallet balance to doctor after users successfull online payment........ so this is from booking service we make use of this 
+  async updateWalletTransaction(
+    doctorId: string,
+    fee: number,
+    appointmentId: string
+  ): Promise<any> {
+    try {
+      const updatedDoctor = await doctorModel.findByIdAndUpdate(
+        doctorId,
+        {
+          $inc: { "wallet.balance": fee },
+          $push: {
+            "wallet.transactions": {
+              amount: fee,
+              transactionType: "credit",
+              description: `Payment received for appointment ${appointmentId}`,
+              date: new Date(),
+            },
+          },
+        },
+        { new: true }
+      );
+      return updatedDoctor;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+
+  async deductFromDoctorWallet(doctorId: string, refundAmount: number): Promise<IDoctor | null> {
+    try {
+      console.log("deductFromDoctorWallet: Starting deduction for doctorId:", doctorId, "with refundAmount:", refundAmount);
+      const doctor = await doctorModel.findById(doctorId);
+      console.log("deductFromDoctorWallet: Retrieved doctor:", doctor);
+      if (!doctor) throw new Error("Doctor not found for refund deduction");
+      if (!doctor.wallet) {
+          doctor.wallet = { balance: 0, transactions: [] };
+      }
+      doctor.wallet.balance -= refundAmount;
+      console.log("deductFromDoctorWallet: Updated doctor wallet balance =", doctor.wallet.balance);
+      doctor.wallet.transactions.push({
+        amount: refundAmount,
+        transactionType: "debit",
+        description: "Refund issued due to appointment cancellation",
+        date: new Date(),
+      });
+      console.log("deductFromDoctorWallet: Pushed transaction:", doctor.wallet.transactions[doctor.wallet.transactions.length - 1]);
+      const savedDoctor = await doctor.save();
+      console.log("deductFromDoctorWallet: Doctor saved successfully:", savedDoctor);
+      return savedDoctor;
+    } catch (error: any) {
+      console.error("deductFromDoctorWallet: Error:", error);
+      throw new Error(error.message);
+    }
+  }
+  
 }

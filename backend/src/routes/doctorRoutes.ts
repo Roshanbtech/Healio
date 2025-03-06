@@ -101,4 +101,10 @@ route.get(
   DoctorControllerInstance.getAppointments.bind(DoctorControllerInstance)
 )
 
+//appointment status update routes......................................
+route.patch(
+  "/appointments/:id/accept",
+  DoctorControllerInstance.acceptAppointment.bind(DoctorControllerInstance)
+)
+
 export default route;

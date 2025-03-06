@@ -1,4 +1,4 @@
-import userModel from "../../model/userModel";
+import userModel, { Iuser } from "../../model/userModel";
 import doctorModel from "../../model/doctorModel";
 import serviceModel from "../../model/serviceModel";
 import slotModel from "../../model/slotModel";
@@ -6,6 +6,7 @@ import { Schedule } from "../../interface/doctorInterface/Interface";
 import {
   DoctorDetails,
   Service,
+
 } from "../../interface/userInterface/interface";
 import { IUserRepository } from "../../interface/user/User.repository.interface";
 import { paginate, PaginationOptions } from "../../helper/pagination";
@@ -152,4 +153,37 @@ export class UserRepository implements IUserRepository {
       throw error;
     }
   }
+
+  async refundToUser(userId: string, refundAmount: number): Promise<Iuser> {
+    try {
+      console.log("refundToUser: Starting refund for userId:", userId, "with refundAmount:", refundAmount);
+      const user = await userModel.findById(userId);
+      console.log("refundToUser: Retrieved user:", user);
+      if (!user) throw new Error("User not found for refund");
+      // Ensure __v is a number
+      if (user.__v == null) {
+        user.__v = 0;
+      }
+      if (!user.wallet) {
+        user.wallet = { balance: 0, transactions: [] };
+    }
+      user.wallet.balance += refundAmount;
+      console.log("refundToUser: Updated wallet balance =", user?.wallet.balance);
+      user.wallet.transactions.push({
+        amount: refundAmount,
+        transactionType: "credit",
+        description: `Refund for cancelled appointment from ${user.name}`,
+        date: new Date(),
+      });
+      console.log("refundToUser: Pushed transaction:", user.wallet.transactions[user.wallet.transactions.length - 1]);
+      await user.save();
+      console.log("refundToUser: User saved successfully");
+      return user;
+    } catch (error: any) {
+      console.error("refundToUser: Error:", error);
+      throw error;
+    }
+  }
+  
+  
 }

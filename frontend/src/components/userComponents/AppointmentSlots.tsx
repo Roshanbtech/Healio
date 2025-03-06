@@ -22,17 +22,40 @@ interface IDoctor {
   degree?: string;
 }
 
+interface IAppointment {
+  _id: string;
+  appointmentId: string;
+  patientId: string;
+  doctorId: string;
+  date: string;
+  time: string;
+  status: string;
+  fees: number;
+  paymentMethod: string;
+  paymentStatus: string;
+  prescription: any;
+  couponCode: string;
+  couponDiscount: string;
+  isApplied: boolean;
+  medicalRecords: any[];
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  razorpay_order_id?: string;
+  razorpay_payment_id?: string;
+  razorpay_signature?: string;
+}
+
 const Appointment: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [docInfo, setDocInfo] = useState<IDoctor | null>(null);
   const [slots, setSlots] = useState<IAvailableSlot[]>([]);
-  const [groupedSlots, setGroupedSlots] = useState<{
-    [date: string]: IAvailableSlot[];
-  }>({});
+  const [groupedSlots, setGroupedSlots] = useState<{ [date: string]: IAvailableSlot[] }>({});
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [selectedTime, setSelectedTime] = useState<IAvailableSlot | null>(null);
+  const [bookedAppointments, setBookedAppointments] = useState<IAppointment[]>([]);
 
   const sliderSettings = {
     dots: false,
@@ -41,18 +64,9 @@ const Appointment: React.FC = () => {
     slidesToShow: 4,
     slidesToScroll: 1,
     responsive: [
-      {
-        breakpoint: 1024,
-        settings: { slidesToShow: 3 },
-      },
-      {
-        breakpoint: 768,
-        settings: { slidesToShow: 2 },
-      },
-      {
-        breakpoint: 480,
-        settings: { slidesToShow: 1 },
-      },
+      { breakpoint: 1024, settings: { slidesToShow: 3 } },
+      { breakpoint: 768, settings: { slidesToShow: 2 } },
+      { breakpoint: 480, settings: { slidesToShow: 1 } },
     ],
   };
 
@@ -86,6 +100,19 @@ const Appointment: React.FC = () => {
     }
   };
 
+  const fetchDoctorAppointmentSlots = async () => {
+    try {
+      if (id) {
+        const res = await axiosInstance.get(`/appointments/doctor/${id}`);
+        if (res.data?.docAppointment) {
+          setBookedAppointments(res.data.docAppointment);
+        }
+      }
+    } catch (error) {
+      console.log("Error fetching doctor appointment slots:", error);
+    }
+  };
+
   useEffect(() => {
     const groups: { [date: string]: IAvailableSlot[] } = {};
     slots.forEach((slot) => {
@@ -103,6 +130,7 @@ const Appointment: React.FC = () => {
   useEffect(() => {
     fetchDoctorDetails();
     fetchAvailableSlots();
+    fetchDoctorAppointmentSlots();
   }, [id]);
 
   if (loading) return <div className="text-center py-8">Loading...</div>;
@@ -122,14 +150,10 @@ const Appointment: React.FC = () => {
                 className="w-full h-full object-cover bg-green-100"
               />
             </div>
-
             <div className="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg text-center font-bold shadow-md">
-              {typeof speciality === "object"
-                ? speciality.name
-                : speciality || "Specialist"}
+              {typeof speciality === "object" ? speciality.name : speciality || "Specialist"}
             </div>
-
-            {/* VERIFIED Badge (overlaps bottom of container) */}
+            {/* VERIFIED Badge */}
             <div className="absolute bottom-[-12px] left-1/2 transform -translate-x-1/2 flex items-center gap-1 bg-white px-3 py-1 rounded-full shadow">
               <CheckCircle className="w-4 h-4 text-green-600" />
               <span className="text-xs font-bold text-green-600">VERIFIED</span>
@@ -137,28 +161,19 @@ const Appointment: React.FC = () => {
           </div>
         </div>
 
-        {/* Right: Name, Experience, About, and Fees */}
+        {/* Doctor Details */}
         <div className="flex-grow flex flex-col justify-center">
-          {/* Name + Degree */}
           <h1 className="text-xl sm:text-2xl font-bold">
             {name} {degree ? `(${degree})` : ""}
           </h1>
-
-          {/* Experience */}
           <div className="flex items-center gap-2 mt-2">
             <Clock size={20} />
-            <span className="text-sm sm:text-base">
-              {experience || 0}+ years Exp
-            </span>
+            <span className="text-sm sm:text-base">{experience || 0}+ years Exp</span>
           </div>
-
-          {/* About Section */}
           <div className="mt-4">
             <h3 className="text-base sm:text-lg font-semibold mb-2">About</h3>
             <p>{about || "No description available."}</p>
           </div>
-
-          {/* Consultation Fee */}
           <div className="mt-4 p-3 bg-white/10 rounded-lg">
             <span className="text-base font-semibold">Consultation Fee: </span>
             <span className="text-xl font-bold">₹{fees ?? 0}</span>
@@ -166,7 +181,7 @@ const Appointment: React.FC = () => {
         </div>
       </div>
 
-      {/* Date Slider Section */}
+      {/* Date Slider */}
       {Object.keys(groupedSlots).length > 0 && (
         <div className="mt-8 bg-white rounded-xl p-4 shadow-xl">
           <h2 className="text-xl font-bold mb-4 text-green-800">Select Date</h2>
@@ -181,15 +196,9 @@ const Appointment: React.FC = () => {
                       : "bg-green-100 hover:bg-gray-200"
                   }`}
                 >
-                  <div className="text-xs font-semibold">
-                    {format(new Date(dateKey), "EEE")}
-                  </div>
-                  <div className="text-xl font-bold">
-                    {format(new Date(dateKey), "dd")}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {format(new Date(dateKey), "MMM yyyy")}
-                  </div>
+                  <div className="text-xs font-semibold">{format(new Date(dateKey), "EEE")}</div>
+                  <div className="text-xl font-bold">{format(new Date(dateKey), "dd")}</div>
+                  <div className="text-xs text-gray-500">{format(new Date(dateKey), "MMM yyyy")}</div>
                 </button>
               </div>
             ))}
@@ -204,19 +213,34 @@ const Appointment: React.FC = () => {
             {format(new Date(selectedDate), "EEEE, d MMMM yyyy")}
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {groupedSlots[selectedDate]?.map((slot, index) => (
-              <button
-                key={index}
-                onClick={() => setSelectedTime(slot)}
-                className={`p-2 rounded-lg transition-colors ${
-                  selectedTime?.slot === slot.slot
-                    ? "bg-red-600 text-white"
-                    : "bg-green-100 text-gray-800"
-                }`}
-              >
-                {format(new Date(slot.datetime), "hh:mm a")}
-              </button>
-            ))}
+            {groupedSlots[selectedDate]?.map((slot, index) => {
+              const isBooked = bookedAppointments.some((appointment) => {
+                const appointmentDate = new Date(appointment.date);
+                const slotDate = new Date(slot.datetime);
+                return (
+                  startOfDay(appointmentDate).toISOString() ===
+                  startOfDay(slotDate).toISOString() &&
+                  appointment.time.trim() === slot.slot.trim()
+                );
+              });
+              return (
+                <button
+                  key={index}
+                  onClick={() => setSelectedTime(slot)}
+                  disabled={isBooked}
+                  className={`p-2 rounded-lg transition-colors flex items-center justify-center ${
+                    isBooked
+                      ? "bg-green-100 text-gray-800 cursor-not-allowed"
+                      : selectedTime?.slot === slot.slot
+                      ? "bg-red-600 text-white"
+                      : "bg-green-100 text-gray-800"
+                  }`}
+                >
+                  <span>{format(new Date(slot.datetime), "hh:mm a")}</span>
+                  {isBooked && <span className="ml-2 text-xs text-red-500 bg-red-100 rounded-full px-2">Booked</span>}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

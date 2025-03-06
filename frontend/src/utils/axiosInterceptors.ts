@@ -76,7 +76,7 @@ axiosInstance.interceptors.response.use(
       error.response?.status === 403 &&
       error.response.data.message === "Access denied. Doctor is blocked."
     ) {
-      handleDoctorLogout();
+      handleDoctorLogout(error.response.data.message);
     }
 
     return Promise.reject(error);

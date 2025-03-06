@@ -14,9 +14,11 @@ export interface IBookingRepository {
   getCoupons(): Promise<ICoupon[]>;
   findConflictingAppointments(doctorId: string, date: Date, time: string): Promise<IAppointment[]>;
   bookAppointment(data: Partial<IAppointment>): Promise<any>;
-  findAppointmentById(appointmentId: string): Promise<IAppointment | null>;
+  findAppointmentByPatientId(appointmentId: string): Promise<IAppointment | null>;
   updateByAppointmentId(appointmentId: string, data: Partial<IAppointment>): Promise<IAppointment | null>;
   getPatientAppointments(id: string): Promise<IAppointment[]>;
   addMedicalRecord(appointmentId: string, newMedicalRecord: any): Promise<IAppointment | null>;
-  // cancelAppointment(appointmentId: string): Promise<IAppointment | null>;
+  cancelAppointment(appointmentId: string): Promise<IAppointment | null>;
+  findAppointmentById(appointmentId: string): Promise<IAppointment | null>;
+  getDoctorAppointments(id: string): Promise<IAppointment[]>;
 }

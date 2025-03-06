@@ -31,6 +31,7 @@ export interface IAuthService {
 
 import { Service } from "../../interface/doctorInterface/Interface";
 import { Schedule } from "../../interface/doctorInterface/Interface";
+import { IAppointment } from "../../model/appointmentModel";
 export interface IDoctorService {
   getServices(): Promise<Service[]>;
   addQualification(data: any, files: any): Promise<any>;
@@ -49,4 +50,6 @@ export interface IDoctorService {
     id: string,
     file: Express.Multer.File): Promise<any>;
   getAppointments(id: string): Promise<any>;
+  // findAppointmentById(id: string): Promise<IAppointment | null>;
+  acceptAppointment(id:string): Promise<IAppointment | null>
 }

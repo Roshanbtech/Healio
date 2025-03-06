@@ -30,7 +30,7 @@ interface IAppointment {
   };
   date: string;
   time: string;
-  status: "pending" | "accepted" | "completed" | "cancelled" | "cancelled by Dr";
+  status: "pending" | "accepted" | "completed" | "cancelled" | "rescheduled";
   reason?: string;
   fees?: number;
   paymentMethod?: "razorpay";
@@ -71,34 +71,104 @@ const RescheduleModal: React.FC<RescheduleModalProps> = ({
 }) => {
   const [date, setDate] = useState<string>("");
   const [time, setTime] = useState<string>("");
-  const availableTimes = [
-    "09:00 AM",
-    "10:00 AM",
-    "11:00 AM",
-    "12:00 PM",
-    "02:00 PM",
-    "03:00 PM",
-    "04:00 PM",
-    "05:00 PM",
-  ];
+  const [availableSlots, setAvailableSlots] = useState<Array<{ 
+    slot: string;
+    datetime: string;
+  }>>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [slotError, setSlotError] = useState<string | null>(null);
+
+  const doctorId = appointment.doctorId._id;
 
   useEffect(() => {
-    // Set minimum date to tomorrow
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    setDate(tomorrow.toISOString().split("T")[0]);
+    const initialDate = tomorrow.toISOString().split("T")[0];
+    setDate(initialDate);
+    fetchSlots(initialDate);
     
-    // Prevent body scrolling when modal is open
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = 'auto';
     };
   }, []);
 
+  const getLocalDateString = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const formatTime = (utcDateTime: string) => {
+    const date = new Date(utcDateTime);
+    return date.toLocaleTimeString([], { 
+      hour: 'numeric', 
+      minute: '2-digit', 
+      hour12: true 
+    });
+  };
+
+  const fetchSlots = async (selectedDate: string) => {
+    if (!doctorId) return;
+    
+    setLoadingSlots(true);
+    setSlotError(null);
+    setTime("");
+    
+    try {
+      const response = await axiosInstance.get(
+        `/schedule/${doctorId}?date=${selectedDate}`
+      );
+
+      if (response.data.status && response.data.slots?.length > 0) {
+        // Filter slots for the selected date in local timezone
+        const filteredSlots = response.data.slots.filter((slot: any) => {
+          const slotDate = new Date(slot.datetime);
+          const slotLocalDate = getLocalDateString(slotDate);
+          return slotLocalDate === selectedDate;
+        });
+
+        if (filteredSlots.length > 0) {
+          setAvailableSlots(filteredSlots);
+        } else {
+          setAvailableSlots([]);
+          setSlotError('No available slots for this date');
+        }
+      } else {
+        setAvailableSlots([]);
+        setSlotError('No available slots for this date');
+      }
+    } catch (err) {
+      console.error('Error fetching slots:', err);
+      setSlotError('Failed to load available slots');
+      setAvailableSlots([]);
+    } finally {
+      setLoadingSlots(false);
+    }
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newDate = e.target.value;
+    setDate(newDate);
+    fetchSlots(newDate);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (date && time) {
-      onReschedule(date, time);
+      const selectedSlot = availableSlots.find(slot => slot.slot === time);
+      if (!selectedSlot) {
+        toast.error("Invalid time selection");
+        return;
+      }
+      
+      // Convert to ISO date and time components
+      const slotDate = new Date(selectedSlot.datetime);
+      const isoDate = slotDate.toISOString().split('T')[0];
+      const isoTime = `${String(slotDate.getUTCHours()).padStart(2, '0')}:${String(slotDate.getUTCMinutes()).padStart(2, '0')}`;
+      
+      onReschedule(isoDate, isoTime);
     }
   };
 
@@ -121,32 +191,48 @@ const RescheduleModal: React.FC<RescheduleModalProps> = ({
                 type="date"
                 className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 transition-all"
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
+                onChange={handleDateChange}
                 min={new Date().toISOString().split("T")[0]}
                 required
               />
             </div>
+            
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select Time
+                Available Time Slots
               </label>
-              <div className="grid grid-cols-4 gap-2">
-                {availableTimes.map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    className={`p-3 text-sm border rounded-md transition-all ${
-                      time === t
-                        ? "bg-gradient-to-r from-red-600 to-red-700 text-white border-red-600 shadow-md"
-                        : "border-gray-300 hover:border-red-300 hover:bg-red-50"
-                    }`}
-                    onClick={() => setTime(t)}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
+              
+              {loadingSlots ? (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
+                  <p className="mt-2 text-sm text-gray-600">Loading available slots...</p>
+                </div>
+              ) : slotError ? (
+                <div className="text-center py-4 text-red-600 text-sm">{slotError}</div>
+              ) : availableSlots.length > 0 ? (
+                <div className="grid grid-cols-2 gap-2">
+                  {availableSlots.map((slot) => (
+                    <button
+                      key={slot.datetime}
+                      type="button"
+                      className={`p-3 text-sm border rounded-md transition-all ${
+                        time === slot.slot
+                          ? "bg-gradient-to-r from-red-600 to-red-700 text-white border-red-600 shadow-md"
+                          : "border-gray-300 hover:border-red-300 hover:bg-red-50"
+                      }`}
+                      onClick={() => setTime(slot.slot)}
+                    >
+                      {formatTime(slot.datetime)}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4 text-gray-500 text-sm">
+                  No slots available for selected date
+                </div>
+              )}
             </div>
+
             <div className="flex justify-end space-x-3">
               <button
                 type="button"
@@ -160,7 +246,7 @@ const RescheduleModal: React.FC<RescheduleModalProps> = ({
                 className={`px-5 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-md hover:from-red-700 hover:to-red-800 transition-all font-medium shadow-md ${
                   !date || !time ? "opacity-70 cursor-not-allowed" : ""
                 }`}
-                disabled={!date || !time}
+                disabled={!date || !time || loadingSlots}
               >
                 Confirm Reschedule
               </button>
@@ -433,6 +519,10 @@ const UserAppointments: React.FC = () => {
   const itemsPerPage = 5;
 
   // Modal states
+  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [slotError, setSlotError] = useState<string | null>(null);
+
   const [showRescheduleModal, setShowRescheduleModal] = useState<boolean>(false);
   const [selectedAppointment, setSelectedAppointment] = useState<IAppointment | null>(null);
   const [showMedicalModal, setShowMedicalModal] = useState<boolean>(false);
@@ -441,6 +531,8 @@ const UserAppointments: React.FC = () => {
 
   const userId = localStorage.getItem("userId");
   const navigate = useNavigate();
+
+  
 
   // Fetch appointments from the API
   useEffect(() => {
@@ -494,7 +586,7 @@ const UserAppointments: React.FC = () => {
 
   const handleCancel = async (appointmentId: string) => {
     try {
-      await axiosInstance.put(`/appointments/cancel/${appointmentId}`);
+      await axiosInstance.patch(`/appointments/${appointmentId}/cancel`);
       setAppointments((prev) =>
         prev.map((appt) =>
           appt._id === appointmentId ? { ...appt, status: "cancelled" } : appt
@@ -733,12 +825,12 @@ const UserAppointments: React.FC = () => {
                     )}
                     {appointment.status === "accepted" && (
                       <>
-                        <button
+                        {/* <button
                           onClick={() => handleCancel(appointment._id)}
                           className="px-4 py-2 border border-red-600 text-red-600 rounded-md hover:bg-red-50 transition-colors text-sm font-medium"
                         >
                           Cancel
-                        </button>
+                        </button> */}
                         <button
                           onClick={() => handleReschedule(appointment)}
                           className="px-4 py-2 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 transition-colors text-sm font-medium"

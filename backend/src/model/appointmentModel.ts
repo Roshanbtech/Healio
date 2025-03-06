@@ -6,7 +6,7 @@ export interface IAppointment extends Document {
   doctorId: mongoose.Types.ObjectId;
   date: Date;
   time: string;
-  status: "pending" | "accepted" | "completed" | "cancelled" | "cancelled by Dr";
+  status: "pending" | "accepted" | "completed" | "cancelled" | "rescheduled" ;
   reason?: string;
   fees?: number;
   paymentMethod?: "razorpay";
@@ -64,7 +64,7 @@ const AppointmentSchema = new Schema<IAppointment>(
         "accepted",
         "completed",
         "cancelled",
-        "cancelled by Dr",
+        "rescheduled",
       ],
       required: true,
     },

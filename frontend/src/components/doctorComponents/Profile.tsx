@@ -132,16 +132,17 @@ const Profile: React.FC = () => {
       const formData = new FormData();
 
       for (const key in editProfile) {
-        if (key === "image") continue;
-
+        if (["image", "wallet", "isBlocked"].includes(key)) continue;
+        
         if (key === "speciality") {
           const specialityObj = editProfile.speciality as any;
           const specialityId = specialityObj?._id || specialityObj?.id || "";
           formData.append(key, specialityId);
         } else {
-          formData.append(key, String(editProfile[key as keyof DoctorProfile]));
+          formData.append(key, String(editProfile[key as keyof DoctorProfile] || ""));
         }
       }
+      
 
       if (selectedImage) {
         formData.append("image", selectedImage);

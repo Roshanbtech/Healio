@@ -2,6 +2,8 @@ import { Document } from "mongoose";
 import { DoctorResult, doctorType, Schedule } from "../doctorInterface/Interface";
 import { Service } from "../doctorInterface/Interface";
 import { UserProfile } from "../userInterface/interface";
+import { IAppointment } from "../../model/appointmentModel";
+import { IDoctor } from "../../model/doctorModel";
 
 export interface IAuthRepository {
   existDoctor(email: string): Promise<{ existEmail: boolean }>;
@@ -25,4 +27,8 @@ export interface IDoctorRepository{
   uploadChatImage(chatId: string, file: Express.Multer.File): Promise<any>
   saveChatImageMessage(chatId: string, messageData: any): Promise<any> 
   getAppointments(id: string): Promise<any>
+  // findAppointmentById(id: string): Promise<IAppointment | null>
+  acceptAppointment(id:string): Promise<IAppointment | null>; 
+  updateWalletTransaction( doctorId: string,fee: number,appointmentId: string): Promise<any>
+  deductFromDoctorWallet(doctorId: string, refundAmount: number): Promise<IDoctor | null>
 }

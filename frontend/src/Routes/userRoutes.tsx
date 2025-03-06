@@ -16,6 +16,7 @@ import BookAppointment from "../pages/userPages/BookAppointment";
 import Chat from "../components/userComponents/Chats";
 import Success from "../pages/userPages/BookingSuccess";
 import UserAppointments from "../components/userComponents/AppointmentList";
+import Wallet from "../components/userComponents/Wallet";
 // import Landing from "../pages/userPages/Landing";
 
 const UserRoutes = () => {
@@ -31,6 +32,7 @@ const UserRoutes = () => {
     "/chats",
     "/success",
     "/appointments",
+    "/wallet",
   ].includes(location.pathname);
   const showFooter = ![
     "/signup",
@@ -42,6 +44,7 @@ const UserRoutes = () => {
     "/chats",
     "/success",
     "/appointments",
+    "/wallet",
   ].includes(location.pathname);
 
   return (
@@ -61,6 +64,7 @@ const UserRoutes = () => {
           <Route path="/profile" element={<Profile />} />
           <Route path="/chats" element={<Chat />} />
           <Route path="/appointments" element={<UserAppointments />} />
+          <Route path="/wallet" element={<Wallet />} />
 
         </Route>
         <Route path="/forgot-password" element={<ForgotPassword />} />

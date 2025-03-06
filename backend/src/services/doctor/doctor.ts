@@ -8,6 +8,7 @@ import { Service } from "../../interface/doctorInterface/Interface";
 import { awsFileUpload } from "../../helper/uploadFiles";
 import { AwsConfig } from "../../config/s3Config";
 import { RRule, Weekday } from "rrule";
+import { IAppointment } from "../../model/appointmentModel";
 
 export class DoctorService implements IDoctorService {
   private DoctorRepository: IDoctorRepository;
@@ -225,6 +226,16 @@ export class DoctorService implements IDoctorService {
     }catch(error: any){
       throw new Error(`Failed to get appointments: ${error.message}`);
     }
+  }
+
+  //doctor accept appointments....
+  async acceptAppointment(id: string): Promise<IAppointment | null> {
+      try{
+       const accepted = await this.DoctorRepository.acceptAppointment(id);
+       return accepted;
+      }catch(error: any){
+        throw new Error(`Failed to accept appointment: ${error.message}`);
+      }
   }
 
 }

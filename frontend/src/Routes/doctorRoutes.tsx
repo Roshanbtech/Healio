@@ -9,6 +9,7 @@ import ResetPassword from "../pages/doctorPages/ResetPassword";
 import Schedule from "../pages/doctorPages/Schedule";
 import Chat from "../components/doctorComponents/Chats";
 import AppointmentsList from "../components/doctorComponents/Appointments";
+import Wallet from "../components/doctorComponents/Wallet";
 
 const DoctorRoutes = () => {
   return (
@@ -24,6 +25,7 @@ const DoctorRoutes = () => {
         <Route path="/profile" element={<Profile />} />
         <Route path="/schedules" element={<Schedule />} />
         <Route path="/appointments" element={<AppointmentsList />} />
+        <Route path="/wallet" element={<Wallet />} />
         <Route path="/chats" element={<Chat />} />
       </Routes>
     </div>

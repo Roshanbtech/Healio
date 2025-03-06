@@ -227,4 +227,28 @@ export class DoctorController {
       })
     }
   }
+
+  async acceptAppointment(req: Request, res: Response): Promise<any>{
+    try{
+       const { id } = req.params;
+       const accepted = await this.doctorService.acceptAppointment(id);
+       if(!accepted){
+         return res.status(HTTP_statusCode.NotFound).json({
+           status: false,
+           message: "Appointment not found",
+         })
+       }
+       return res.status(HTTP_statusCode.OK).json({
+         status: true,
+         data: { accepted },
+         message: "Appointment accepted successfully",
+       })
+    }catch(error:any){
+      console.log("error in accepting appointment", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: "Something went wrong, please try again later.",
+      })
+    }
+  }
 }

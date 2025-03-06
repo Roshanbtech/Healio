@@ -39,14 +39,11 @@ const Login: React.FC = () => {
         sessionStorage.setItem("doctorId", data.doctorId);
         const decodedToken = jwtDecode(data.accessToken) as { role: string };
         localStorage.setItem("userRole", decodedToken.role);
-
-        if (data.status) {
-          toast.success(data.message);
-          setTimeout(() => navigate("/doctor/home"), 1000); 
-        }
+        toast.success("Login successful");
+        navigate("/doctor/home");
       } catch (error: any) {
         console.error("Login error:", error);
-        toast.error(error.response.data.message);
+        toast.error(error?.response?.data?.message || "Login failed");
       } finally {
         setIsSubmitting(false);
       }

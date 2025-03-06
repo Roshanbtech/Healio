@@ -1,6 +1,7 @@
 import { PaginationOptions } from "../../helper/pagination";
 import { DoctorDetails } from "../userInterface/interface";
 import { UserProfile } from "../userInterface/interface";
+import { Iuser } from "../../model/userModel";
 export interface Service {
     serviceId: string;
     name: string;
@@ -17,4 +18,5 @@ export interface IUserRepository {
     getScheduleForDoctor(id: string): Promise<any>
     uploadChatImage(chatId: string, file: Express.Multer.File): Promise<any>
     saveChatImageMessage(chatId: string, messageData: any): Promise<any> 
+    refundToUser(userId: string, refundAmount: number): Promise<Iuser>
 }
