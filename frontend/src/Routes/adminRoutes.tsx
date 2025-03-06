@@ -16,10 +16,10 @@ const AdminRoutes = () => {
           <Route path="/dashboard" element={<AdminDashboard />} />
         </Route>
         <Route element={<ProtectedRoute role="admin" />}>
-          <Route path="/getUsers" element={<UserListing />} />
+          <Route path="/users" element={<UserListing />} />
         </Route>
         <Route element={<ProtectedRoute role="admin" />}>
-          <Route path="/getDoctors" element={<DocotorListing />} />
+          <Route path="/doctors" element={<DocotorListing />} />
         </Route>
         <Route element={<ProtectedRoute role="admin" />}>
           <Route path="/services" element={<Services />} />
