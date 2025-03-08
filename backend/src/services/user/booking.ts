@@ -160,7 +160,7 @@ export class BookingService implements IBookingService {
       if (!appointment) {
         throw new Error("Appointment not found");
       }
-      if (appointment.status === "cancelled" || appointment.status === "cancelled by Dr") {
+      if (appointment.status === "cancelled") {
         throw new Error("Appointment is already cancelled");
       }
       const isPending = appointment.status === "pending";

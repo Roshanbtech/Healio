@@ -2,6 +2,7 @@ import { PaginationOptions } from "../../helper/pagination";
 import { DoctorDetails } from "../userInterface/interface";
 import { UserProfile } from "../userInterface/interface";
 import { Iuser } from "../../model/userModel";
+import { IDoctor } from "../../model/doctorModel";
 export interface Service {
     serviceId: string;
     name: string;
@@ -16,6 +17,7 @@ export interface IUserRepository {
     editUserProfile(id: string, data: any): Promise<any>
     changePassword(id: string, oldPassword: any, newPassword: any): Promise<any>;
     getScheduleForDoctor(id: string): Promise<any>
+    getAppointmentDoctors(id: string): Promise<IDoctor[]>
     uploadChatImage(chatId: string, file: Express.Multer.File): Promise<any>
     saveChatImageMessage(chatId: string, messageData: any): Promise<any> 
     refundToUser(userId: string, refundAmount: number): Promise<Iuser>

@@ -11,6 +11,7 @@ import bcrypt from "bcrypt";
 import userModel from "../../model/userModel";
 import ChatModel from "../../model/chatModel";
 import AppointmentModel, { IAppointment } from "../../model/appointmentModel";
+import { Iuser } from "../../model/userModel";
 
 export class DoctorRepository implements IDoctorRepository {
   async getServices(): Promise<Service[]> {
@@ -135,6 +136,26 @@ export class DoctorRepository implements IDoctorRepository {
     }
   }
 
+  async getAppointmentUsers(id: string): Promise<Iuser[]>{
+    try{
+     const appointments = await AppointmentModel.find({doctorId: id, status: "accepted"});
+     if(!appointments || appointments.length === 0) return [];
+      const userIds: string[] = [];
+      for (let i = 0; i < appointments.length; i++) {
+        const userId = appointments[i].patientId.toString();
+        if (!userIds.includes(userId)) {
+          userIds.push(userId);
+        }
+      }
+      const userDetails = await userModel
+        .find({ _id: { $in: userIds } })
+        .select("-wallet -password");
+      return userDetails;
+    }catch(error: any){
+      throw new Error(error.message);
+    }
+  }
+  
   async uploadChatImage(
     chatId: string,
     file: Express.Multer.File

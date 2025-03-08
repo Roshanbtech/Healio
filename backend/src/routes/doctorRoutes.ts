@@ -90,6 +90,12 @@ route.get(
   "/users",
   DoctorControllerInstance.getUsers.bind(DoctorControllerInstance)
 );
+
+route.get(
+  "/appointment-users/:id",
+  DoctorControllerInstance.getAppointmentUsers.bind(DoctorControllerInstance)
+);
+
 route.post(
   "/chatImgUploads/:id",
   upload.single("image"),

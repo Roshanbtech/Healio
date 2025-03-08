@@ -1,7 +1,8 @@
 import userModel, { Iuser } from "../../model/userModel";
-import doctorModel from "../../model/doctorModel";
+import doctorModel, { IDoctor} from "../../model/doctorModel";
 import serviceModel from "../../model/serviceModel";
 import slotModel from "../../model/slotModel";
+import AppointmentModel from "../../model/appointmentModel";
 import { Schedule } from "../../interface/doctorInterface/Interface";
 import {
   DoctorDetails,
@@ -103,6 +104,29 @@ export class UserRepository implements IUserRepository {
       throw new Error(error.message);
     }
   }
+
+  async getAppointmentDoctors(id: string): Promise<IDoctor[]> {
+    try {
+      const appointments = await AppointmentModel.find({ patientId: id, status: "accepted" });
+      if (!appointments || appointments.length === 0) return [];
+      const doctorIds: string[] = [];
+      for (let i = 0; i < appointments.length; i++) {
+        const docId = appointments[i].doctorId.toString();
+        if (!doctorIds.includes(docId)) {
+          doctorIds.push(docId);
+        }
+      }
+      const doctorDetails = await doctorModel
+        .find({ _id: { $in: doctorIds } })
+        .select("-wallet -password -certificate")
+        .populate({ path: "speciality", select: "name" });
+      return doctorDetails;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+  
+  
 
   async uploadChatImage(
     chatId: string,

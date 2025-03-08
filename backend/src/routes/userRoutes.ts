@@ -91,11 +91,19 @@ route.get(
   "/schedule/:id",
   UserControllerInstance.getAvailableSlots.bind(UserControllerInstance)
 );
+
+//chat routes
 route.post(
   "/chatImgUploads/:id",
   upload.single("image"),
   UserControllerInstance.chatImageUploads.bind(UserControllerInstance)
 );
+
+route.get(
+  "/appointment-doctors/:id",
+  UserControllerInstance.getAppointmentDoctors.bind(UserControllerInstance)
+);
+//
 route.post(
   "/logout",
   AuthControllerInstance.logoutUser.bind(AuthControllerInstance)
@@ -130,6 +138,8 @@ route.get(
   "/appointments/doctor/:id",
    BookingControllerInstance.getDoctorAppointments.bind(BookingControllerInstance)
 )
+
+
 
 
 export default route;

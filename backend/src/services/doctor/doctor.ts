@@ -9,6 +9,7 @@ import { awsFileUpload } from "../../helper/uploadFiles";
 import { AwsConfig } from "../../config/s3Config";
 import { RRule, Weekday } from "rrule";
 import { IAppointment } from "../../model/appointmentModel";
+import { Iuser } from "../../model/userModel";
 
 export class DoctorService implements IDoctorService {
   private DoctorRepository: IDoctorRepository;
@@ -186,6 +187,16 @@ export class DoctorService implements IDoctorService {
       throw new Error(error.message);
     }
   }
+
+  async getAppointmentUsers(id: string): Promise<Iuser[]>{
+    try{
+      const result = await this.DoctorRepository.getAppointmentUsers(id);
+      return result;
+    }catch(error: any){
+      throw new Error(error.message);
+    }
+  }
+  
 
   async chatImageUploads(id: string, file: Express.Multer.File): Promise<any> {
     try {

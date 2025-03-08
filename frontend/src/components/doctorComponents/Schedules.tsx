@@ -137,12 +137,12 @@ const DoctorScheduleManagement: React.FC = () => {
       <div
         className={`${
           sidebarCollapsed ? "ml-20" : "ml-64"
-        } p-4 md:p-8 bg-green-100/30 min-h-screen transition-all duration-300`}
+        } p-4 md:p-8 bg-white min-h-screen transition-all duration-300`}
       >
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-8 bg-white p-6 rounded-xl shadow-lg">
             <div>
-              <h1 className="text-3xl font-bold text-green-800 flex items-center gap-2">
+              <h1 className="text-3xl font-bold text-red-600 flex items-center gap-2">
                 <CalendarDays className="h-8 w-8" />
                 Current Schedules
               </h1>
@@ -188,7 +188,7 @@ const DoctorScheduleManagement: React.FC = () => {
                   key={sched._id}
                   className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-green-100"
                 >
-                  <div className="bg-green-800 text-white p-4">
+                  <div className="bg-red-600 text-white p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <Calendar className="h-5 w-5" />
                       <h3 className="font-semibold">Schedule Details</h3>

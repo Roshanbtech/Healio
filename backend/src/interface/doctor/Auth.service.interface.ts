@@ -32,6 +32,7 @@ export interface IAuthService {
 import { Service } from "../../interface/doctorInterface/Interface";
 import { Schedule } from "../../interface/doctorInterface/Interface";
 import { IAppointment } from "../../model/appointmentModel";
+import { Iuser } from "../../model/userModel";
 export interface IDoctorService {
   getServices(): Promise<Service[]>;
   addQualification(data: any, files: any): Promise<any>;
@@ -46,6 +47,7 @@ export interface IDoctorService {
   addSchedule(scheduleData: Schedule): Promise<any>; 
   getSchedule(id: string): Promise<any>;
   getUsers(): Promise<any>;
+  getAppointmentUsers(id: string): Promise<Iuser[]>;
   chatImageUploads(
     id: string,
     file: Express.Multer.File): Promise<any>;

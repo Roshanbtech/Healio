@@ -166,7 +166,9 @@ export class DoctorController {
     }
   }
 
-  async getUsers(req: Request, res: Response): Promise<any> {
+  // Removed duplicate getUsers function.
+
+ async getUsers(req: Request, res: Response): Promise<any> {
     try {
       const users = await this.doctorService.getUsers();
       return res.status(HTTP_statusCode.OK).json({
@@ -182,6 +184,25 @@ export class DoctorController {
       });
     }
   }
+
+  async getAppointmentUsers(req: Request, res: Response): Promise<any> {
+    try {
+      const { id } = req.params;
+      const users = await this.doctorService.getAppointmentUsers(id);
+      return res.status(HTTP_statusCode.OK).json({
+        status: true,
+        data: { users },
+        message: "Users fetched successfully",
+      });
+    } catch (error: any) {
+      console.error("Error in getUsers:", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: "Something went wrong, please try again later.",
+      });
+    }
+  }
+
 
   async chatImageUploads(req: Request, res: Response): Promise<any> {
     try {

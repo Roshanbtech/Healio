@@ -1,4 +1,5 @@
 import { PaginationOptions } from "../../helper/pagination";
+import { IDoctor} from "../../model/doctorModel";
 
 export interface IUserService {
   getDoctors(options: PaginationOptions): Promise<any>;
@@ -11,6 +12,8 @@ export interface IUserService {
     file: Express.Multer.File): Promise<any>;
   changePassword(id: string, oldPassword: any, newPassword: any): Promise<any>;
   getAvailableSlots(id: string): Promise<any>;
+
+  getAppointmentDoctors(id: string): Promise<IDoctor[]>;
   chatImageUploads(
     id: string,
     file: Express.Multer.File): Promise<any>;

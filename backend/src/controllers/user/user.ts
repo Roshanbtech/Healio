@@ -146,6 +146,20 @@ export class UserController {
     }
   }
 
+  async getAppointmentDoctors(req: Request, res: Response): Promise<any>{
+    try{
+      const { id } = req.params;
+      const getAcceptedDoctors = await this.userService.getAppointmentDoctors(id);
+      return res.status(HTTP_statusCode.OK).json({ status: true, getAcceptedDoctors });
+    }catch(error:any){
+      console.error("Error in getAppointmentDoctors:", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: "Something went wrong, please try again later.",
+      });
+    }
+  }
+
   async chatImageUploads(req: Request, res: Response): Promise<any> {
     try {
       const { id } = req.params;

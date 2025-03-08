@@ -10,6 +10,7 @@ import { PaginationOptions } from "../../helper/pagination";
 import { RRule } from "rrule";
 import { format, addMinutes, isBefore } from "date-fns";
 import { Schedule } from "../../interface/doctorInterface/Interface";
+import { IDoctor } from "../../model/doctorModel";
 interface Slot {
   slot: string;
   datetime: Date;
@@ -94,6 +95,16 @@ export class UserService implements IUserService {
       throw new Error(error.message);
     }
   }
+
+  async getAppointmentDoctors(id: string): Promise<IDoctor[]>{
+    try{
+      const doctors = await this.UserRepository.getAppointmentDoctors(id);
+      return doctors;
+    }catch(error: any){
+      throw new Error(error.message);
+    }
+  }
+  
 
   async chatImageUploads(id: string, file: Express.Multer.File): Promise<any> {
     try {

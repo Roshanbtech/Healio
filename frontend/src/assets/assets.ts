@@ -20,6 +20,7 @@ import bg1 from './bgsignup.jpg';
 import bg2 from './bg2.png';
 import google from './google.svg';
 import userDefault1 from './userDefault1.gif';
+import about from './aboutHealio.mp4'
 
 
 // Importing Doctor Images
@@ -48,7 +49,6 @@ import Gynecologist from './Gynecologist.svg';
 import Neurologist from './Neurologist.svg';
 import Pediatricians from './Pediatricians.svg';
 
-// ✅ Assets Object
 export const assets = {
   appointment_img,
   header_img,
@@ -73,15 +73,14 @@ export const assets = {
   userDefault1,
   doc11,
   docthink,
+  about
 };
 
-// ✅ Define Speciality Type
 export interface Speciality {
   speciality: string;
   image: string;
 }
 
-// ✅ Define Doctor Type
 export interface Doctor {
   _id: string;
   name: string;
@@ -97,7 +96,6 @@ export interface Doctor {
   };
 }
 
-// ✅ Specialities Array with Types
 export const specialityData: Speciality[] = [
   { speciality: 'General physician', image: General_physician },
   { speciality: 'Gynecologist', image: Gynecologist },
@@ -107,7 +105,6 @@ export const specialityData: Speciality[] = [
   { speciality: 'Gastroenterologist', image: Gastroenterologist }
 ];
 
-// ✅ Doctors Array with Types
 export const doctors: Doctor[] = [
   {
     _id: 'doc1',

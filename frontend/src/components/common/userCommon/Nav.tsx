@@ -94,7 +94,7 @@ const Navbar = () => {
             {/* Profile Picture */}
             <img
               className="w-16 h-16 rounded-full border-2 border-red-600 object-cover"
-              src={userImage}
+              src={userImage || assets.userDefault1}
               alt="Profile"
             />
             {/* Dropdown Icon */}

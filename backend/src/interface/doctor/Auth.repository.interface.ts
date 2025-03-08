@@ -4,6 +4,7 @@ import { Service } from "../doctorInterface/Interface";
 import { UserProfile } from "../userInterface/interface";
 import { IAppointment } from "../../model/appointmentModel";
 import { IDoctor } from "../../model/doctorModel";
+import { Iuser } from "../../model/userModel";
 
 export interface IAuthRepository {
   existDoctor(email: string): Promise<{ existEmail: boolean }>;
@@ -24,6 +25,7 @@ export interface IDoctorRepository{
   addSchedule(scheduleData: Schedule): Promise<any>
   getSchedule(id: string): Promise<any>
   getUsers(): Promise<any>
+  getAppointmentUsers(id: string): Promise<Iuser[]>
   uploadChatImage(chatId: string, file: Express.Multer.File): Promise<any>
   saveChatImageMessage(chatId: string, messageData: any): Promise<any> 
   getAppointments(id: string): Promise<any>
