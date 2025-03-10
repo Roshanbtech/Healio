@@ -13,6 +13,9 @@ import {
   X,
   Maximize2,
   Minimize2,
+  User,
+  Clock,
+  Shield,
 } from "lucide-react";
 
 interface DoctorVideoCallProps {
@@ -21,6 +24,7 @@ interface DoctorVideoCallProps {
   userId: string;
   onClose: () => void;
   logo?: string; // Optional logo URL
+  patientName?: string; // Optional patient name for display
 }
 
 const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
@@ -29,6 +33,7 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
   userId,
   onClose,
   logo,
+  patientName = "Patient",
 }) => {
   const socket = useSocket();
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
@@ -39,11 +44,41 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [callDuration, setCallDuration] = useState(0);
+  const [callTimerInterval, setCallTimerInterval] = useState<NodeJS.Timeout | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<"idle" | "connecting" | "connected" | "failed">("idle");
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Format call duration as mm:ss
+  const formatCallDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Start call timer when call becomes active
+  useEffect(() => {
+    if (callActive && !callTimerInterval) {
+      const interval = setInterval(() => {
+        setCallDuration(prev => prev + 1);
+      }, 1000);
+      setCallTimerInterval(interval);
+    } else if (!callActive && callTimerInterval) {
+      clearInterval(callTimerInterval);
+      setCallTimerInterval(null);
+      setCallDuration(0);
+    }
+    
+    return () => {
+      if (callTimerInterval) {
+        clearInterval(callTimerInterval);
+      }
+    };
+  }, [callActive, callTimerInterval]);
 
   // Register doctor on mount
   useEffect(() => {
@@ -55,19 +90,24 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
 
   // Get local camera & mic
   useEffect(() => {
-    navigator.mediaDevices
-      .getUserMedia({ video: true, audio: true })
-      .then((stream) => {
+    const initializeMedia = async () => {
+      try {
+        setConnectionStatus("connecting");
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         localStreamRef.current = stream;
         setLocalStream(stream);
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
         }
         console.log("Doctor: Local stream obtained.");
-      })
-      .catch((err) => {
+        setConnectionStatus("idle");
+      } catch (err) {
         console.error("Doctor: Error accessing camera/mic:", err);
-      });
+        setConnectionStatus("failed");
+      }
+    };
+
+    initializeMedia();
     
     // Cleanup function
     return () => {
@@ -83,6 +123,7 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
       if (data.chatId === chatId && data.recipientId === userId) {
         console.log("Doctor: User accepted call.");
         setIsConnecting(false);
+        setConnectionStatus("connected");
         // If a peer already exists, do not recreate it.
         if (!peer) {
           console.log("Doctor: Starting peer as initiator...");
@@ -97,6 +138,7 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
       if (data.chatId === chatId && data.recipientId === userId) {
         console.log("Doctor: User rejected call.", data);
         setIsConnecting(false);
+        setConnectionStatus("failed");
         endCallCleanup();
       }
     });
@@ -125,8 +167,16 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
 
   // Doctor initiates call
   const startCall = () => {
-    if (!socket) return;
+    if (!socket || isConnecting) return;
+    
+    // Check if media is available before starting the call
+    if (!localStreamRef.current) {
+      console.error("Doctor: Cannot start call without local media stream");
+      return;
+    }
+    
     setIsConnecting(true);
+    setConnectionStatus("connecting");
     console.log("Doctor: Initiating call to user...");
     socket.emit("video:call", {
       chatId,
@@ -150,23 +200,52 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
       });
     }
     endCallCleanup();
+  };
+
+  // Handle component close - ensure cleanup before closing
+  const handleClose = () => {
+    endCallCleanup();
     onClose();
   };
 
   const endCallCleanup = () => {
     setCallActive(false);
     setIsConnecting(false);
+    setConnectionStatus("idle");
+    
+    // Destroy peer connection
     if (peer) {
       peer.destroy();
       setPeer(null);
       console.log("Doctor: Peer connection destroyed.");
     }
+    
+    // Clear remote stream
+    if (remoteVideoRef.current && remoteVideoRef.current.srcObject) {
+      remoteVideoRef.current.srcObject = null;
+    }
     setRemoteStream(null);
+    
+    // Stop all local tracks
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((track) => {
         track.stop();
       });
+      
+      // Clear srcObject from video element
+      if (localVideoRef.current && localVideoRef.current.srcObject) {
+        localVideoRef.current.srcObject = null;
+      }
+      
       localStreamRef.current = null;
+      setLocalStream(null);
+    }
+    
+    // Reset call duration
+    if (callTimerInterval) {
+      clearInterval(callTimerInterval);
+      setCallTimerInterval(null);
+      setCallDuration(0);
     }
   };
 
@@ -201,11 +280,24 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
       setRemoteStream(remoteStreamData);
       if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = remoteStreamData;
+        
+        // Ensure video plays when it's ready
+        remoteVideoRef.current.onloadedmetadata = () => {
+          remoteVideoRef.current?.play().catch(err => {
+            console.error("Doctor: Error playing remote video:", err);
+          });
+        };
       }
+    });
+    
+    newPeer.on("connect", () => {
+      console.log("Doctor: Peer connection established successfully.");
+      setConnectionStatus("connected");
     });
     
     newPeer.on("error", (err) => {
       console.error("Doctor: Peer connection error:", err);
+      setConnectionStatus("failed");
       endCallCleanup();
     });
     
@@ -232,29 +324,35 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
     }
   };
 
-  // Toggle audio mute
+  // Toggle audio mute with visual feedback
   const toggleMute = () => {
     if (localStreamRef.current) {
       const audioTracks = localStreamRef.current.getAudioTracks();
+      const newMuteState = !isMuted;
+      
       audioTracks.forEach((track) => {
-        track.enabled = !track.enabled;
+        track.enabled = !newMuteState;
       });
-      setIsMuted(!isMuted);
+      
+      setIsMuted(newMuteState);
     }
   };
 
-  // Toggle video on/off
+  // Toggle video on/off with visual feedback
   const toggleVideo = () => {
     if (localStreamRef.current) {
       const videoTracks = localStreamRef.current.getVideoTracks();
+      const newVideoState = !isVideoOff;
+      
       videoTracks.forEach((track) => {
-        track.enabled = !track.enabled;
+        track.enabled = !newVideoState;
       });
-      setIsVideoOff(!isVideoOff);
+      
+      setIsVideoOff(newVideoState);
     }
   };
 
-  // Toggle fullscreen
+  // Toggle fullscreen with proper browser API handling
   const toggleFullscreen = () => {
     if (!containerRef.current) return;
     
@@ -280,8 +378,35 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
     };
   }, []);
 
+  // Connection status indicator component
+  const ConnectionIndicator = () => {
+    if (connectionStatus === "connected") {
+      return (
+        <div className="flex items-center text-green-600">
+          <div className="h-2 w-2 rounded-full bg-green-600 mr-2 animate-pulse"></div>
+          <span className="text-xs font-medium">Connected</span>
+        </div>
+      );
+    } else if (connectionStatus === "connecting") {
+      return (
+        <div className="flex items-center text-yellow-500">
+          <div className="h-2 w-2 rounded-full bg-yellow-500 mr-2 animate-pulse"></div>
+          <span className="text-xs font-medium">Connecting...</span>
+        </div>
+      );
+    } else if (connectionStatus === "failed") {
+      return (
+        <div className="flex items-center text-red-600">
+          <div className="h-2 w-2 rounded-full bg-red-600 mr-2"></div>
+          <span className="text-xs font-medium">Connection Failed</span>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-85 flex items-center justify-center z-50 backdrop-blur-sm">
       <div 
         ref={containerRef}
         className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col relative overflow-hidden border border-green-100"
@@ -290,13 +415,25 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
         }}
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-4 bg-red-600 border-b border-red-700 rounded-t-2xl">
+        <div className="flex justify-between items-center p-4 bg-gradient-to-r from-red-600 to-red-700 border-b border-red-700 rounded-t-2xl">
           <div className="flex items-center space-x-3">
             {logo && (
               <img src={logo} alt="Healio Logo" className="h-8" />
             )}
-            <h2 className="text-xl font-bold text-white">Healio Video Consultation</h2>
+            <div>
+              <h2 className="text-xl font-bold text-white">Healio Video Consultation</h2>
+              <div className="flex items-center mt-1">
+                <ConnectionIndicator />
+                {callActive && (
+                  <div className="flex items-center text-white text-xs ml-3">
+                    <Clock size={12} className="mr-1" />
+                    {formatCallDuration(callDuration)}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
+          
           <div className="flex items-center space-x-2">
             <button
               onClick={toggleFullscreen}
@@ -306,7 +443,7 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
               {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
             </button>
             <button
-              onClick={endCall}
+              onClick={handleClose}
               className="bg-red-700 hover:bg-red-800 text-white p-2 rounded-full transition-all duration-200 ease-in-out flex items-center justify-center"
               aria-label="Close call"
             >
@@ -320,7 +457,7 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
           <div 
             className={`${
               callActive ? 'w-full md:w-3/4 h-full' : 'w-full h-full'
-            } relative rounded-xl overflow-hidden shadow-lg`}
+            } relative rounded-xl overflow-hidden shadow-lg bg-gray-900`}
             style={{
               boxShadow:
                 "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), inset 0 0 0 1px rgba(220, 38, 38, 0.1)",
@@ -328,30 +465,48 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
           >
             {/* Remote Video (User) */}
             {callActive ? (
-              <video
-                ref={remoteVideoRef}
-                autoPlay
-                playsInline
-                className="w-full h-full object-cover rounded-xl bg-gray-800"
-              />
+              <>
+                <video
+                  ref={remoteVideoRef}
+                  autoPlay
+                  playsInline
+                  className="w-full h-full object-cover rounded-xl bg-gray-800"
+                />
+                <div className="absolute top-4 left-4 bg-black bg-opacity-60 px-3 py-1 rounded-lg text-white text-sm font-medium flex items-center">
+                  <User size={14} className="mr-2" />
+                  {patientName}
+                </div>
+                
+                {/* Secure connection badge */}
+                <div className="absolute top-4 right-4 bg-green-600 bg-opacity-80 px-2 py-1 rounded-lg text-white text-xs font-medium flex items-center">
+                  <Shield size={12} className="mr-1" />
+                  Secure Connection
+                </div>
+              </>
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-800 rounded-xl">
+              <div className="w-full h-full flex items-center justify-center rounded-xl relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-800"></div>
+                
                 {isConnecting ? (
-                  <div className="text-center">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-100 mb-4"></div>
-                    <p className="text-white text-lg">Connecting to patient...</p>
+                  <div className="text-center z-10">
+                    <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-green-100 mb-6"></div>
+                    <p className="text-white text-lg font-light">Connecting to patient...</p>
+                    <p className="text-gray-400 text-sm mt-2">Please wait while we establish a secure connection</p>
                   </div>
                 ) : (
                   <div
-                    className="text-center px-4"
-                    style={{ background: "linear-gradient(135deg, #1a1a1a, #2d3748)" }}
+                    className="text-center px-4 z-10 w-full max-w-md"
                   >
                     <div className="py-12 px-8">
-                      <Camera size={64} className="mx-auto text-green-100 mb-6 opacity-70" />
-                      <p className="text-white text-xl mb-10 font-light">Ready to start your consultation</p>
+                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center mx-auto mb-8 shadow-lg">
+                        <Camera size={40} className="text-white" />
+                      </div>
+                      <h3 className="text-white text-2xl mb-3 font-semibold">Ready for Consultation</h3>
+                      <p className="text-gray-300 text-md mb-10">Your video and audio are ready. Start the call when you're ready to connect with the patient.</p>
+                      
                       <button
                         onClick={startCall}
-                        className="bg-green-100 hover:bg-green-200 text-gray-800 px-8 py-4 rounded-full text-lg font-medium flex items-center mx-auto transition-all duration-300 ease-in-out shadow-lg"
+                        className="bg-gradient-to-r from-green-100 to-green-200 hover:from-green-200 hover:to-green-300 text-gray-800 px-10 py-4 rounded-full text-lg font-medium flex items-center mx-auto transition-all duration-300 ease-in-out shadow-lg"
                         style={{
                           boxShadow: "0 4px 14px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(240, 255, 244, 0.1)",
                         }}
@@ -371,6 +526,7 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
               absolute bottom-4 right-4 w-1/4 h-1/4 md:w-1/5 md:h-1/5 
               rounded-lg overflow-hidden
               transition-all duration-300 border-2 border-green-100
+              ${isVideoOff ? 'bg-gray-900' : ''}
             `}
               style={{
                 boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
@@ -383,12 +539,21 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
                 playsInline
                 className={`
                   w-full h-full object-cover bg-gray-900
-                  ${isVideoOff ? 'opacity-50' : 'opacity-100'}
+                  ${isVideoOff ? 'opacity-0' : 'opacity-100'}
+                  transition-opacity duration-300
                 `}
               />
               {isVideoOff && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-70">
-                  <Camera size={24} className="text-red-500" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900">
+                  <Camera size={24} className="text-red-500 mb-1" />
+                  <span className="text-xs text-gray-400">Camera Off</span>
+                </div>
+              )}
+              
+              {/* Mute indicator */}
+              {isMuted && (
+                <div className="absolute top-1 right-1 bg-red-600 rounded-full p-1">
+                  <MicOff size={12} className="text-white" />
                 </div>
               )}
             </div>
@@ -396,11 +561,11 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
         </div>
 
         {/* Call Controls */}
-        <div className="p-5 bg-gray-50 flex justify-center items-center space-x-6 border-t border-green-100 rounded-b-2xl">
+        <div className="p-5 bg-gradient-to-r from-gray-50 to-gray-100 flex justify-center items-center space-x-6 border-t border-green-100 rounded-b-2xl">
           <button
             onClick={toggleMute}
             className={`
-              p-4 rounded-full transition-all duration-300 shadow-lg
+              p-4 rounded-full transition-all duration-300 transform hover:scale-105
               ${isMuted ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-200 hover:bg-gray-300'}
             `}
             style={{
@@ -416,7 +581,7 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
           {callActive ? (
             <button
               onClick={endCall}
-              className="p-5 bg-red-600 hover:bg-red-700 rounded-full transition-all duration-300 shadow-lg"
+              className="p-5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg"
               style={{ boxShadow: "0 4px 14px rgba(220, 38, 38, 0.4)" }}
               aria-label="End call"
             >
@@ -427,8 +592,10 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
               onClick={startCall}
               disabled={isConnecting}
               className={`
-                p-5 rounded-full transition-all duration-300 shadow-lg
-                ${isConnecting ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-100 hover:bg-green-200'}
+                p-5 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg
+                ${isConnecting 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-gradient-to-r from-green-100 to-green-200 hover:from-green-200 hover:to-green-300'}
               `}
               style={{
                 boxShadow: isConnecting
@@ -444,7 +611,7 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
           <button
             onClick={toggleVideo}
             className={`
-              p-4 rounded-full transition-all duration-300 shadow-lg
+              p-4 rounded-full transition-all duration-300 transform hover:scale-105
               ${isVideoOff ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-200 hover:bg-gray-300'}
             `}
             style={{
