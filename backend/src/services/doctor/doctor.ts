@@ -249,4 +249,14 @@ export class DoctorService implements IDoctorService {
       }
   }
 
+  async completeAppointment(id:string): Promise<IAppointment | null> {
+    try{
+      const completed = await this.DoctorRepository.completeAppointment(id);
+      return completed;
+    }catch(error: any){
+      throw new Error(`Failed to complete appointment: ${error.message}`);
+    }
+  }
+  
+
 }

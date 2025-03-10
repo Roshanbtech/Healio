@@ -14,9 +14,9 @@ import axiosInstance from "../../utils/axiosInterceptors";
 import { Sidebar } from "../common/userCommon/Sidebar";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-
+import ReviewModal from "./ReviewModal";
 // Define the Appointment interface matching your API response
-interface IAppointment {
+export interface IAppointment {
   _id: string;
   appointmentId: string;
   patientId: string;
@@ -34,7 +34,12 @@ interface IAppointment {
   reason?: string;
   fees?: number;
   paymentMethod?: "razorpay";
-  paymentStatus?: "payment pending" | "payment completed" | "payment failed" | "refunded" | "anonymous";
+  paymentStatus?:
+    | "payment pending"
+    | "payment completed"
+    | "payment failed"
+    | "refunded"
+    | "anonymous";
   razorpay_order_id?: string;
   razorpay_payment_id?: string;
   razorpay_signature?: string;
@@ -71,10 +76,12 @@ const RescheduleModal: React.FC<RescheduleModalProps> = ({
 }) => {
   const [date, setDate] = useState<string>("");
   const [time, setTime] = useState<string>("");
-  const [availableSlots, setAvailableSlots] = useState<Array<{ 
-    slot: string;
-    datetime: string;
-  }>>([]);
+  const [availableSlots, setAvailableSlots] = useState<
+    Array<{
+      slot: string;
+      datetime: string;
+    }>
+  >([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [slotError, setSlotError] = useState<string | null>(null);
 
@@ -86,36 +93,36 @@ const RescheduleModal: React.FC<RescheduleModalProps> = ({
     const initialDate = tomorrow.toISOString().split("T")[0];
     setDate(initialDate);
     fetchSlots(initialDate);
-    
-    document.body.style.overflow = 'hidden';
+
+    document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = "auto";
     };
   }, []);
 
   const getLocalDateString = (date: Date) => {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   };
 
   const formatTime = (utcDateTime: string) => {
     const date = new Date(utcDateTime);
-    return date.toLocaleTimeString([], { 
-      hour: 'numeric', 
-      minute: '2-digit', 
-      hour12: true 
+    return date.toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
     });
   };
 
   const fetchSlots = async (selectedDate: string) => {
     if (!doctorId) return;
-    
+
     setLoadingSlots(true);
     setSlotError(null);
     setTime("");
-    
+
     try {
       const response = await axiosInstance.get(
         `/schedule/${doctorId}?date=${selectedDate}`
@@ -133,15 +140,15 @@ const RescheduleModal: React.FC<RescheduleModalProps> = ({
           setAvailableSlots(filteredSlots);
         } else {
           setAvailableSlots([]);
-          setSlotError('No available slots for this date');
+          setSlotError("No available slots for this date");
         }
       } else {
         setAvailableSlots([]);
-        setSlotError('No available slots for this date');
+        setSlotError("No available slots for this date");
       }
     } catch (err) {
-      console.error('Error fetching slots:', err);
-      setSlotError('Failed to load available slots');
+      console.error("Error fetching slots:", err);
+      setSlotError("Failed to load available slots");
       setAvailableSlots([]);
     } finally {
       setLoadingSlots(false);
@@ -157,17 +164,20 @@ const RescheduleModal: React.FC<RescheduleModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (date && time) {
-      const selectedSlot = availableSlots.find(slot => slot.slot === time);
+      const selectedSlot = availableSlots.find((slot) => slot.slot === time);
       if (!selectedSlot) {
         toast.error("Invalid time selection");
         return;
       }
-      
+
       // Convert to ISO date and time components
       const slotDate = new Date(selectedSlot.datetime);
-      const isoDate = slotDate.toISOString().split('T')[0];
-      const isoTime = `${String(slotDate.getUTCHours()).padStart(2, '0')}:${String(slotDate.getUTCMinutes()).padStart(2, '0')}`;
-      
+      const isoDate = slotDate.toISOString().split("T")[0];
+      const isoTime = `${String(slotDate.getUTCHours()).padStart(
+        2,
+        "0"
+      )}:${String(slotDate.getUTCMinutes()).padStart(2, "0")}`;
+
       onReschedule(isoDate, isoTime);
     }
   };
@@ -176,8 +186,13 @@ const RescheduleModal: React.FC<RescheduleModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden animate-fadeIn transform transition-all">
         <div className="bg-gradient-to-r from-red-600 to-red-700 p-5 flex justify-between items-center">
-          <h2 className="text-white text-lg font-bold">Reschedule Appointment</h2>
-          <button onClick={onClose} className="text-white hover:text-red-200 transition-colors">
+          <h2 className="text-white text-lg font-bold">
+            Reschedule Appointment
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-white hover:text-red-200 transition-colors"
+          >
             <X size={20} />
           </button>
         </div>
@@ -196,19 +211,23 @@ const RescheduleModal: React.FC<RescheduleModalProps> = ({
                 required
               />
             </div>
-            
+
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Available Time Slots
               </label>
-              
+
               {loadingSlots ? (
                 <div className="text-center py-4">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
-                  <p className="mt-2 text-sm text-gray-600">Loading available slots...</p>
+                  <p className="mt-2 text-sm text-gray-600">
+                    Loading available slots...
+                  </p>
                 </div>
               ) : slotError ? (
-                <div className="text-center py-4 text-red-600 text-sm">{slotError}</div>
+                <div className="text-center py-4 text-red-600 text-sm">
+                  {slotError}
+                </div>
               ) : availableSlots.length > 0 ? (
                 <div className="grid grid-cols-2 gap-2">
                   {availableSlots.map((slot) => (
@@ -286,9 +305,9 @@ const MedicalReportsModal: React.FC<MedicalReportsModalProps> = ({
 
   useEffect(() => {
     // Prevent body scrolling when modal is open
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = "auto";
     };
   }, []);
 
@@ -305,8 +324,13 @@ const MedicalReportsModal: React.FC<MedicalReportsModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden animate-fadeIn transform transition-all">
         <div className="bg-gradient-to-r from-red-600 to-red-700 p-5 flex justify-between items-center">
-          <h2 className="text-white text-lg font-bold">Submit Medical Report</h2>
-          <button onClick={onClose} className="text-white hover:text-red-200 transition-colors">
+          <h2 className="text-white text-lg font-bold">
+            Submit Medical Report
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-white hover:text-red-200 transition-colors"
+          >
             <X size={20} />
           </button>
         </div>
@@ -415,9 +439,9 @@ const AppointmentDetailsModal: React.FC<{
 
   useEffect(() => {
     // Prevent body scrolling when modal is open
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = "auto";
     };
   }, []);
 
@@ -441,8 +465,12 @@ const AppointmentDetailsModal: React.FC<{
           <div className="bg-gray-50 p-4 rounded-lg mb-6 border-l-4 border-red-600">
             <div className="grid grid-cols-2 gap-4 mb-3">
               <div>
-                <p className="text-sm font-semibold text-gray-500">Appointment ID:</p>
-                <p className="text-base font-medium">{appointment.appointmentId}</p>
+                <p className="text-sm font-semibold text-gray-500">
+                  Appointment ID:
+                </p>
+                <p className="text-base font-medium">
+                  {appointment.appointmentId}
+                </p>
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-500">Status:</p>
@@ -450,7 +478,7 @@ const AppointmentDetailsModal: React.FC<{
               </div>
             </div>
           </div>
-          
+
           <div className="space-y-4">
             <div className="flex items-center p-3 border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-shadow">
               <div className="bg-red-50 p-2 rounded-full mr-3">
@@ -461,37 +489,54 @@ const AppointmentDetailsModal: React.FC<{
                 <p className="text-base">{appointment.doctorId.name}</p>
               </div>
             </div>
-            
+
             <div className="flex items-center p-3 border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-shadow">
               <div className="bg-red-50 p-2 rounded-full mr-3">
                 <Calendar className="w-5 h-5 text-red-600" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-500">Date & Time</p>
-                <p className="text-base">{formatDate(appointment.date)} at {appointment.time}</p>
+                <p className="text-sm font-semibold text-gray-500">
+                  Date & Time
+                </p>
+                <p className="text-base">
+                  {formatDate(appointment.date)} at {appointment.time}
+                </p>
               </div>
             </div>
-            
+
             <div className="flex items-center p-3 border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-shadow">
               <div className="bg-red-50 p-2 rounded-full mr-3">
-                <span className="flex items-center justify-center w-5 h-5 text-red-600 font-bold">₹</span>
+                <span className="flex items-center justify-center w-5 h-5 text-red-600 font-bold">
+                  ₹
+                </span>
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-500">Payment Status</p>
-                <p className="text-base">{appointment.paymentStatus || "N/A"} {appointment.fees ? `(₹${appointment.fees})` : ""}</p>
+                <p className="text-sm font-semibold text-gray-500">
+                  Payment Status
+                </p>
+                <p className="text-base">
+                  {appointment.paymentStatus || "N/A"}{" "}
+                  {appointment.fees ? `(₹${appointment.fees})` : ""}
+                </p>
               </div>
             </div>
-            
+
             {appointment.reason && (
               <div className="p-3 border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                <p className="text-sm font-semibold text-gray-500 mb-1">Reason for Visit</p>
+                <p className="text-sm font-semibold text-gray-500 mb-1">
+                  Reason for Visit
+                </p>
                 <p className="text-base">{appointment.reason}</p>
               </div>
             )}
-            
+
             <div className="p-3 border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-              <p className="text-sm font-semibold text-gray-500 mb-1">Speciality</p>
-              <p className="text-base">{appointment.doctorId.speciality.name}</p>
+              <p className="text-sm font-semibold text-gray-500 mb-1">
+                Speciality
+              </p>
+              <p className="text-base">
+                {appointment.doctorId.speciality.name}
+              </p>
             </div>
           </div>
         </div>
@@ -523,16 +568,20 @@ const UserAppointments: React.FC = () => {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [slotError, setSlotError] = useState<string | null>(null);
 
-  const [showRescheduleModal, setShowRescheduleModal] = useState<boolean>(false);
-  const [selectedAppointment, setSelectedAppointment] = useState<IAppointment | null>(null);
+  const [showRescheduleModal, setShowRescheduleModal] =
+    useState<boolean>(false);
+  const [selectedAppointment, setSelectedAppointment] =
+    useState<IAppointment | null>(null);
   const [showMedicalModal, setShowMedicalModal] = useState<boolean>(false);
-  const [selectedMedicalAppointment, setSelectedMedicalAppointment] = useState<IAppointment | null>(null);
+  const [selectedMedicalAppointment, setSelectedMedicalAppointment] =
+    useState<IAppointment | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState<boolean>(false);
+  const [showReviewModal, setShowReviewModal] = useState<boolean>(false);
+  const [selectedReviewAppointment, setSelectedReviewAppointment] =
+    useState<IAppointment | null>(null);
 
   const userId = localStorage.getItem("userId");
   const navigate = useNavigate();
-
-  
 
   // Fetch appointments from the API
   useEffect(() => {
@@ -547,7 +596,9 @@ const UserAppointments: React.FC = () => {
           setError("Failed to fetch appointments");
         }
       } catch (err: any) {
-        setError(err.message || "An error occurred while fetching appointments");
+        setError(
+          err.message || "An error occurred while fetching appointments"
+        );
       } finally {
         setLoading(false);
       }
@@ -607,7 +658,10 @@ const UserAppointments: React.FC = () => {
   const confirmReschedule = async (date: string, time: string) => {
     if (!selectedAppointment) return;
     try {
-      await axiosInstance.put(`/appointments/reschedule/${selectedAppointment._id}`, { date, time });
+      await axiosInstance.put(
+        `/appointments/reschedule/${selectedAppointment._id}`,
+        { date, time }
+      );
       setAppointments((prev) =>
         prev.map((appt) =>
           appt._id === selectedAppointment._id ? { ...appt, date, time } : appt
@@ -649,9 +703,51 @@ const UserAppointments: React.FC = () => {
     }
   };
 
-  const handleConsult = (appointment: IAppointment) => {
-    navigate(`/consultation/${appointment._id}`);
+  const handleReview = (appointment: IAppointment) => {
+    setSelectedReviewAppointment(appointment);
+    setShowReviewModal(true);
   };
+
+  const confirmReview = async (rating: number, description: string) => {
+    if (!selectedReviewAppointment) return;
+    
+    try {
+      const { data } = await axiosInstance.patch(
+        `/appointments/${selectedReviewAppointment._id}/review`,
+        { rating, description }
+      );
+      
+      if (data.status) {
+        setAppointments((prev) =>
+          prev.map((appt) =>
+            appt._id === selectedReviewAppointment._id 
+              ? { 
+                  ...appt, 
+                  review: { 
+                    rating, 
+                    description 
+                  } 
+                } 
+              : appt
+          )
+        );
+        
+        setShowReviewModal(false);
+        setSelectedReviewAppointment(null);
+        
+        toast.success(data.message || "Review submitted successfully");
+        return Promise.resolve(); 
+      } else {
+        toast.error(data.message || "Error submitting review");
+        return Promise.reject(new Error(data.message)); 
+      }
+    } catch (error: any) {
+      console.error("Error submitting review:", error);
+      toast.error(error.response?.data?.message || "Error submitting review");
+      return Promise.reject(error); 
+    }
+  };
+  
 
   const handleViewDetails = (appointment: IAppointment) => {
     setSelectedAppointment(appointment);
@@ -684,7 +780,11 @@ const UserAppointments: React.FC = () => {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar onCollapse={setSidebarCollapsed} collapsed={sidebarCollapsed} />
-      <div className={`flex-1 transition-all duration-300 ${sidebarCollapsed ? "ml-16" : "ml-64"}`}>
+      <div
+        className={`flex-1 transition-all duration-300 ${
+          sidebarCollapsed ? "ml-16" : "ml-64"
+        }`}
+      >
         <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6">
           <div className="bg-white rounded-xl shadow-lg p-6 mb-6 transition-shadow hover:shadow-xl border border-gray-100">
             <div className="flex flex-col sm:flex-row justify-between items-center">
@@ -753,9 +853,13 @@ const UserAppointments: React.FC = () => {
                   <div className="sm:flex items-center p-6 bg-gradient-to-r from-red-600 to-red-700">
                     <div className="sm:flex-shrink-0 mb-4 sm:mb-0">
                       <div className="h-20 w-20 rounded-full overflow-hidden bg-white flex items-center justify-center border-2 border-white mx-auto sm:mx-0 shadow-lg">
-                        {appointment.doctorId.image || appointment.doctorId.profileImage ? (
+                        {appointment.doctorId.image ||
+                        appointment.doctorId.profileImage ? (
                           <img
-                            src={appointment.doctorId.image || appointment.doctorId.profileImage}
+                            src={
+                              appointment.doctorId.image ||
+                              appointment.doctorId.profileImage
+                            }
                             alt={appointment.doctorId.name}
                             className="h-full w-full object-cover"
                           />
@@ -825,20 +929,15 @@ const UserAppointments: React.FC = () => {
                     )}
                     {appointment.status === "accepted" && (
                       <>
-                        {/* <button
-                          onClick={() => handleCancel(appointment._id)}
-                          className="px-4 py-2 border border-red-600 text-red-600 rounded-md hover:bg-red-50 transition-colors text-sm font-medium"
-                        >
-                          Cancel
-                        </button> */}
                         <button
-                          onClick={() => handleReschedule(appointment)}
-                          className="px-4 py-2 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 transition-colors text-sm font-medium"
-                        >
-                          Reschedule
-                        </button>
-                        <button
-                          onClick={() => handleConsult(appointment)}
+                          onClick={() => {
+                            navigate("/chats");
+                            window.scrollTo({
+                              top: 0,
+                              left: 0,
+                              behavior: "smooth",
+                            });
+                          }}
                           className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-medium"
                         >
                           Consult
@@ -846,12 +945,22 @@ const UserAppointments: React.FC = () => {
                       </>
                     )}
                     {appointment.status === "completed" && (
-                      <button
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
-                        onClick={() => handleViewDetails(appointment)}
-                      >
-                        View Details
-                      </button>
+                      <>
+                        <button
+                          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+                          onClick={() => handleViewDetails(appointment)}
+                        >
+                          View Details
+                        </button>
+                        <button
+                          className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors text-sm font-medium"
+                          onClick={() => handleReview(appointment)}
+                        >
+                          {appointment.review?.rating
+                            ? "Edit Review"
+                            : "Add Review"}
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -863,7 +972,9 @@ const UserAppointments: React.FC = () => {
             <div className="flex justify-center mt-8">
               <nav className="flex items-center space-x-2">
                 <button
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
                   disabled={currentPage === 1}
                   className={`p-2 rounded-md ${
                     currentPage === 1
@@ -887,7 +998,9 @@ const UserAppointments: React.FC = () => {
                   </button>
                 ))}
                 <button
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
                   disabled={currentPage === totalPages}
                   className={`p-2 rounded-md ${
                     currentPage === totalPages
@@ -929,6 +1042,17 @@ const UserAppointments: React.FC = () => {
         <AppointmentDetailsModal
           appointment={selectedAppointment}
           onClose={() => setShowDetailsModal(false)}
+        />
+      )}
+
+      {showReviewModal && selectedReviewAppointment && (
+        <ReviewModal
+          appointment={selectedReviewAppointment}
+          onClose={() => {
+            setShowReviewModal(false);
+            setSelectedReviewAppointment(null);
+          }}
+          onSubmit={confirmReview}
         />
       )}
     </div>

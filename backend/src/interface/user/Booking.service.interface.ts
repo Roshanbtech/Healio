@@ -7,5 +7,5 @@ export interface IBookingService {
     addMedicalRecord(appointmentId: string, newMedicalRecord: any): Promise<IAppointment | null>;
     cancelAppointment(appointmentId: string): Promise<IAppointment>;
     getDoctorAppointments(id: string): Promise<IAppointment[]>;
-
+    addReviewForDoctor(id: string, rating: number, description: string): Promise<IAppointment | null>;
 }

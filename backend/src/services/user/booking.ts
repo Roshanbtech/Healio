@@ -195,6 +195,20 @@ export class BookingService implements IBookingService {
       throw new Error(error.message);
     }
   }
+
+  async addReviewForDoctor(id: string, rating: number, description: string): Promise<IAppointment | null>{
+    try{
+      const updatedAppointment = await this.bookingRepository.addReviewForDoctor(id, rating, description);
+      if(updatedAppointment){
+        const doctorId = updatedAppointment.doctorId.toString();
+        await this.doctorRepository.updateDoctorAggregatedReview(doctorId);
+      }
+      return updatedAppointment
+    }catch(error: any){
+      throw new Error(error.message);
+    }
+  }
+  
   
   
 }

@@ -21,4 +21,5 @@ export interface IBookingRepository {
   cancelAppointment(appointmentId: string): Promise<IAppointment | null>;
   findAppointmentById(appointmentId: string): Promise<IAppointment | null>;
   getDoctorAppointments(id: string): Promise<IAppointment[]>;
+  addReviewForDoctor(id: string, rating: number, description: string): Promise<IAppointment | null>;
 }

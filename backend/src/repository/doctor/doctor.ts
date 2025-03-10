@@ -12,6 +12,7 @@ import userModel from "../../model/userModel";
 import ChatModel from "../../model/chatModel";
 import AppointmentModel, { IAppointment } from "../../model/appointmentModel";
 import { Iuser } from "../../model/userModel";
+import mongoose from "mongoose";
 
 export class DoctorRepository implements IDoctorRepository {
   async getServices(): Promise<Service[]> {
@@ -233,6 +234,21 @@ export class DoctorRepository implements IDoctorRepository {
     }
   }
 
+  async completeAppointment(id:string): Promise<IAppointment | null> {
+    try{
+      const completed = await AppointmentModel.findByIdAndUpdate(
+        id,
+        {$set: {status: "completed"}},
+        {new: true}
+      ).exec();
+      return completed;
+    }catch(error: any){
+      console.error("Error in completeAppointment:", error);
+      throw error;
+    }
+  }
+  
+
   // adding wallet balance to doctor after users successfull online payment........ so this is from booking service we make use of this 
   async updateWalletTransaction(
     doctorId: string,
@@ -287,5 +303,48 @@ export class DoctorRepository implements IDoctorRepository {
       throw new Error(error.message);
     }
   }
+
+  async updateDoctorAggregatedReview(doctorId: string): Promise<IDoctor | null> {
+    try {
+      const aggregatedReview = await AppointmentModel.aggregate([
+        {
+          $match: {
+            doctorId: new mongoose.Types.ObjectId(doctorId),
+            status: "completed",
+            "review.rating": { $gt: 0 }
+          }
+        },
+        {
+          $group: {
+            _id: "$doctorId",
+            averageRating: { $avg: "$review.rating" },
+            reviewCount: { $sum: 1 }
+          }
+        }
+      ]);
+  
+      let updatedDoctor: IDoctor | null;
+  
+      if (aggregatedReview.length > 0) {
+        const { averageRating, reviewCount } = aggregatedReview[0];
+        updatedDoctor = await doctorModel.findOneAndUpdate(
+          { _id: doctorId },
+          { averageRating, reviewCount },
+          { new: true }
+        );
+      } else {
+        updatedDoctor = await doctorModel.findOneAndUpdate(
+          { _id: doctorId },
+          { averageRating: 0, reviewCount: 0 },
+          { new: true }
+        );
+      }
+      
+      return updatedDoctor;
+    } catch (error: any) {
+      console.error("Error in updateDoctorAggregatedReview:", error);
+      throw new Error(error.message);
+    }
+  }  
   
 }

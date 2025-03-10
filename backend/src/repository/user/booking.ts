@@ -75,4 +75,10 @@ export class BookingRepository implements IBookingRepository {
   async getDoctorAppointments(id: string): Promise<IAppointment[]> {
     return this.appointmentRepo.findAll({ doctorId: id , status: { $in: ["pending", "accepted", "completed"] }});
   }
+
+  async addReviewForDoctor(id: string, rating: number, description: string): Promise<IAppointment | null> {
+    return this.appointmentRepo.updateWithOperators(id, { $set: { review: { rating, description } } });
+  }
+  
+  
 }

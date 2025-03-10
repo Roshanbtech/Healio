@@ -16,6 +16,7 @@ import { Sidebar } from "../common/doctorCommon/Sidebar";
 import { format } from "date-fns";
 import axiosInstance from "../../utils/axiosInterceptors";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 // Custom Button Component (unchanged)
 interface CustomButtonProps {
@@ -103,6 +104,7 @@ interface PaginationInfo {
 }
 
 const AppointmentsList: React.FC = () => {
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [filteredAppointments, setFilteredAppointments] = useState<
@@ -254,25 +256,30 @@ const AppointmentsList: React.FC = () => {
 
   // Action Handlers
   const handleConfirmAppointment = async (appointmentId: string) => {
-  try {
-    const response = await axiosInstance.patch(`/doctor/appointments/${appointmentId}/accept`);
-    if (response.data.status) {
-      setAppointments((prevAppointments) =>
-        prevAppointments.map((appointment) =>
-          appointment._id === appointmentId
-            ? { ...appointment, status: 'accepted' }
-            : appointment
-        )
+    try {
+      const response = await axiosInstance.patch(
+        `/doctor/appointments/${appointmentId}/accept`
       );
-      toast.success('Appointment confirmed successfully');
-    } else {
-      toast.error('Failed to confirm appointment: ' + (response.data.message || 'Unknown error'));
+      if (response.data.status) {
+        setAppointments((prevAppointments) =>
+          prevAppointments.map((appointment) =>
+            appointment._id === appointmentId
+              ? { ...appointment, status: "accepted" }
+              : appointment
+          )
+        );
+        toast.success("Appointment confirmed successfully");
+      } else {
+        toast.error(
+          "Failed to confirm appointment: " +
+            (response.data.message || "Unknown error")
+        );
+      }
+    } catch (error: any) {
+      console.error("Error confirming appointment:", error.message || error);
+      toast.error("Error confirming appointment");
     }
-  } catch (error: any) {
-    console.error('Error confirming appointment:', error.message || error);
-    toast.error('Error confirming appointment');
-  }
-};
+  };
 
   const handleAddPrescription = (appointmentId: string) => {
     console.log(`Adding prescription for appointment ${appointmentId}`);
@@ -291,9 +298,31 @@ const AppointmentsList: React.FC = () => {
   };
 
   // New Cancel Handler for accepted appointments
-  const handleCancelAppointment = (appointmentId: string) => {
-    console.log(`Cancelling appointment ${appointmentId}`);
-    // Implement cancellation logic here
+  const handleCompleteAppointment = async (appointmentId: string) => {
+    console.log(`Completing appointment ${appointmentId}`);
+    try {
+      const response = await axiosInstance.patch(
+        `/doctor/appointments/${appointmentId}/complete`
+      );
+      if (response.data.status) {
+        setAppointments((prevAppointments) =>
+          prevAppointments.map((appointment) =>
+            appointment._id === appointmentId
+              ? { ...appointment, status: "completed" }
+              : appointment
+          )
+        );
+        toast.success("Appointment completed successfully");
+      } else {
+        toast.error(
+          "Failed to complete appointment: " +
+            (response.data.message || "Unknown error")
+        );
+      }
+    } catch (error: any) {
+      console.error("Error completing appointment:", error.message || error);
+      toast.error("Error completing appointment");
+    }
   };
 
   // New Modal Openers
@@ -368,24 +397,21 @@ const AppointmentsList: React.FC = () => {
                 className="-mb-px flex space-x-8 overflow-x-auto"
                 aria-label="Tabs"
               >
-                {[
-                  "pending",
-                  "accepted",
-                  "completed",
-                  "cancelled",
-                ].map((status) => (
-                  <button
-                    key={status}
-                    onClick={() => setStatusFilter(status)}
-                    className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-                      statusFilter === status
-                        ? "border-red-500 text-red-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                    }`}
-                  >
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
-                  </button>
-                ))}
+                {["pending", "accepted", "completed", "cancelled"].map(
+                  (status) => (
+                    <button
+                      key={status}
+                      onClick={() => setStatusFilter(status)}
+                      className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                        statusFilter === status
+                          ? "border-red-500 text-red-600"
+                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      }`}
+                    >
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </button>
+                  )
+                )}
               </nav>
 
               {/* Date Filter */}
@@ -555,26 +581,31 @@ const AppointmentsList: React.FC = () => {
                                       variant="outline"
                                       size="sm"
                                       className="text-blue-600 border border-blue-600 hover:bg-blue-50"
-                                      onClick={() =>
-                                        handleContactPatient(
-                                          appointment.patientId._id,
-                                          "chat"
-                                        )
-                                      }
+                                      onClick={() => {
+                                        navigate("/doctor/chats");
+                                        window.scrollTo({
+                                          top: 0,
+                                          left: 0,
+                                          behavior: "smooth",
+                                        });
+                                      }}
                                     >
                                       <MessageCircle className="w-4 h-4 mr-1" />
                                       Consult
                                     </CustomButton>
+
                                     <CustomButton
-                                      variant="outline"
+                                      variant="solid"
                                       size="sm"
-                                      className="text-red-600 border border-red-600 hover:bg-red-50"
+                                      className="bg-green-600 text-white hover:bg-green-700"
                                       onClick={() =>
-                                        handleCancelAppointment(appointment._id)
+                                        handleCompleteAppointment(
+                                          appointment._id
+                                        )
                                       }
                                     >
-                                      <Info className="w-4 h-4 mr-1" />
-                                      Cancel
+                                      <Check className="w-4 h-4 mr-1" />
+                                      Complete
                                     </CustomButton>
                                   </>
                                 )}

@@ -54,4 +54,5 @@ export interface IDoctorService {
   getAppointments(id: string): Promise<any>;
   // findAppointmentById(id: string): Promise<IAppointment | null>;
   acceptAppointment(id:string): Promise<IAppointment | null>
+  completeAppointment(id:string): Promise<IAppointment | null>
 }

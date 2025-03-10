@@ -211,4 +211,29 @@ export class BookingController {
       });
     }
   }
+
+  async addReviewForDoctor(req: Request, res: Response): Promise<any> {
+    try{
+      const { id } = req.params;
+      const { rating, description } = req.body;
+      if(!rating || !description){
+        return res.status(HTTP_statusCode.BadRequest).json({
+          status: false,
+          message: "All required fields must be provided.",
+        });
+      }
+      const reviewForDoctor = await this.bookingService.addReviewForDoctor(id, rating, description);
+      return res.status(HTTP_statusCode.OK).json({
+        status: true,
+        message: "Review added successfully",
+        reviewForDoctor,
+      });
+    }catch(error: any){
+      console.error("Error in addReviewForDoctor:", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: "Something went wrong, please try again later.",
+      });
+    }
+  }
 }

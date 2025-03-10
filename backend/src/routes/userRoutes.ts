@@ -139,6 +139,11 @@ route.get(
    BookingControllerInstance.getDoctorAppointments.bind(BookingControllerInstance)
 )
 
+route.patch(
+  "/appointments/:id/review",
+  BookingControllerInstance.addReviewForDoctor.bind(BookingControllerInstance)
+)
+
 
 
 

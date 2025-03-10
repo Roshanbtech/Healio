@@ -272,4 +272,28 @@ export class DoctorController {
       })
     }
   }
+
+  async completeAppointment(req: Request, res: Response): Promise<any>{
+    try{
+       const { id } = req.params;
+       const completed = await this.doctorService.completeAppointment(id);
+       if(!completed){
+         return res.status(HTTP_statusCode.NotFound).json({
+           status: false,
+           message: "Appointment not found",
+         })
+       }
+       return res.status(HTTP_statusCode.OK).json({
+         status: true,
+         data: { completed },
+         message: "Appointment completed successfully",
+       })
+    }catch(error:any){
+      console.log("error in completing appointment", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: "Something went wrong, please try again later.",
+      })
+    }
+  }
 }

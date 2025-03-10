@@ -113,4 +113,9 @@ route.patch(
   DoctorControllerInstance.acceptAppointment.bind(DoctorControllerInstance)
 )
 
+route.patch(
+  "/appointments/:id/complete",
+  DoctorControllerInstance.completeAppointment.bind(DoctorControllerInstance)
+)
+
 export default route;

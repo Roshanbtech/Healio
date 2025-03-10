@@ -31,6 +31,8 @@ export interface IDoctorRepository{
   getAppointments(id: string): Promise<any>
   // findAppointmentById(id: string): Promise<IAppointment | null>
   acceptAppointment(id:string): Promise<IAppointment | null>; 
+  completeAppointment(id:string): Promise<IAppointment | null>
   updateWalletTransaction( doctorId: string,fee: number,appointmentId: string): Promise<any>
   deductFromDoctorWallet(doctorId: string, refundAmount: number): Promise<IDoctor | null>
+  updateDoctorAggregatedReview(doctorId: string): Promise<IDoctor | null>
 }
