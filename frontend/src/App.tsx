@@ -6,6 +6,7 @@ import DoctorRoutes from "../src/Routes/doctorRoutes";
 import ErrorBoundary from "./pages/userPages/ErrorBoundary";
 
 const App = () => {
+
   return (
     <>
       <Router>
