@@ -160,7 +160,7 @@ const AddScheduleModal: React.FC<IAddScheduleModalProps> = ({
     };
 
     try {
-      const res = await axiosInstance.post("/doctor/addSchedule", scheduleData);
+      const res = await axiosInstance.post("/doctor/schedule", scheduleData);
       console.log("API response:", res.data);
       // Assumes backend returns the saved schedule in res.data.data.result.data
       const savedSchedule = res.data.data.result.data;

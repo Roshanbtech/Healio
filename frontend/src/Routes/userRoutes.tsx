@@ -18,6 +18,8 @@ import Success from "../pages/userPages/BookingSuccess";
 import UserAppointments from "../components/userComponents/AppointmentList";
 import Wallet from "../components/userComponents/Wallet";
 import About from "../components/common/userCommon/About";
+import ErrorBoundary from "../components/common/ErrorBoundary";
+import NotFound from "../pages/userPages/NotFound";
 // import Landing from "../pages/userPages/Landing";
 
 const UserRoutes = () => {
@@ -51,6 +53,7 @@ const UserRoutes = () => {
   return (
     <div className="mx-4 sm:mx-[10%]">
       {showNavbar && <Navbar />}
+      <ErrorBoundary>
       <Routes>
         {/* <Route path="/" element={<Landing/>} /> */}
         <Route path="/signup" element={<SignUp />} />
@@ -70,7 +73,9 @@ const UserRoutes = () => {
         </Route>
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
+      </ErrorBoundary>
       {showFooter && <Footer />}
     </div>
   );

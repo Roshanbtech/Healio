@@ -346,5 +346,29 @@ export class DoctorRepository implements IDoctorRepository {
       throw new Error(error.message);
     }
   }  
-  
+
+  async rescheduleAppointment(id: string, date: string, time: string, reason: string): Promise<IAppointment | null>{
+    try{
+      const rescheduled = await AppointmentModel.findByIdAndUpdate(
+        id,
+        {$set: {date, time, reason}},
+        {new: true}
+      ).populate("patientId", "email");
+      return rescheduled;
+    }catch(error:any){
+      console.error("Error in rescheduleAppointment:", error);
+      throw error;
+    }
+  }
+
+  //for rescheduling ive to get the available slots of the doctor.................
+   async getDoctorAvailableSlots(id: string): Promise<any> {
+      try {
+        const schedules = await slotModel.find({ doctor: id }).lean();
+        return schedules;
+      } catch (error: any) {
+        throw new Error(error.message);
+      }
+    }
+    
 }

@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import HTTP_statusCode from "../../enums/httpStatusCode";
 import { IAuthService } from "../../interface/doctor/Auth.service.interface";
 
-
 export class AuthController {
   private authService: IAuthService;
   constructor(authServiceInstance: IAuthService) {
@@ -208,6 +207,26 @@ export class AuthController {
           .status(HTTP_statusCode.InternalServerError)
           .json({ message: "Authentication failed" });
       }
+    }
+  }
+
+  async logoutDoctor(req: Request, res: Response): Promise<any> {
+    try {
+      const refreshToken = req.cookies.refreshToken;
+      await this.authService.logout(refreshToken);
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        path: "/",
+      });
+      res.status(HTTP_statusCode.OK).json({ status: true, message: "Logout" });
+    } catch (error: any) {
+      console.log("error in doctor logout", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: "Something went wrong, please try again later.",
+      });
     }
   }
 }

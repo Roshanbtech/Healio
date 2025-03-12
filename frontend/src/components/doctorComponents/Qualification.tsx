@@ -89,7 +89,7 @@ export const QualificationForm: React.FC = () => {
       if (!doctorId) {
         throw new Error("Doctor ID not found in session storage.");
       }
-      const response = await axiosInstance.get(`/doctor/getQual/${doctorId}`);
+      const response = await axiosInstance.get(`/doctor/qualifications/${doctorId}`);
       if (response.data.status && response.data.data.qualifications) {
         setSubmittedData(response.data.data.qualifications);
       }

@@ -27,6 +27,7 @@ export interface IAuthService {
     email: string,
     password: string
   ): Promise<{ status: boolean; message: string }>;
+  logout(refreshToken: string): Promise<any>
 }
 
 import { Service } from "../../interface/doctorInterface/Interface";
@@ -55,4 +56,7 @@ export interface IDoctorService {
   // findAppointmentById(id: string): Promise<IAppointment | null>;
   acceptAppointment(id:string): Promise<IAppointment | null>
   completeAppointment(id:string): Promise<IAppointment | null>
+  rescheduleAppointment(id: string, date: string, time: string, reason: string): Promise<IAppointment | null>;
+  getDoctorAvailableSlots(id: string): Promise<any>;
+
 }

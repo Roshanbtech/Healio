@@ -296,4 +296,49 @@ export class DoctorController {
       })
     }
   }
+
+  //rescheduling of an appointment by doctor ........... starts here.....................
+
+  async rescheduleAppointment(req: Request, res: Response): Promise<any>{
+    try{
+      const { id } = req.params;
+      const { date, time , reason} = req.body;
+      const rescheduled = await this.doctorService.rescheduleAppointment(id, date, time, reason);
+      if(!rescheduled){
+        return res.status(HTTP_statusCode.NotFound).json({
+          status: false,
+          message: "Appointment not found",
+        })
+      }
+      return res.status(HTTP_statusCode.OK).json({
+        status: true,
+        data: { rescheduled },
+        message: "Appointment rescheduled successfully",
+      })
+
+    }catch(error:any){
+      console.log("error in rescheduling appointment", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: "Something went wrong, please try again later.",
+      })
+    }
+  }
+
+  //rescheduling required available slots of doctor so fetch it first..........
+
+    async getDoctorAvailableSlots(req: Request, res: Response): Promise<any> {
+      try {
+        const { id } = req.params;
+        const slots = await this.doctorService.getDoctorAvailableSlots(id);
+        return res.status(HTTP_statusCode.OK).json({ status: true, slots });
+      } catch (error: any) {
+        console.error("Error in getAvailableSlots:", error);
+        return res.status(HTTP_statusCode.InternalServerError).json({
+          status: false,
+          message: "Something went wrong, please try again later.",
+        });
+      }
+    }
+
 }

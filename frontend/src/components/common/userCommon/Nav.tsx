@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { assets } from "../../../assets/assets";
 import { NavLink, useNavigate } from "react-router-dom";
 import axiosInstance from "../../../utils/axiosInterceptors";
+import { toast } from "react-toastify";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ const Navbar = () => {
   const handleLogout = async () => {
     try {
       await axiosInstance.post("/logout");
+      toast.success("Logout successful");
     } catch (error) {
       console.error("Logout failed:", error);
     }
@@ -89,7 +91,7 @@ const Navbar = () => {
 
       {/* User Profile/Login Section */}
       <div className="flex items-center gap-2">
-        {token && userImage ? (
+        {token ? (
           <div className="flex items-center gap-2 cursor-pointer group relative">
             {/* Profile Picture */}
             <img

@@ -12,6 +12,7 @@ export interface IAuthRepository {
   doctorCheck(email: string): Promise<DoctorResult | null>;
   handleGoogleLogin(doctorData: any): Promise<{ doctor: any; isNewDoctor: boolean }>
   updatePassword(email: string, hashedPassword: string): Promise<any>
+  logout(refreshToken: string): Promise<any>
 }
 
 
@@ -35,4 +36,6 @@ export interface IDoctorRepository{
   updateWalletTransaction( doctorId: string,fee: number,appointmentId: string): Promise<any>
   deductFromDoctorWallet(doctorId: string, refundAmount: number): Promise<IDoctor | null>
   updateDoctorAggregatedReview(doctorId: string): Promise<IDoctor | null>
+  rescheduleAppointment(id: string, date: string, time: string, reason: string): Promise<IAppointment | null>;
+  getDoctorAvailableSlots(id: string): Promise<any>;
 }

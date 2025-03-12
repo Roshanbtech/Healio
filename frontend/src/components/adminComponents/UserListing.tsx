@@ -51,7 +51,7 @@ const UserList: React.FC = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axiosInstance.get("/admin/getUsers", {
+      const response = await axiosInstance.get("/admin/users", {
         params: {
           page: currentPage,
           limit: itemsPerPage,
@@ -75,7 +75,7 @@ const UserList: React.FC = () => {
 
   const handleToggleUser = async (id: string) => {
     try {
-      const response = await axiosInstance.patch(`/admin/toggleUser/${id}`);
+      const response = await axiosInstance.patch(`/admin/users/${id}/toggle`);
       if (response.data?.status) {
         setUsers((prevUsers) =>
           prevUsers.map((user) =>

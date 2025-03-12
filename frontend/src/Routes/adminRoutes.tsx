@@ -6,10 +6,13 @@ import UserListing from "../pages/adminPages/UserListing";
 import DocotorListing from "../pages/adminPages/DoctorListing";
 import Services from "../pages/adminPages/Services";
 import Coupons from "../pages/adminPages/Coupon";
+import ErrorBoundary from "../components/common/ErrorBoundary";
+import NotFound from "../pages/adminPages/NotFound";
 
 const AdminRoutes = () => {
   return (
     <div className="mx-4 sm:mx-[10%]">
+      <ErrorBoundary>
       <Routes>
         <Route path="/login" element={<AdminLogin />} />
         <Route element={<ProtectedRoute role="admin" />}>
@@ -27,7 +30,9 @@ const AdminRoutes = () => {
         <Route element={<ProtectedRoute role="admin" />}>
           <Route path="/coupons" element={<Coupons />} />
         </Route>
+        <Route path="*" element={<NotFound />} />
       </Routes>
+      </ErrorBoundary>
     </div>
   );
 };

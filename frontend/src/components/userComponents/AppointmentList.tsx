@@ -30,7 +30,7 @@ export interface IAppointment {
   };
   date: string;
   time: string;
-  status: "pending" | "accepted" | "completed" | "cancelled" | "rescheduled";
+  status: "pending" | "accepted" | "completed" | "cancelled" ;
   reason?: string;
   fees?: number;
   paymentMethod?: "razorpay";
@@ -564,9 +564,6 @@ const UserAppointments: React.FC = () => {
   const itemsPerPage = 5;
 
   // Modal states
-  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
-  const [loadingSlots, setLoadingSlots] = useState(false);
-  const [slotError, setSlotError] = useState<string | null>(null);
 
   const [showRescheduleModal, setShowRescheduleModal] =
     useState<boolean>(false);
@@ -913,12 +910,12 @@ const UserAppointments: React.FC = () => {
                         >
                           Cancel
                         </button>
-                        <button
+                        {/* <button
                           onClick={() => handleReschedule(appointment)}
                           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-all text-sm font-medium shadow-sm"
                         >
                           Reschedule
-                        </button>
+                        </button> */}
                         <button
                           onClick={() => handleMedicalReports(appointment)}
                           className="px-4 py-2 border border-yellow-600 text-yellow-600 rounded-md hover:bg-yellow-50 transition-all text-sm font-medium shadow-sm"

@@ -7,6 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import AppContextProvider from './context/AppContext.tsx';
 import { SocketProvider } from './context/SocketContext.tsx';
 
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <SocketProvider>

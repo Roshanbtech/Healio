@@ -9,7 +9,9 @@ export class BookingRepository implements IBookingRepository {
 
   constructor() {
     this.couponRepo = new GenericRepository<ICoupon>(CouponModel);
-    this.appointmentRepo = new GenericRepository<IAppointment>(AppointmentModel);
+    this.appointmentRepo = new GenericRepository<IAppointment>(
+      AppointmentModel
+    );
   }
 
   async getCoupons(): Promise<ICoupon[]> {
@@ -33,14 +35,17 @@ export class BookingRepository implements IBookingRepository {
     return this.appointmentRepo.create(data);
   }
 
-  async findAppointmentByPatientId(appointmentId: string): Promise<IAppointment | null> {
+  async findAppointmentByPatientId(
+    appointmentId: string
+  ): Promise<IAppointment | null> {
     return this.appointmentRepo.findOne(appointmentId);
   }
 
-  async findAppointmentById(appointmentId: string): Promise<IAppointment | null>{
+  async findAppointmentById(
+    appointmentId: string
+  ): Promise<IAppointment | null> {
     return this.appointmentRepo.findById(appointmentId);
   }
-
 
   async updateByAppointmentId(
     appointmentId: string,
@@ -49,36 +54,60 @@ export class BookingRepository implements IBookingRepository {
     return this.appointmentRepo.updateOne(appointmentId, data);
   }
   async getPatientAppointments(id: string): Promise<IAppointment[]> {
-    return this.appointmentRepo
-      .findAllQuery({ patientId: id })
-      .populate("patientId", "name email phone")
-      .populate({
-        path: "doctorId",
-        select: "name image speciality", 
-        populate: {
-          path: "speciality", 
-          select: "name"      
-        }
-      })
-      // .populate("prescription")
-      .exec();
+    return (
+      this.appointmentRepo
+        .findAllQuery({ patientId: id })
+        .populate("patientId", "name email phone")
+        .populate({
+          path: "doctorId",
+          select: "name image speciality",
+          populate: {
+            path: "speciality",
+            select: "name",
+          },
+        })
+        // .populate("prescription")
+        .exec()
+    );
   }
-  
-  async addMedicalRecord(appointmentId: string, newMedicalRecord: any): Promise<IAppointment | null> {
-    return this.appointmentRepo.updateWithOperators(appointmentId, { $push: { medicalRecords: newMedicalRecord } });
+
+  async addMedicalRecord(
+    appointmentId: string,
+    newMedicalRecord: any
+  ): Promise<IAppointment | null> {
+    return this.appointmentRepo.updateWithOperators(appointmentId, {
+      $push: { medicalRecords: newMedicalRecord },
+    });
   }
-  
+
   async cancelAppointment(appointmentId: string): Promise<IAppointment | null> {
     return this.appointmentRepo.update(appointmentId, { status: "cancelled" });
   }
 
   async getDoctorAppointments(id: string): Promise<IAppointment[]> {
-    return this.appointmentRepo.findAll({ doctorId: id , status: { $in: ["pending", "accepted", "completed"] }});
+    return this.appointmentRepo.findAll({
+      doctorId: id,
+      status: { $in: ["pending", "accepted", "completed"] },
+    });
   }
 
-  async addReviewForDoctor(id: string, rating: number, description: string): Promise<IAppointment | null> {
-    return this.appointmentRepo.updateWithOperators(id, { $set: { review: { rating, description } } });
+  async addReviewForDoctor(
+    id: string,
+    rating: number,
+    description: string
+  ): Promise<IAppointment | null> {
+    const updatedAppointment = await this.appointmentRepo.updateWithOperators(
+      id,
+      {
+        $set: { review: { rating, description } },
+      }
+    );
+
+    if (updatedAppointment) {
+      await updatedAppointment.populate("patientId", "name email");
+      await updatedAppointment.populate("doctorId", "name specialty email");
+    }
+
+    return updatedAppointment;
   }
-  
-  
 }

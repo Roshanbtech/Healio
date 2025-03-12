@@ -21,6 +21,7 @@ import bg2 from './bg2.png';
 import google from './google.svg';
 import userDefault1 from './userDefault1.gif';
 import about from './aboutHealio.mp4'
+import error from './error.gif'
 
 
 // Importing Doctor Images
@@ -73,7 +74,8 @@ export const assets = {
   userDefault1,
   doc11,
   docthink,
-  about
+  about,
+  error
 };
 
 export interface Speciality {

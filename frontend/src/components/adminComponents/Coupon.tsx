@@ -113,7 +113,7 @@ const Coupon: React.FC = () => {
         ...newCoupon,
         expirationDate: new Date(newCoupon.expirationDate),
       };
-      const response = await axiosInstance.post("/admin/addCoupon", payload);
+      const response = await axiosInstance.post("/admin/coupons", payload);
       if (response.data?.status) {
         const addedCoupon = response.data.result.coupon;
         console.log("Added coupon:", addedCoupon);
@@ -149,7 +149,7 @@ const Coupon: React.FC = () => {
     }
     try {
       const response = await axiosInstance.patch(
-        `/admin/editCoupon/${selectedCoupon._id}`,
+        `/admin/coupons/${selectedCoupon._id}`,
         selectedCoupon
       );
       if (response.data?.status) {
@@ -174,7 +174,7 @@ const Coupon: React.FC = () => {
   const handleToggleCoupon = async (couponId: string) => {
     try {
       const response = await axiosInstance.patch(
-        `/admin/toggleCoupon/${couponId}`
+        `/admin/coupons/${couponId}/toggle`
       );
       if (response.data?.status) {
         setCoupons((prevCoupons) =>
@@ -185,7 +185,7 @@ const Coupon: React.FC = () => {
             return coupon;
           })
         );
-        toast.success("Coupon updated successfully");
+        toast.success(response.data?.coupon?.message || "Coupon toggled successfully");
       } else {
         toast.error(response.data?.message || "Failed to update coupon");
       }

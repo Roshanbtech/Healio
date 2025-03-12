@@ -10,6 +10,13 @@ import { AwsConfig } from "../../config/s3Config";
 import { RRule, Weekday } from "rrule";
 import { IAppointment } from "../../model/appointmentModel";
 import { Iuser } from "../../model/userModel";
+import { addMinutes, format, isBefore } from "date-fns";
+import sendMail from "../../config/emailConfig";
+
+interface Slot {
+  slot: string;
+  datetime: Date;
+}
 
 export class DoctorService implements IDoctorService {
   private DoctorRepository: IDoctorRepository;
@@ -257,6 +264,76 @@ export class DoctorService implements IDoctorService {
       throw new Error(`Failed to complete appointment: ${error.message}`);
     }
   }
+
+  async rescheduleAppointment(id: string, date: string, time: string, reason: string): Promise<IAppointment | null>{
+    try{
+      const rescheduled = await this.DoctorRepository.rescheduleAppointment(id, date, time, reason);
+      await sendMail((rescheduled?.patientId as any)?.email, "Appointment Rescheduled", `Your appointment has been rescheduled to ${date} at ${time}. Reason: ${reason}.`);
+      return rescheduled;
+    }catch(error: any){
+      throw new Error(`Failed to reschedule appointment: ${error.message}`);
+    }
+  }
+  
+  async getDoctorAvailableSlots(id: string): Promise<Slot[]> {
+      try {
+        const schedules: Schedule[] =
+          await this.DoctorRepository.getDoctorAvailableSlots(id);
+        if (!schedules || schedules.length === 0) {
+          return [];
+        }
+        const sched = schedules[0];
+        const slots: Slot[] = [];
+        const windowDuration =
+          new Date(sched.endTime).getTime() - new Date(sched.startTime).getTime();
+  
+        if (sched.isRecurring && sched.recurrenceRule) {
+          const rangeStart = new Date();
+          const rangeEnd = new Date();
+          rangeEnd.setDate(rangeEnd.getDate() + 14);
+  
+          const lines = sched.recurrenceRule.split("\n");
+          let ruleStr = "";
+          for (const line of lines) {
+            if (line.startsWith("RRULE:")) {
+              ruleStr = line.substring(6);
+              break;
+            }
+          }
+          if (!ruleStr) ruleStr = sched.recurrenceRule;
+  
+          const ruleOptions = RRule.parseString(ruleStr);
+          ruleOptions.dtstart = new Date(sched.startTime);
+          const rule = new RRule(ruleOptions);
+          const occurrences = rule.between(rangeStart, rangeEnd, true);
+          occurrences.forEach((occurrence: Date) => {
+            const occStart = new Date(occurrence);
+            const occEnd = new Date(occStart.getTime() + windowDuration);
+            let current = new Date(occStart);
+            while (isBefore(current, occEnd)) {
+              slots.push({
+                slot: format(current, "h:mma"),
+                datetime: new Date(current),
+              });
+              current = addMinutes(current, sched.defaultSlotDuration);
+            }
+          });
+        } else {
+          let current = new Date(sched.startTime);
+          const end = new Date(sched.endTime);
+          while (isBefore(current, end)) {
+            slots.push({
+              slot: format(current, "h:mma"),
+              datetime: new Date(current),
+            });
+            current = addMinutes(current, sched.defaultSlotDuration);
+          }
+        }
+        return slots;
+      } catch (error: any) {
+        throw new Error(error.message);
+      }
+    }
   
 
 }

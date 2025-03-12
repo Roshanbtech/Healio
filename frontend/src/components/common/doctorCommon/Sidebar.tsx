@@ -14,6 +14,7 @@ import {
   X
 } from "lucide-react";
 import { assets } from "../../../assets/assets";
+import { toast } from "react-toastify"
 
 interface NavItem {
   icon: React.ReactNode;
@@ -56,6 +57,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCollapse }) => {
   const handleLogout = async () => {
     try {
       await axiosInstance.post("/doctor/logout");
+      toast.success("Logout successful");
     } catch (error) {
       console.error("Logout failed:", error);
     }

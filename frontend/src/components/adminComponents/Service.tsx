@@ -61,7 +61,7 @@ const Service: React.FC = () => {
 
   const handleToggleService = async (id: string) => {
     try {
-      const response = await axiosInstance.patch(`/admin/toggleService/${id}`);
+      const response = await axiosInstance.patch(`/admin/services/${id}/toggle`);
       if (response.data?.status) {
         setServices((prevServices) =>
           prevServices.map((service) =>
@@ -89,7 +89,7 @@ const Service: React.FC = () => {
     }
     try {
       const response = await axiosInstance.post(
-        "/admin/addService",
+        "/admin/services",
         newService
       );
       if (response.data?.status) {
@@ -116,7 +116,7 @@ const Service: React.FC = () => {
     }
     try {
       const response = await axiosInstance.patch(
-        `/admin/updateService/${selectedService._id}`,
+        `/admin/services/${selectedService._id}`,
         { name: selectedService.name }
       );
       if (response.data?.status) {

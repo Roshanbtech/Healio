@@ -102,4 +102,16 @@ export class AuthRepository implements IAuthRepository {
       throw new Error("DB error while handling Google login");
     }
   }
+
+  async logout(refreshToken: string): Promise<any> {
+      try {
+        console.log(refreshToken, "refresh token");
+        return await doctorModel.updateOne(
+          { refreshToken },
+          { $set: { refreshToken: "" } }
+        );
+      } catch (error: any) {
+        throw new Error(error.message);
+      }
+    }
 }

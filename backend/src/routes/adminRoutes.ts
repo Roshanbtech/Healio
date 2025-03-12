@@ -10,6 +10,7 @@ const AuthRepositoryInstance = new AuthRepository();
 const AuthServiceInstance = new AuthService(AuthRepositoryInstance);
 const AuthControllerInstance = new AuthController(AuthServiceInstance);
 
+// ____________  Admin Public Auth Routes ____________ // No token required
 route.post(
   "/login",
   AuthControllerInstance.loginAdmin.bind(AuthControllerInstance)
@@ -18,25 +19,45 @@ route.post(
   "/logout",
   AuthControllerInstance.logoutAdmin.bind(AuthControllerInstance)
 );
+
+// ___________ Admin Protected Routes are listed below ____________ // Token required - admin only
 route.use(verifyToken(["admin"]));
+
+// ___________ User management ____________ //
 route.get(
-  "/getUsers",
+  "/users",
   AuthControllerInstance.getUserList.bind(AuthControllerInstance)
 );
+route.patch(
+  "/users/:id/toggle",
+  AuthControllerInstance.toggleUser.bind(AuthControllerInstance)
+);
+
+// ___________ Doctor management ____________ //
 route.get(
-  "/getDoctors",
+  "/doctors",
   AuthControllerInstance.getDoctorList.bind(AuthControllerInstance)
 );
 route.patch(
-  "/toggleUser/:id",
-  AuthControllerInstance.toggleUser.bind(AuthControllerInstance)
-);
-route.patch(
-  "/toggleDoctor/:id",
+  "/doctors/:id/toggle",
   AuthControllerInstance.toggleDoctor.bind(AuthControllerInstance)
 );
+route.get(
+  "/doctors/:id/certificates",
+  AuthControllerInstance.getCertificates.bind(AuthControllerInstance)
+);
+route.patch(
+  "/doctors/:id/certificates/accept",
+  AuthControllerInstance.approveDoctor.bind(AuthControllerInstance)
+);
+route.patch(
+  "/doctors/:id/certificates/reject",
+  AuthControllerInstance.rejectDoctor.bind(AuthControllerInstance)
+);
+
+// ___________ Service management ____________ //
 route.post(
-  "/addService",
+  "/services",
   AuthControllerInstance.addService.bind(AuthControllerInstance)
 );
 route.get(
@@ -44,39 +65,29 @@ route.get(
   AuthControllerInstance.getServices.bind(AuthControllerInstance)
 );
 route.patch(
-  "/updateService/:id",
+  "/services/:id",
   AuthControllerInstance.editService.bind(AuthControllerInstance)
 );
 route.patch(
-  "/toggleService/:id",
+  "/services/:id/toggle",
   AuthControllerInstance.toggleService.bind(AuthControllerInstance)
 );
-route.get(
-  "/docCert/:id",
-  AuthControllerInstance.getCertificates.bind(AuthControllerInstance)
-);
-route.patch(
-  "/docCertAccept/:id",
-  AuthControllerInstance.approveDoctor.bind(AuthControllerInstance)
-);
-route.patch(
-  "/docCertReject/:id",
-  AuthControllerInstance.rejectDoctor.bind(AuthControllerInstance)
-);
+
+// ___________ Coupon management ____________ //
 route.get(
   "/coupons",
   AuthControllerInstance.getCoupons.bind(AuthControllerInstance)
 );
 route.post(
-  "/addCoupon",
+  "/coupons",
   AuthControllerInstance.createCoupon.bind(AuthControllerInstance)
 );
 route.patch(
-  "/toggleCoupon/:id",
+  "/coupons/:id/toggle",
   AuthControllerInstance.toggleCoupon.bind(AuthControllerInstance)
 );
 route.patch(
-  "/editCoupon/:id",
+  "/coupons/:id",
   AuthControllerInstance.editCoupon.bind(AuthControllerInstance)
 );
 

@@ -148,7 +148,7 @@ const Profile: React.FC = () => {
         formData.append("image", selectedImage);
       }
 
-      await axiosInstance.patch(`/doctor/editProfile/${doctor}`, formData, {
+      await axiosInstance.patch(`/doctor/profile/${doctor}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -180,7 +180,7 @@ const Profile: React.FC = () => {
     }
 
     try {
-      await axiosInstance.patch(`/doctor/changePassword/${doctor}`, {
+      await axiosInstance.patch(`/doctor/profile/${doctor}/password`, {
         oldPassword: changePassword.oldPassword,
         newPassword: changePassword.newPassword,
       });

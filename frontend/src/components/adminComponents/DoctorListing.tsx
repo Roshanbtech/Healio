@@ -62,7 +62,7 @@ const DoctorList: React.FC = () => {
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        const response = await axiosInstance.get("/admin/getDoctors");
+        const response = await axiosInstance.get("/admin/doctors");
         if (response.data?.doctorList) {
           setDoctors(response.data.doctorList);
         }
@@ -103,7 +103,7 @@ const DoctorList: React.FC = () => {
 
   const handleToggleDoctor = async (id: string) => {
     try {
-      const response = await axiosInstance.patch(`/admin/toggleDoctor/${id}`);
+      const response = await axiosInstance.patch(`/admin/doctors/${id}/toggle`);
       if (response.data?.status && response.data.blockUser?.message) {
         setDoctors((prevDoctors) =>
           prevDoctors.map((doctor) =>
@@ -122,7 +122,7 @@ const DoctorList: React.FC = () => {
 
   const fetchCertificates = async (id: string) => {
     try {
-      const response = await axiosInstance.get(`/admin/docCert/${id}`);
+      const response = await axiosInstance.get(`/admin/doctors/${id}/certificates`);
       if (response.data.certificates) {
         setSelectedFile(response.data.certificates);
         setCurrentCertIndex(0);
@@ -154,7 +154,7 @@ const DoctorList: React.FC = () => {
     if (!selectedDoctor) return;
     try {
       const response = await axiosInstance.patch(
-        `/admin/docCertAccept/${selectedDoctor._id}`
+        `/admin/doctors/${selectedDoctor._id}/certificates/accept`
       );
       if (response.data?.status) {
         setDoctors((prevDoctors) =>
@@ -183,7 +183,7 @@ const DoctorList: React.FC = () => {
     }
     try {
       const response = await axiosInstance.patch(
-        `/admin/docCertReject/${selectedDoctor._id}`,
+        `/admin/doctors/${selectedDoctor._id}/certificates/reject`,
         {
           reason: rejectionReason,
         }

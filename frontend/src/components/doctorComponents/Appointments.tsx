@@ -11,12 +11,14 @@ import {
   FileText,
   Check,
   Info,
+  X,
 } from "lucide-react";
 import { Sidebar } from "../common/doctorCommon/Sidebar";
 import { format } from "date-fns";
 import axiosInstance from "../../utils/axiosInterceptors";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { IAppointment } from "../userComponents/AppointmentList";
 
 // Custom Button Component (unchanged)
 interface CustomButtonProps {
@@ -110,6 +112,8 @@ const AppointmentsList: React.FC = () => {
   const [filteredAppointments, setFilteredAppointments] = useState<
     Appointment[]
   >([]);
+  const [showRescheduleModal, setShowRescheduleModal] =
+    useState<boolean>(false);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [loading, setLoading] = useState<boolean>(true);
@@ -128,33 +132,34 @@ const AppointmentsList: React.FC = () => {
   const itemsPerPage = 10;
   const doctorId = sessionStorage.getItem("doctorId");
 
+  const fetchAppointments = async () => {
+    setLoading(true);
+    try {
+      const response = await axiosInstance.get(
+        `/doctor/appointments/${doctorId}`
+      );
+      if (response.data.status) {
+        setAppointments(response.data.data.appointments);
+        // Initial filtering to show only pending appointments
+        const pendingAppointments = response.data.data.appointments.filter(
+          (appointment: Appointment) => appointment.status === "pending"
+        );
+        setFilteredAppointments(pendingAppointments);
+        setError(null);
+      } else {
+        setError("Failed to fetch appointments");
+      }
+    } catch (err: any) {
+      setError(
+        err.message || "An error occurred while fetching appointments"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch Appointments
   useEffect(() => {
-    const fetchAppointments = async () => {
-      setLoading(true);
-      try {
-        const response = await axiosInstance.get(
-          `/doctor/appointments/${doctorId}`
-        );
-        if (response.data.status) {
-          setAppointments(response.data.data.appointments);
-          // Initial filtering to show only pending appointments
-          const pendingAppointments = response.data.data.appointments.filter(
-            (appointment: Appointment) => appointment.status === "pending"
-          );
-          setFilteredAppointments(pendingAppointments);
-          setError(null);
-        } else {
-          setError("Failed to fetch appointments");
-        }
-      } catch (err: any) {
-        setError(
-          err.message || "An error occurred while fetching appointments"
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchAppointments();
   }, [doctorId]);
 
@@ -261,6 +266,8 @@ const AppointmentsList: React.FC = () => {
         `/doctor/appointments/${appointmentId}/accept`
       );
       if (response.data.status) {
+        console.log("Appointment confirmed successfully");
+        toast.success("Appointment confirmed successfully");
         setAppointments((prevAppointments) =>
           prevAppointments.map((appointment) =>
             appointment._id === appointmentId
@@ -268,7 +275,6 @@ const AppointmentsList: React.FC = () => {
               : appointment
           )
         );
-        toast.success("Appointment confirmed successfully");
       } else {
         toast.error(
           "Failed to confirm appointment: " +
@@ -284,17 +290,6 @@ const AppointmentsList: React.FC = () => {
   const handleAddPrescription = (appointmentId: string) => {
     console.log(`Adding prescription for appointment ${appointmentId}`);
     // Implement add prescription logic here
-  };
-
-  const handleContactPatient = (patientId: string, method: "call" | "chat") => {
-    console.log(
-      `${method === "call" ? "Calling" : "Chatting with"} patient ${patientId}`
-    );
-  };
-
-  // For pending appointments
-  const handleStartAppointment = (appointmentId: string) => {
-    console.log(`Starting appointment ${appointmentId}`);
   };
 
   // New Cancel Handler for accepted appointments
@@ -347,6 +342,52 @@ const AppointmentsList: React.FC = () => {
   const closeModal = () => {
     setShowModal(false);
     setSelectedAppointment(null);
+  };
+
+  // Fixed handleReschedule to match the Appointment type
+  const handleReschedule = (appointment: Appointment) => {
+    setSelectedAppointment(appointment);
+    setShowRescheduleModal(true);
+  };
+
+  // Improved error handling in confirmReschedule
+  const confirmReschedule = async (date: string, time: string, reason: string) => {
+    if (!selectedAppointment) return;
+    
+    try {
+      const response = await axiosInstance.patch(
+        `/doctor/appointments/${selectedAppointment._id}/reschedule`,
+        { date, time, reason }
+      );
+      
+      if (response.data.status) {
+        // Update both appointments and filteredAppointments
+        const updatedAppointment = { 
+          ...selectedAppointment, 
+          date, 
+          time 
+        };
+        
+        setAppointments(prev =>
+          prev.map(appt =>
+            appt._id === selectedAppointment._id ? updatedAppointment : appt
+          )
+        );
+        
+        // Refresh appointments list to ensure consistency
+        fetchAppointments();
+        
+        setShowRescheduleModal(false);
+        setSelectedAppointment(null);
+        toast.success("Appointment rescheduled successfully");
+      } else {
+        toast.error("Failed to reschedule: " + (response.data.message || "Unknown error"));
+      }
+    } catch (error: any) {
+      console.error("Error rescheduling appointment:", error);
+      const errorMessage = error.response?.data?.message || "Error rescheduling appointment";
+      toast.error(errorMessage);
+    }
   };
 
   return (
@@ -606,6 +647,18 @@ const AppointmentsList: React.FC = () => {
                                     >
                                       <Check className="w-4 h-4 mr-1" />
                                       Complete
+                                    </CustomButton>
+
+                                    <CustomButton
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-yellow-600 border border-yellow-600 hover:bg-yellow-50"
+                                      onClick={() =>
+                                        handleReschedule(appointment)
+                                      }
+                                    >
+                                      <Calendar className="w-4 h-4 mr-1" />
+                                      Reschedule
                                     </CustomButton>
                                   </>
                                 )}
@@ -916,6 +969,13 @@ const AppointmentsList: React.FC = () => {
                 </div>
               </div>
             )}
+            {showRescheduleModal && selectedAppointment && (
+            <RescheduleModal
+              appointment={selectedAppointment}
+              onClose={() => setShowRescheduleModal(false)}
+              onReschedule={confirmReschedule}
+            />
+          )}
           </div>
         </div>
       </div>
@@ -924,3 +984,244 @@ const AppointmentsList: React.FC = () => {
 };
 
 export default AppointmentsList;
+interface RescheduleModalProps {
+  appointment: Appointment;
+  onClose: () => void;
+  onReschedule: (date: string, time: string, reason: string) => void;
+}
+
+const RescheduleModal: React.FC<RescheduleModalProps> = ({
+  appointment,
+  onClose,
+  onReschedule,
+}) => {
+  const [date, setDate] = useState<string>("");
+  const [time, setTime] = useState<string>("");
+  const [reason, setReason] = useState<string>("");
+  const [availableSlots, setAvailableSlots] = useState<
+    Array<{ slot: string; datetime: string }>
+  >([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [slotError, setSlotError] = useState<string | null>(null);
+
+  const doctorId = sessionStorage.getItem("doctorId");
+
+  useEffect(() => {
+    // Set initial date to tomorrow.
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const initialDate = tomorrow.toISOString().split("T")[0];
+    setDate(initialDate);
+    fetchSlots(initialDate);
+
+    // Prevent body scroll while modal is open.
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, []);
+
+  // Helper to get local date string in YYYY-MM-DD format.
+  const getLocalDateString = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  // Formats a UTC datetime string into a local time string.
+  const formatTime = (utcDateTime: string) => {
+    const date = new Date(utcDateTime);
+    return date.toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+  // Fetches slots from the API and filters them by the selected date.
+  const fetchSlots = async (selectedDate: string) => {
+    if (!doctorId) {
+      setSlotError("Doctor ID not available");
+      setLoadingSlots(false);
+      return;
+    }
+
+    setLoadingSlots(true);
+    setSlotError(null);
+    setTime("");
+
+    try {
+      const response = await axiosInstance.get(
+        `/doctor/slots/${doctorId}?date=${selectedDate}`
+      );
+
+      if (
+        response.data.status &&
+        Array.isArray(response.data.slots) &&
+        response.data.slots.length > 0
+      ) {
+        // Filter slots to only include those matching the selected date.
+        const filteredSlots = response.data.slots.filter((slot: any) => {
+          const slotDate = new Date(slot.datetime);
+          const slotLocalDate = getLocalDateString(slotDate);
+          return slotLocalDate === selectedDate;
+        });
+
+        if (filteredSlots.length > 0) {
+          setAvailableSlots(filteredSlots);
+        } else {
+          setAvailableSlots([]);
+          setSlotError("No available slots for this date");
+        }
+      } else {
+        setAvailableSlots([]);
+        setSlotError("No available slots returned");
+      }
+    } catch (err) {
+      console.error("Error fetching slots:", err);
+      setSlotError("Failed to load available slots");
+      setAvailableSlots([]);
+    } finally {
+      setLoadingSlots(false);
+    }
+  };
+
+  // Update available slots when the user changes the date.
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newDate = e.target.value;
+    setDate(newDate);
+    fetchSlots(newDate);
+  };
+
+  // Handles form submission.
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!date || !time || !reason.trim()) {
+      toast.error("Please select a date, time, and provide a reason.");
+      return;
+    }
+
+    const slotDate = new Date(time);
+    if (isNaN(slotDate.getTime())) {
+      toast.error("Invalid slot date");
+      return;
+    }
+    const slotLocalDate = getLocalDateString(slotDate);
+    if (slotLocalDate !== date) {
+      toast.error("Selected time does not match the selected date");
+      return;
+    }
+
+    // Format time in 24-hour format.
+    const localTime = slotDate.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+    onReschedule(slotLocalDate, localTime, reason);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden animate-fadeIn transform transition-all">
+        <div className="bg-gradient-to-r from-red-600 to-red-700 p-5 flex justify-between items-center">
+          <h2 className="text-white text-lg font-bold">Reschedule Appointment</h2>
+          <button onClick={onClose} className="text-white hover:text-red-200 transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+        <div className="p-6">
+          <form onSubmit={handleSubmit}>
+            {/* Date Picker */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select Date
+              </label>
+              <input
+                type="date"
+                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 transition-all"
+                value={date}
+                onChange={handleDateChange}
+                min={new Date().toISOString().split("T")[0]}
+                required
+              />
+            </div>
+
+            {/* Available Time Slots */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Available Time Slots (in your local timezone)
+              </label>
+              {loadingSlots ? (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
+                  <p className="mt-2 text-sm text-gray-600">Loading available slots...</p>
+                </div>
+              ) : slotError ? (
+                <div className="text-center py-4 text-red-600 text-sm">{slotError}</div>
+              ) : availableSlots.length > 0 ? (
+                <div className="grid grid-cols-2 gap-2">
+                  {availableSlots.map((slot) => (
+                    <button
+                      key={slot.datetime}
+                      type="button"
+                      className={`p-3 text-sm border rounded-md transition-all ${
+                        time === slot.datetime
+                          ? "bg-gradient-to-r from-red-600 to-red-700 text-white border-red-600 shadow-md"
+                          : "border-gray-300 hover:border-red-300 hover:bg-red-50"
+                      }`}
+                      onClick={() => setTime(slot.datetime)}
+                    >
+                      {formatTime(slot.datetime)}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4 text-gray-500 text-sm">
+                  No slots available for selected date
+                </div>
+              )}
+            </div>
+
+            {/* Reason Textarea */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Reason for Reschedule
+              </label>
+              <textarea
+                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 transition-all"
+                placeholder="Enter reason for rescheduling..."
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                required
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-5 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-all font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className={`px-5 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-md hover:from-red-700 hover:to-red-800 transition-all font-medium shadow-md ${
+                  !date || !time || !reason.trim() ? "opacity-70 cursor-not-allowed" : ""
+                }`}
+                disabled={!date || !time || !reason.trim() || loadingSlots}
+              >
+                Confirm Reschedule
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+

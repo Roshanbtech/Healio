@@ -294,4 +294,14 @@ export class AuthService implements IAuthService {
       throw new Error("Error handling Google login");
     }
   }
+
+  async logout(refreshToken: string): Promise<any> {
+    try {
+      console.log("Logout process started...");
+      return await this.AuthRepository.logout(refreshToken);
+    } catch (error) {
+      console.error("Logout error:", error);
+      return { error: "Internal server error." };
+    }
+  }
 }

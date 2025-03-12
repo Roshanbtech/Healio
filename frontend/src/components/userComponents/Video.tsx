@@ -138,16 +138,13 @@ const stopLocalStream = () => {
         setConnectionStatus("failed");
       });
     
-    // Cleanup function for component unmount
     return () => {
-      // Make sure to clean up everything when component unmounts
       stopLocalStream();
       endCallCleanup();
       console.log("User: Component unmounted, all resources cleaned up.");
     };
   }, []);
 
-  // Start peer connection only after local stream is available and if not already active
   useEffect(() => {
     if (localStream && !callActive) {
       console.log("User: Local stream is ready. Starting peer connection as callee (initiator: false).");
@@ -190,6 +187,7 @@ const stopLocalStream = () => {
 
   // End call cleanup - separate from stopping local stream
   const endCallCleanup = () => {
+    console.log("User: Call cleanup started.");
     setCallActive(false);
     setConnectionStatus("idle");
     
@@ -203,6 +201,7 @@ const stopLocalStream = () => {
     // Clear remote stream
     if (remoteVideoRef.current && remoteVideoRef.current.srcObject) {
       remoteVideoRef.current.srcObject = null;
+      console.log("User: Remote stream cleared.");
     }
     setRemoteStream(null);
     

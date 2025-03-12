@@ -120,31 +120,32 @@ route.post(
 route.post(
   "/verifyBooking",
   BookingControllerInstance.verifyBooking.bind(BookingControllerInstance)
-)
+);
 route.get(
   "/appointments/:id",
-   BookingControllerInstance.getPatientAppointments.bind(BookingControllerInstance)
-  );
+  BookingControllerInstance.getPatientAppointments.bind(
+    BookingControllerInstance
+  )
+);
 route.patch(
   "/appointments/:id/medical-records",
   BookingControllerInstance.addMedicalRecord.bind(BookingControllerInstance)
-)
+);
 route.patch(
-  "/appointments/:id/cancel", 
+  "/appointments/:id/cancel",
   BookingControllerInstance.cancelAppointment.bind(BookingControllerInstance)
 );
 
 route.get(
   "/appointments/doctor/:id",
-   BookingControllerInstance.getDoctorAppointments.bind(BookingControllerInstance)
-)
+  BookingControllerInstance.getDoctorAppointments.bind(
+    BookingControllerInstance
+  )
+);
 
 route.patch(
   "/appointments/:id/review",
   BookingControllerInstance.addReviewForDoctor.bind(BookingControllerInstance)
-)
-
-
-
+);
 
 export default route;
