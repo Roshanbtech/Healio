@@ -51,14 +51,12 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
   const localStreamRef = useRef<MediaStream | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Format call duration as mm:ss
   const formatCallDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Start call timer when call becomes active
   useEffect(() => {
     if (callActive && !callTimerInterval) {
       const interval = setInterval(() => {
@@ -78,7 +76,6 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
     };
   }, [callActive, callTimerInterval]);
 
-  // Register user on mount
   useEffect(() => {
     if (socket && userId) {
       socket.emit("register", { type: "user", id: userId });
@@ -86,7 +83,6 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
     }
   }, [socket, userId]);
 
-  // Stop all tracks in a media stream
   const stopMediaTracks = (stream: MediaStream | null) => {
     if (!stream) return;
     
@@ -96,21 +92,17 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
     });
   };
 
-  // Properly stop the local stream
-  // Properly stop the local stream
+  
 const stopLocalStream = () => {
-  // Stop tracks from the ref
   if (localStreamRef.current) {
     stopMediaTracks(localStreamRef.current);
     if (localVideoRef.current) {
-      // Pause the video element before removing the stream reference
       localVideoRef.current.pause();
       localVideoRef.current.srcObject = null;
     }
     localStreamRef.current = null;
   }
   
-  // Also stop tracks from the state (as a safeguard)
   if (localStream) {
     stopMediaTracks(localStream);
     setLocalStream(null);
@@ -119,7 +111,6 @@ const stopLocalStream = () => {
   console.log("User: Local stream fully stopped.");
 };
 
-  // Get local stream on mount
   useEffect(() => {
     setConnectionStatus("connecting");
     navigator.mediaDevices
@@ -152,7 +143,6 @@ const stopLocalStream = () => {
     }
   }, [localStream, callActive]);
 
-  // Listen for signaling events
   useEffect(() => {
     if (!socket) return;
     
@@ -160,6 +150,7 @@ const stopLocalStream = () => {
       if (data.chatId === chatId && data.recipientId === userId) {
         console.log("User: Doctor rejected call.", data);
         setConnectionStatus("failed");
+        stopLocalStream();
         endCallCleanup();
       }
     });
@@ -167,6 +158,7 @@ const stopLocalStream = () => {
     socket.on("video:ended", (data) => {
       if (data.chatId === chatId) {
         console.log("User: Call ended by doctor.", data);
+        stopLocalStream();
         endCallCleanup();
       }
     });
@@ -185,20 +177,17 @@ const stopLocalStream = () => {
     };
   }, [socket, chatId, userId]);
 
-  // End call cleanup - separate from stopping local stream
   const endCallCleanup = () => {
     console.log("User: Call cleanup started.");
     setCallActive(false);
     setConnectionStatus("idle");
     
-    // Destroy peer if it exists
     if (peer) {
       peer.destroy();
       setPeer(null);
       console.log("User: Peer connection destroyed.");
     }
     
-    // Clear remote stream
     if (remoteVideoRef.current && remoteVideoRef.current.srcObject) {
       remoteVideoRef.current.srcObject = null;
       console.log("User: Remote stream cleared.");
@@ -208,7 +197,6 @@ const stopLocalStream = () => {
     console.log("User: Call cleanup completed.");
   };
 
-  // End call handler (if user manually ends the call)
   const endCall = () => {
     console.log("User: End call button clicked.");
     if (!socket) return;

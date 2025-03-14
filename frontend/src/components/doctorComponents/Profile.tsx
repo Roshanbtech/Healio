@@ -148,14 +148,18 @@ const Profile: React.FC = () => {
         formData.append("image", selectedImage);
       }
 
-      await axiosInstance.patch(`/doctor/profile/${doctor}`, formData, {
+      const {data} = await axiosInstance.patch(`/doctor/profile/${doctor}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
 
-      setProfile(editProfile);
-      toast.success("Profile updated successfully!");
+      if (data.status) {
+        setProfile(editProfile);
+        toast.success(data.message || "Profile updated successfully!");
+      } else {
+        toast.error(data.message || "Error updating profile");
+      }
     } catch (error) {
       setError("Error updating profile");
       toast.error("Error updating profile");
@@ -224,6 +228,10 @@ const Profile: React.FC = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-green-800">Doctor Profile</h1>
         </div>
+        <button onClick={() => toast.info("Test toast from doctor profile!")}>
+  Test Toast
+</button>
+
 
         <div className="grid md:grid-cols-2 gap-8">
           {/* Display Profile Information */}

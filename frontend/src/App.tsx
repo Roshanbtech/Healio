@@ -6,6 +6,8 @@ import AdminRoutes from "../src/Routes/adminRoutes";
 import DoctorRoutes from "../src/Routes/doctorRoutes";
 import ErrorBoundary from "./components/common/ErrorBoundary";
 import NotFound from "./components/common/NotFound";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const App = () => {
   return (
@@ -18,6 +20,11 @@ const App = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
+      <ToastContainer 
+        position="top-right" 
+        autoClose={3000} 
+        newestOnTop 
+      />
     </ErrorBoundary>
   );
 };

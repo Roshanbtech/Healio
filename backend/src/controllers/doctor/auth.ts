@@ -15,6 +15,13 @@ export class AuthController {
       console.log(data, "docdata");
 
       const response = await this.authService.signup(data);
+      if ("error" in response) {
+        res.status(HTTP_statusCode.Unauthorized).json({
+          status: false,
+          message: response.error,
+        });
+        return;
+      }
       res.status(HTTP_statusCode.OK).json({ status: true, response });
     } catch (error: any) {
       if (error.message === "Email already in use") {

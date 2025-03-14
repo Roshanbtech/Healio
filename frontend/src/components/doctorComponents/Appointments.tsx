@@ -14,11 +14,11 @@ import {
   X,
 } from "lucide-react";
 import { Sidebar } from "../common/doctorCommon/Sidebar";
-import { format } from "date-fns";
 import axiosInstance from "../../utils/axiosInterceptors";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { IAppointment } from "../userComponents/AppointmentList";
+import { format } from "date-fns";
 
 // Custom Button Component (unchanged)
 interface CustomButtonProps {
@@ -338,6 +338,7 @@ const AppointmentsList: React.FC = () => {
     setModalViewType("previousReport");
     setShowModal(true);
   };
+  
 
   const closeModal = () => {
     setShowModal(false);
@@ -984,6 +985,7 @@ const AppointmentsList: React.FC = () => {
 };
 
 export default AppointmentsList;
+
 interface RescheduleModalProps {
   appointment: Appointment;
   onClose: () => void;
@@ -998,76 +1000,47 @@ const RescheduleModal: React.FC<RescheduleModalProps> = ({
   const [date, setDate] = useState<string>("");
   const [time, setTime] = useState<string>("");
   const [reason, setReason] = useState<string>("");
-  const [availableSlots, setAvailableSlots] = useState<
-    Array<{ slot: string; datetime: string }>
-  >([]);
+  const [availableSlots, setAvailableSlots] = useState<Array<{ slot: string; datetime: string }>>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [slotError, setSlotError] = useState<string | null>(null);
+  const [bookedAppointments, setBookedAppointments] = useState<IAppointment[]>([]);
 
   const doctorId = sessionStorage.getItem("doctorId");
 
   useEffect(() => {
-    // Set initial date to tomorrow.
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const initialDate = tomorrow.toISOString().split("T")[0];
+    const initialDate = format(tomorrow, "yyyy-MM-dd");
     setDate(initialDate);
     fetchSlots(initialDate);
-
-    // Prevent body scroll while modal is open.
+    fetchBookedAppointments(initialDate);
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = "auto";
     };
   }, []);
 
-  // Helper to get local date string in YYYY-MM-DD format.
-  const getLocalDateString = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
+  const getLocalDateString = (dateObj: Date) => format(dateObj, "yyyy-MM-dd");
 
-  // Formats a UTC datetime string into a local time string.
-  const formatTime = (utcDateTime: string) => {
-    const date = new Date(utcDateTime);
-    return date.toLocaleTimeString([], {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
+  const formatTimeDisplay = (utcDateTime: string) =>
+    new Date(utcDateTime).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true });
 
-  // Fetches slots from the API and filters them by the selected date.
   const fetchSlots = async (selectedDate: string) => {
     if (!doctorId) {
       setSlotError("Doctor ID not available");
       setLoadingSlots(false);
       return;
     }
-
     setLoadingSlots(true);
     setSlotError(null);
     setTime("");
-
     try {
-      const response = await axiosInstance.get(
-        `/doctor/slots/${doctorId}?date=${selectedDate}`
-      );
-
-      if (
-        response.data.status &&
-        Array.isArray(response.data.slots) &&
-        response.data.slots.length > 0
-      ) {
-        // Filter slots to only include those matching the selected date.
+      const response = await axiosInstance.get(`/doctor/slots/${doctorId}?date=${selectedDate}`);
+      if (response.data.status && Array.isArray(response.data.slots)) {
         const filteredSlots = response.data.slots.filter((slot: any) => {
           const slotDate = new Date(slot.datetime);
-          const slotLocalDate = getLocalDateString(slotDate);
-          return slotLocalDate === selectedDate;
+          return getLocalDateString(slotDate) === selectedDate;
         });
-
         if (filteredSlots.length > 0) {
           setAvailableSlots(filteredSlots);
         } else {
@@ -1087,21 +1060,44 @@ const RescheduleModal: React.FC<RescheduleModalProps> = ({
     }
   };
 
-  // Update available slots when the user changes the date.
+  const fetchBookedAppointments = async (selectedDate: string) => {
+    if (!doctorId) return;
+    try {
+      const response = await axiosInstance.get(`/doctor/appointments/${doctorId}`);
+      if (response.data.status) {
+        const filteredAppointments = response.data.data.appointments.filter((appt: IAppointment) => {
+          const apptDate = getLocalDateString(new Date(appt.date));
+          return apptDate === selectedDate && appt.status !== "cancelled";
+        });
+        setBookedAppointments(filteredAppointments);
+      }
+    } catch (err) {
+      console.error("Error fetching booked appointments:", err);
+    }
+  };
+
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newDate = e.target.value;
     setDate(newDate);
     fetchSlots(newDate);
+    fetchBookedAppointments(newDate);
   };
 
-  // Handles form submission.
+  const isSlotBooked = (slot: { slot: string; datetime: string }): boolean => {
+    return bookedAppointments.some((appt) => {
+      if (appt._id === appointment._id) return false;
+      const apptDate = getLocalDateString(new Date(appt.date));
+      if (apptDate !== date) return false;
+      return appt.time.trim() === slot.slot.trim();
+    });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!date || !time || !reason.trim()) {
       toast.error("Please select a date, time, and provide a reason.");
       return;
     }
-
     const slotDate = new Date(time);
     if (isNaN(slotDate.getTime())) {
       toast.error("Invalid slot date");
@@ -1112,14 +1108,8 @@ const RescheduleModal: React.FC<RescheduleModalProps> = ({
       toast.error("Selected time does not match the selected date");
       return;
     }
-
-    // Format time in 24-hour format.
-    const localTime = slotDate.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-
+    const selectedSlot = availableSlots.find((s) => s.datetime === time);
+    const localTime = selectedSlot ? selectedSlot.slot : formatTimeDisplay(time);
     onReschedule(slotLocalDate, localTime, reason);
   };
 
@@ -1134,22 +1124,17 @@ const RescheduleModal: React.FC<RescheduleModalProps> = ({
         </div>
         <div className="p-6">
           <form onSubmit={handleSubmit}>
-            {/* Date Picker */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select Date
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Select Date</label>
               <input
                 type="date"
                 className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 transition-all"
                 value={date}
                 onChange={handleDateChange}
-                min={new Date().toISOString().split("T")[0]}
+                min={format(new Date(), "yyyy-MM-dd")}
                 required
               />
             </div>
-
-            {/* Available Time Slots */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Available Time Slots (in your local timezone)
@@ -1163,33 +1148,34 @@ const RescheduleModal: React.FC<RescheduleModalProps> = ({
                 <div className="text-center py-4 text-red-600 text-sm">{slotError}</div>
               ) : availableSlots.length > 0 ? (
                 <div className="grid grid-cols-2 gap-2">
-                  {availableSlots.map((slot) => (
-                    <button
-                      key={slot.datetime}
-                      type="button"
-                      className={`p-3 text-sm border rounded-md transition-all ${
-                        time === slot.datetime
-                          ? "bg-gradient-to-r from-red-600 to-red-700 text-white border-red-600 shadow-md"
-                          : "border-gray-300 hover:border-red-300 hover:bg-red-50"
-                      }`}
-                      onClick={() => setTime(slot.datetime)}
-                    >
-                      {formatTime(slot.datetime)}
-                    </button>
-                  ))}
+                  {availableSlots.map((slot) => {
+                    const booked = isSlotBooked(slot);
+                    return (
+                      <button
+                        key={slot.datetime}
+                        type="button"
+                        disabled={booked}
+                        className={`p-3 text-sm border rounded-md transition-all ${
+                          booked
+                            ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                            : time === slot.datetime
+                            ? "bg-gradient-to-r from-red-600 to-red-700 text-white border-red-600 shadow-md"
+                            : "border-gray-300 hover:border-red-300 hover:bg-red-50"
+                        }`}
+                        onClick={() => !booked && setTime(slot.datetime)}
+                      >
+                        {slot.slot}
+                        {booked && <span className="block text-xs text-red-600 mt-1">Booked</span>}
+                      </button>
+                    );
+                  })}
                 </div>
               ) : (
-                <div className="text-center py-4 text-gray-500 text-sm">
-                  No slots available for selected date
-                </div>
+                <div className="text-center py-4 text-gray-500 text-sm">No slots available for selected date</div>
               )}
             </div>
-
-            {/* Reason Textarea */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Reason for Reschedule
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Reason for Reschedule</label>
               <textarea
                 className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 transition-all"
                 placeholder="Enter reason for rescheduling..."
@@ -1198,8 +1184,6 @@ const RescheduleModal: React.FC<RescheduleModalProps> = ({
                 required
               />
             </div>
-
-            {/* Action Buttons */}
             <div className="flex justify-end space-x-3">
               <button
                 type="button"
@@ -1211,7 +1195,7 @@ const RescheduleModal: React.FC<RescheduleModalProps> = ({
               <button
                 type="submit"
                 className={`px-5 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-md hover:from-red-700 hover:to-red-800 transition-all font-medium shadow-md ${
-                  !date || !time || !reason.trim() ? "opacity-70 cursor-not-allowed" : ""
+                  !date || !time || !reason.trim() || loadingSlots ? "opacity-70 cursor-not-allowed" : ""
                 }`}
                 disabled={!date || !time || !reason.trim() || loadingSlots}
               >

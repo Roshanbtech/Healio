@@ -51,11 +51,15 @@ const Appointment: React.FC = () => {
   const navigate = useNavigate();
   const [docInfo, setDocInfo] = useState<IDoctor | null>(null);
   const [slots, setSlots] = useState<IAvailableSlot[]>([]);
-  const [groupedSlots, setGroupedSlots] = useState<{ [date: string]: IAvailableSlot[] }>({});
+  const [groupedSlots, setGroupedSlots] = useState<{
+    [date: string]: IAvailableSlot[];
+  }>({});
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [selectedTime, setSelectedTime] = useState<IAvailableSlot | null>(null);
-  const [bookedAppointments, setBookedAppointments] = useState<IAppointment[]>([]);
+  const [bookedAppointments, setBookedAppointments] = useState<IAppointment[]>(
+    []
+  );
 
   const sliderSettings = {
     dots: false,
@@ -151,7 +155,9 @@ const Appointment: React.FC = () => {
               />
             </div>
             <div className="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg text-center font-bold shadow-md">
-              {typeof speciality === "object" ? speciality.name : speciality || "Specialist"}
+              {typeof speciality === "object"
+                ? speciality.name
+                : speciality || "Specialist"}
             </div>
             {/* VERIFIED Badge */}
             <div className="absolute bottom-[-12px] left-1/2 transform -translate-x-1/2 flex items-center gap-1 bg-white px-3 py-1 rounded-full shadow">
@@ -168,7 +174,9 @@ const Appointment: React.FC = () => {
           </h1>
           <div className="flex items-center gap-2 mt-2">
             <Clock size={20} />
-            <span className="text-sm sm:text-base">{experience || 0}+ years Exp</span>
+            <span className="text-sm sm:text-base">
+              {experience || 0}+ years Exp
+            </span>
           </div>
           <div className="mt-4">
             <h3 className="text-base sm:text-lg font-semibold mb-2">About</h3>
@@ -182,68 +190,85 @@ const Appointment: React.FC = () => {
       </div>
 
       {/* Date Slider */}
-      {Object.keys(groupedSlots).length > 0 && (
+      {Object.keys(groupedSlots).filter(
+        (dateKey) => new Date(dateKey) >= startOfDay(new Date())
+      ).length > 0 && (
         <div className="mt-8 bg-white rounded-xl p-4 shadow-xl">
           <h2 className="text-xl font-bold mb-4 text-green-800">Select Date</h2>
           <Slider {...sliderSettings}>
-            {Object.keys(groupedSlots).map((dateKey) => (
-              <div key={dateKey} className="px-2">
-                <button
-                  onClick={() => setSelectedDate(dateKey)}
-                  className={`w-full py-2 rounded-xl transition-all ${
-                    selectedDate === dateKey
-                      ? "bg-red-600 text-white"
-                      : "bg-green-100 hover:bg-gray-200"
-                  }`}
-                >
-                  <div className="text-xs font-semibold">{format(new Date(dateKey), "EEE")}</div>
-                  <div className="text-xl font-bold">{format(new Date(dateKey), "dd")}</div>
-                  <div className="text-xs text-gray-500">{format(new Date(dateKey), "MMM yyyy")}</div>
-                </button>
-              </div>
-            ))}
+            {Object.keys(groupedSlots)
+              .filter((dateKey) => new Date(dateKey) >= startOfDay(new Date()))
+              .map((dateKey) => (
+                <div key={dateKey} className="px-2">
+                  <button
+                    onClick={() => setSelectedDate(dateKey)}
+                    className={`w-full py-2 rounded-xl transition-all ${
+                      selectedDate === dateKey
+                        ? "bg-red-600 text-white"
+                        : "bg-green-100 hover:bg-gray-200"
+                    }`}
+                  >
+                    <div className="text-xs font-semibold">
+                      {format(new Date(dateKey), "EEE")}
+                    </div>
+                    <div className="text-xl font-bold">
+                      {format(new Date(dateKey), "dd")}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {format(new Date(dateKey), "MMM yyyy")}
+                    </div>
+                  </button>
+                </div>
+              ))}
           </Slider>
         </div>
       )}
 
       {/* Time Slot Grid */}
-      {selectedDate && (
-        <div className="mt-8 bg-white rounded-xl p-4 shadow-xl">
-          <h2 className="text-xl font-bold mb-4 text-green-800">
-            {format(new Date(selectedDate), "EEEE, d MMMM yyyy")}
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {groupedSlots[selectedDate]?.map((slot, index) => {
-              const isBooked = bookedAppointments.some((appointment) => {
-                const appointmentDate = new Date(appointment.date);
-                const slotDate = new Date(slot.datetime);
-                return (
-                  startOfDay(appointmentDate).toISOString() ===
-                  startOfDay(slotDate).toISOString() &&
-                  appointment.time.trim() === slot.slot.trim()
-                );
-              });
-              return (
-                <button
-                  key={index}
-                  onClick={() => setSelectedTime(slot)}
-                  disabled={isBooked}
-                  className={`p-2 rounded-lg transition-colors flex items-center justify-center ${
-                    isBooked
-                      ? "bg-green-100 text-gray-800 cursor-not-allowed"
-                      : selectedTime?.slot === slot.slot
-                      ? "bg-red-600 text-white"
-                      : "bg-green-100 text-gray-800"
-                  }`}
-                >
-                  <span>{format(new Date(slot.datetime), "hh:mm a")}</span>
-                  {isBooked && <span className="ml-2 text-xs text-red-500 bg-red-100 rounded-full px-2">Booked</span>}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {selectedDate && new Date(selectedDate) >= startOfDay(new Date()) && (
+  <div className="mt-8 bg-white rounded-xl p-4 shadow-xl">
+    <h2 className="text-xl font-bold mb-4 text-green-800">
+      {format(new Date(selectedDate), "EEEE, d MMMM yyyy")}
+    </h2>
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {groupedSlots[selectedDate]
+        ?.filter((slot) => new Date(slot.datetime) >= new Date())
+        .map((slot, index) => {
+          const isBooked = bookedAppointments.some((appointment) => {
+            const appointmentDate = new Date(appointment.date);
+            const slotDate = new Date(slot.datetime);
+            return (
+              startOfDay(appointmentDate).toISOString() ===
+              startOfDay(slotDate).toISOString() &&
+              appointment.time.trim() === slot.slot.trim()
+            );
+          });
+          return (
+            <button
+              key={index}
+              onClick={() => setSelectedTime(slot)}
+              disabled={isBooked}
+              className={`p-2 rounded-lg transition-colors flex items-center justify-center ${
+                isBooked
+                  ? "bg-green-100 text-gray-800 cursor-not-allowed"
+                  : selectedTime?.slot === slot.slot
+                  ? "bg-red-600 text-white"
+                  : "bg-green-100 text-gray-800"
+              }`}
+            >
+              <span>{format(new Date(slot.datetime), "hh:mm a")}</span>
+              {isBooked && (
+                <span className="ml-2 text-xs text-red-500 bg-red-100 rounded-full px-2">
+                  Booked
+                </span>
+              )}
+            </button>
+          );
+        })}
+    </div>
+  </div>
+)}
+
 
       {/* Book Appointment Button */}
       <div className="mt-8 text-center">

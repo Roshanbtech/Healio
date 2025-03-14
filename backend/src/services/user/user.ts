@@ -11,6 +11,8 @@ import { RRule } from "rrule";
 import { format, addMinutes, isBefore } from "date-fns";
 import { Schedule } from "../../interface/doctorInterface/Interface";
 import { IDoctor } from "../../model/doctorModel";
+import { ISchedule } from "../../model/slotModel";
+import { isScheduleExpired } from "../../helper/schedule";
 interface Slot {
   slot: string;
   datetime: Date;
@@ -156,21 +158,21 @@ export class UserService implements IUserService {
 
   async getAvailableSlots(id: string): Promise<Slot[]> {
     try {
-      const schedules: Schedule[] =
-        await this.UserRepository.getScheduleForDoctor(id);
-      if (!schedules || schedules.length === 0) {
+      const schedules: Schedule[] = await this.UserRepository.getScheduleForDoctor(id);
+      const activeSchedules = schedules.filter(
+        (schedule) => !isScheduleExpired(schedule as unknown as ISchedule)
+      );
+      if (!activeSchedules || activeSchedules.length === 0) {
         return [];
       }
-      const sched = schedules[0];
+      const sched = activeSchedules[0];
       const slots: Slot[] = [];
-      const windowDuration =
-        new Date(sched.endTime).getTime() - new Date(sched.startTime).getTime();
-
+      const windowDuration = new Date(sched.endTime).getTime() - new Date(sched.startTime).getTime();
+    
       if (sched.isRecurring && sched.recurrenceRule) {
         const rangeStart = new Date();
         const rangeEnd = new Date();
         rangeEnd.setDate(rangeEnd.getDate() + 14);
-
         const lines = sched.recurrenceRule.split("\n");
         let ruleStr = "";
         for (const line of lines) {
@@ -180,7 +182,6 @@ export class UserService implements IUserService {
           }
         }
         if (!ruleStr) ruleStr = sched.recurrenceRule;
-
         const ruleOptions = RRule.parseString(ruleStr);
         ruleOptions.dtstart = new Date(sched.startTime);
         const rule = new RRule(ruleOptions);
@@ -213,5 +214,4 @@ export class UserService implements IUserService {
       throw new Error(error.message);
     }
   }
-
 }

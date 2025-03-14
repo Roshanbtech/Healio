@@ -1,6 +1,6 @@
 import doctorModel, { IDoctor } from "../../model/doctorModel";
 import serviceModel from "../../model/serviceModel";
-import slotModel from "../../model/slotModel";
+import slotModel, { ISchedule } from "../../model/slotModel";
 import { IDoctorRepository } from "../../interface/doctor/Auth.repository.interface";
 import {
   Service,
@@ -13,6 +13,7 @@ import ChatModel from "../../model/chatModel";
 import AppointmentModel, { IAppointment } from "../../model/appointmentModel";
 import { Iuser } from "../../model/userModel";
 import mongoose from "mongoose";
+import { isScheduleExpired } from "../../helper/schedule";
 
 export class DoctorRepository implements IDoctorRepository {
   async getServices(): Promise<Service[]> {
@@ -118,11 +119,14 @@ export class DoctorRepository implements IDoctorRepository {
       if (!doctor) {
         return { status: false, message: "Doctor not found" };
       }
-      const schedule = await slotModel
+      const schedules = await slotModel
         .find({ doctor: id })
         .populate({ path: "doctor", select: "name" })
         .lean();
-      return schedule;
+      const activeSchedules = schedules.filter(
+        (schedule: ISchedule) => !isScheduleExpired(schedule)
+      );
+      return activeSchedules;
     } catch (error: any) {
       throw new Error(error.message);
     }

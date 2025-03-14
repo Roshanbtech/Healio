@@ -92,7 +92,8 @@ export const QualificationForm: React.FC = () => {
       const response = await axiosInstance.get(`/doctor/qualifications/${doctorId}`);
       if (response.data.status && response.data.data.qualifications) {
         setSubmittedData(response.data.data.qualifications);
-      }
+        // toast.success(response.data.message);
+      } 
     } catch (error: any) {
       console.error("Error fetching qualifications:", error.message);
     }

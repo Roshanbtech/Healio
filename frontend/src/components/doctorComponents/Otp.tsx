@@ -74,45 +74,42 @@ const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const otpValue = otp.join("");
-    if (otpValue.length === 4) {
-      onSubmit?.(otpValue);
-      console.log("OTP submitted:", otpValue);
-      console.log(formData, "values");
-      const formValues = {
-        name: formData?.name,
-        email: formData?.email,
-        password: formData?.password,
-        phone: formData?.phone,
-        otp: otpValue,
-      };
-      try {
-        const response = await axiosInstance.post("/doctor/signUp", formValues, {
-          withCredentials: true,
-          headers: { "Content-Type": "application/json" },
-        });
-        console.log(response.data, "data");
-        if (response.data?.response?.status === true) {
-          toast.success(response.data.response.message || "Signup successful!");
-          navigate("/doctor/login");
+    if (otpValue.length !== 4) {
+      toast.error("Please enter a valid 4-digit OTP");
+      return;
+    }
+    onSubmit?.(otpValue);
+    console.log("OTP submitted:", otpValue);
+    console.log(formData, "values");
+    const formValues = {
+      name: formData?.name,
+      email: formData?.email,
+      password: formData?.password,
+      phone: formData?.phone,
+      otp: otpValue,
+    };
+    try {
+      const response = await axiosInstance.post("/doctor/signUp", formValues, {
+        withCredentials: true,
+        headers: { "Content-Type": "application/json" },
+      });
+      console.log(response.data, "data");
+      if (response.data?.response?.status === true) {
+        toast.success(response.data.response.message || "Signup successful!");
+        navigate("/doctor/login");
+      } else {
+        if (response.data.response?.status === false) {
+          toast.error("Incorrect OTP. Please try again.");
         } else {
-          if (
-            response.data.response?.message === "OTP does not match or is not found."
-          ) {
-            toast.error(
-              response.data.response?.message ||
-                "OTP does not match or is not found."
-            );
-          }
           toast.error(response.data.response?.message || "Signup failed");
         }
-      } catch (error: any) {
-        console.error("Error Response:", error);
-        toast.error(error.message || "An error occurred during signup");
       }
-    } else {
-      toast.error("Please enter a valid 4-digit OTP");
+    } catch (error: any) {
+      console.error("Error Response:", error);
+      toast.error(error.message || "An error occurred during signup");
     }
   };
+  
 
   const handleResend = async () => {
     if (canResend) {
