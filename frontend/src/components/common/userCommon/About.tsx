@@ -147,11 +147,15 @@ const About = () => {
     const fetchDoctors = async () => {
       try {
         setLoading(true)
-        const response = await axiosInstance.get("/doctors")
-        // Response structure: { status: true, data: { doctors: { data: [ ... ], pagination: { ... } } }, message: "Doctors fetched successfully" }
-        const fetchedDoctors: IDoctorSlider[] = response.data.data.doctors.data || []
+        const response = await axiosInstance.get("/doctors?limit=50")
         // Filter to display only doctors with an averageRating greater than 0
-        const filteredDoctors = fetchedDoctors.filter((doctor: IDoctorSlider) => (doctor.averageRating || 0) > 0)
+        const fetchedDoctors: IDoctorSlider[] = response.data.data.doctors.data || [];
+        console.log("Fetched Doctors:", fetchedDoctors);
+        const filteredDoctors = fetchedDoctors.filter(
+          (doctor) => Number(doctor.averageRating) >= 4
+        );
+        console.log("Filtered Doctors:", filteredDoctors);
+        
         setDoctors(filteredDoctors.length > 0 ? filteredDoctors : fallbackDoctors)
       } catch (error) {
         console.error("Error fetching doctors:", error)
