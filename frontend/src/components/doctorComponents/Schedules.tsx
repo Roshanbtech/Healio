@@ -110,7 +110,7 @@ const DoctorScheduleManagement: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   // Retrieve the doctorId from session storage.
-  const doctorId = sessionStorage.getItem("doctorId");
+  const doctorId = localStorage.getItem("doctorId");
 
   useEffect(() => {
     if (doctorId) {

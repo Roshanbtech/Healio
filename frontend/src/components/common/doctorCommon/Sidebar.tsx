@@ -31,7 +31,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCollapse }) => {
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isDoctor, setIsDoctor] = useState<boolean | null>(null);
-  const doctorId = sessionStorage.getItem("doctorId");
+  const doctorId = localStorage.getItem("doctorId");
 
   const toggleCollapse = () => {
     const newCollapsed = !isCollapsed;
@@ -62,9 +62,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCollapse }) => {
       console.error("Logout failed:", error);
     }
 
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("userRole");
-    document.cookie = "refreshToken=; Max-Age=-99999999; path=/";
+    localStorage.clear();
+    setIsDoctor(null);
     navigate("/doctor/login");
   };
 

@@ -85,7 +85,7 @@ export const QualificationForm: React.FC = () => {
 
   const fetchExistingQualifications = async () => {
     try {
-      const doctorId = sessionStorage.getItem("doctorId");
+      const doctorId = localStorage.getItem("doctorId");
       if (!doctorId) {
         throw new Error("Doctor ID not found in session storage.");
       }

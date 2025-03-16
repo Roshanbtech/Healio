@@ -19,11 +19,11 @@ import {
 
 interface UserVideoCallProps {
   chatId: string;
-  userId: string;   // The user's ID (callee)
-  doctorId: string; // The doctor's ID (caller)
+  userId: string;   
+  doctorId: string; 
   onClose: () => void;
-  logo?: string;    // Optional logo URL
-  doctorName?: string; // Optional doctor name for display
+  logo?: string;    
+  doctorName?: string;
 }
 
 const UserVideoCall: React.FC<UserVideoCallProps> = ({

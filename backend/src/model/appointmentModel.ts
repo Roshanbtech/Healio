@@ -6,11 +6,11 @@ export interface IAppointment extends Document {
   doctorId: mongoose.Types.ObjectId;
   date: Date;
   time: string;
-  status: "pending" | "accepted" | "completed" | "cancelled" | "rescheduled" ;
+  status: "pending" | "accepted" | "completed" | "cancelled" | "rescheduled";
   reason?: string;
   fees?: number;
   paymentMethod?: "razorpay";
-  paymentStatus?: "payment pending" | "payment completed" | "payment failed" | "refunded" | "anonymous";
+  paymentStatus?: "payment pending" | "payment completed" | "payment failed" | "anonymous";
   razorpay_order_id?: string;
   razorpay_payment_id?: string;
   razorpay_signature?: string;
@@ -84,7 +84,6 @@ const AppointmentSchema = new Schema<IAppointment>(
         "payment pending",
         "payment completed",
         "payment failed",
-        "refunded",
         "anonymous",
       ],
     },

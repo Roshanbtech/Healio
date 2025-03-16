@@ -62,7 +62,7 @@ const Profile: React.FC = () => {
     confirmNewPassword: "",
   });
 
-  const doctor = sessionStorage.getItem("doctorId");
+  const doctor = localStorage.getItem("doctorId");
 
   // Fetch doctor profile
   useEffect(() => {

@@ -130,7 +130,7 @@ const AppointmentsList: React.FC = () => {
   >("appointment");
 
   const itemsPerPage = 10;
-  const doctorId = sessionStorage.getItem("doctorId");
+  const doctorId = localStorage.getItem("doctorId");
 
   const fetchAppointments = async () => {
     setLoading(true);
@@ -1005,7 +1005,7 @@ const RescheduleModal: React.FC<RescheduleModalProps> = ({
   const [slotError, setSlotError] = useState<string | null>(null);
   const [bookedAppointments, setBookedAppointments] = useState<IAppointment[]>([]);
 
-  const doctorId = sessionStorage.getItem("doctorId");
+  const doctorId = localStorage.getItem("doctorId");
 
   useEffect(() => {
     const tomorrow = new Date();

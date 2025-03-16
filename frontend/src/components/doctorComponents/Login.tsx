@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Link } from "react-router-dom";
@@ -15,6 +15,13 @@ const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+
+   useEffect(() => {
+      const token = localStorage.getItem("authToken");
+      if (token) {
+        navigate("/doctor/home");
+      }
+    }, []);
 
   const validationSchema = Yup.object({
     email: Yup.string()
@@ -36,7 +43,8 @@ const Login: React.FC = () => {
       try {
         const { data } = await axiosInstance.post("/doctor/login", values);
         localStorage.setItem("authToken", data.accessToken);
-        sessionStorage.setItem("doctorId", data.doctorId);
+        // sessionStorage.setItem("doctorId", data.doctorId);
+        localStorage.setItem("doctorId", data.doctorId);
         const decodedToken = jwtDecode(data.accessToken) as { role: string };
         localStorage.setItem("userRole", decodedToken.role);
         toast.success("Login successful");

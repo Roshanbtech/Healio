@@ -341,4 +341,67 @@ export class DoctorController {
       }
     }
 
+    async getDashboardHome(req: Request, res: Response): Promise<any> {
+      try {
+        const doctorId = req.params.id;
+        const data = await this.doctorService.getDashboardHome(doctorId);
+        return res.status(200).json({
+          status: true,
+          data,
+          message: "Dashboard data fetched successfully",
+        });
+      } catch (error: any) {
+        return res.status(500).json({
+          status: false,
+          message: error.message,
+        });
+      }
+    }
+
+    async getDashboardStats(req: Request, res: Response): Promise<any> {
+      try {
+        const { id: doctorId } = req.params;
+        const data = await this.doctorService.fetchDashboardStats(doctorId);
+    
+        if (!data) {
+          return res.status(HTTP_statusCode.NotFound).json({
+            status: false,
+            message: "Doctor not found",
+          });
+        }
+    
+        // Now data contains both stats and doctorProfile
+        return res.status(HTTP_statusCode.OK).json({
+          status: true,
+          data,  // data already has { stats, doctorProfile }
+          message: "Dashboard stats fetched successfully",
+        });
+      } catch (error: any) {
+        console.log("Error in getting dashboard stats", error);
+        return res.status(HTTP_statusCode.InternalServerError).json({
+          status: false,
+          message: "Something went wrong, please try again later.",
+        });
+      }
+    }
+    
+
+    async getGrowthData(req: Request, res: Response): Promise<any> {
+      try{
+        const { id: doctorId } = req.params;
+        const growthData = await this.doctorService.fetchGrowthData(doctorId);
+        return res.status(HTTP_statusCode.OK).json({
+          status: true,
+          data: { growthData },
+          message: "Growth data fetched successfully",
+        })
+      }catch(error:any){
+        console.log("error in getting growth data", error);
+        return res.status(HTTP_statusCode.InternalServerError).json({
+          status: false,
+          message: "Something went wrong, please try again later.",
+        })
+      }
+    }
+
 }

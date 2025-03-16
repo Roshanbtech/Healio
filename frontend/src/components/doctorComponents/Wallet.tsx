@@ -30,7 +30,7 @@ const DoctorWallet: React.FC = () => {
   const transactionsPerPage = 5;
 
   // Retrieve the doctorId from session storage
-  const doctorId = sessionStorage.getItem('doctorId');
+  const doctorId = localStorage.getItem('doctorId');
 
   useEffect(() => {
     if (!doctorId) {

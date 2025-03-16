@@ -1,11 +1,12 @@
 // App.tsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./index.css";
-import UserRoutes from "../src/Routes/userRoutes";
-import AdminRoutes from "../src/Routes/adminRoutes";
-import DoctorRoutes from "../src/Routes/doctorRoutes";
+import UserRoutes from "./Routes/userRoutes";
+import AdminRoutes from "./Routes/adminRoutes";
+import DoctorRoutes from "./Routes/doctorRoutes";
 import ErrorBoundary from "./components/common/ErrorBoundary";
 import NotFound from "./components/common/NotFound";
+import GlobalNotifications from "./components/common/GlobalNotification";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -13,6 +14,7 @@ const App = () => {
   return (
     <ErrorBoundary>
       <Router>
+      <GlobalNotifications />
         <Routes>
           <Route path="/*" element={<UserRoutes />} />
           <Route path="/doctor/*" element={<DoctorRoutes />} />
@@ -20,11 +22,7 @@ const App = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
-      <ToastContainer 
-        position="top-right" 
-        autoClose={3000} 
-        newestOnTop 
-      />
+      <ToastContainer position="top-right" autoClose={3000} newestOnTop />
     </ErrorBoundary>
   );
 };

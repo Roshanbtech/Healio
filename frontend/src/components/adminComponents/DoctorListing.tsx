@@ -152,6 +152,10 @@ const DoctorList: React.FC = () => {
 
   const handleApprove = async () => {
     if (!selectedDoctor) return;
+    if (selectedDoctor.certificate?.length === 0) {
+      toast.error("No certificates found for this doctor");
+      return;
+    }
     try {
       const response = await axiosInstance.patch(
         `/admin/doctors/${selectedDoctor._id}/certificates/accept`

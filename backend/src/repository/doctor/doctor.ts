@@ -14,6 +14,11 @@ import AppointmentModel, { IAppointment } from "../../model/appointmentModel";
 import { Iuser } from "../../model/userModel";
 import mongoose from "mongoose";
 import { isScheduleExpired } from "../../helper/schedule";
+import { DashboardHomeData, DashboardStatsData, DashboardStatsResponse, DoctorProfile, GrowthChartData } from "../../interface/doctorInterface/dashboardInterface";
+import { ObjectId } from "mongoose";
+import { endOfToday, startOfToday, startOfMonth, endOfMonth } from  "../../helper/date";
+import { startOfYesterday } from "date-fns/startOfYesterday";
+import { endOfYesterday } from "date-fns/endOfYesterday";
 
 export class DoctorRepository implements IDoctorRepository {
   async getServices(): Promise<Service[]> {
@@ -374,5 +379,272 @@ export class DoctorRepository implements IDoctorRepository {
         throw new Error(error.message);
       }
     }
+
+    async getDashboardStats(doctorId: string): Promise<DashboardStatsResponse | null> {
+      try {
+        const doctorObjectId = new mongoose.Types.ObjectId(doctorId);
     
+        // Get Doctor Profile including Image and other necessary fields
+        const doctorData = await doctorModel
+          .findById(doctorObjectId)
+          .select("name speciality image monthlyTarget")
+          .populate("speciality", "name");
+    
+        if (!doctorData) {
+          throw new Error("Doctor not found");
+        }
+    
+        // Convert Mongoose document to DoctorProfile interface
+        const doctorProfile: DoctorProfile = {
+          _id: (doctorData._id as mongoose.Types.ObjectId).toString(), // Convert _id to a string
+          name: doctorData.name,
+          speciality:
+            typeof doctorData.speciality === "object"
+              ? (doctorData.speciality as any).name
+              : doctorData.speciality,
+          image: doctorData.image || ""
+        };
+    
+        const monthlyTarget = (doctorData as any)?.monthlyTarget || 50; // Default Target
+    
+        // Calculate Visits Today
+        const visitsToday = await AppointmentModel.countDocuments({
+          doctorId: doctorObjectId,
+          status: "accepted",
+          date: { $gte: startOfToday(), $lt: endOfToday() },
+        });
+    
+        // Visits Yesterday for Growth Percentage Calculation
+        const visitsYesterday = await AppointmentModel.countDocuments({
+          doctorId: doctorObjectId,
+          status: "accepted",
+          date: { $gte: startOfYesterday(), $lt: endOfYesterday() },
+        });
+    
+        const growthPercentage =
+          visitsYesterday === 0 ? (visitsToday > 0 ? 100 : 0)
+          : ((visitsToday - visitsYesterday) / visitsYesterday) * 100;
+    
+        const currentMonthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+        const nextMonthStart = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1);
+        const monthlyAchieved = await AppointmentModel.countDocuments({
+          doctorId: doctorObjectId,
+          status: "completed",
+          date: { $gte: currentMonthStart, $lt: nextMonthStart },
+        });
+    
+        const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    
+        const newPatientsAgg = await AppointmentModel.aggregate([
+          { $match: { doctorId: doctorObjectId, status: "accepted" } },
+          { $group: { _id: "$patientId", firstAppointment: { $min: "$date" } } },
+          { $match: { firstAppointment: { $gte: oneWeekAgo } } },
+          { $count: "newPatients" },
+        ]);
+        const newPatients = newPatientsAgg?.[0]?.newPatients ?? 0;
+    
+        // Count Old Patients
+        const oldPatientsAgg = await AppointmentModel.aggregate([
+          { $match: { doctorId: doctorObjectId, status: "accepted" } },
+          { $group: { _id: "$patientId", firstAppointment: { $min: "$date" } } },
+          { $match: { firstAppointment: { $lt: oneWeekAgo } } },
+          { $count: "oldPatients" },
+        ]);
+        const oldPatients = oldPatientsAgg?.[0]?.oldPatients ?? 0;
+    
+        // Total Appointments (accepted or completed)
+        const totalAppointments = await AppointmentModel.countDocuments({
+          doctorId: doctorObjectId,
+          status: { $in: ["accepted", "completed"] },
+        });
+    
+        // Build the dashboard stats object
+        const dashboardStats: DashboardStatsData = {
+          visitsToday,
+          growthPercentage: Math.round(growthPercentage),
+          monthlyTarget,
+          monthlyAchieved,
+          statCards: [
+            { label: "New Patients", value: newPatients, percentage: 0 },
+            { label: "Old Patients", value: oldPatients, percentage: 0 },
+            { label: "Appointments", value: totalAppointments, percentage: 0 },
+          ],
+        };
+    
+        return { stats: dashboardStats, doctorProfile };
+      } catch (error: any) {
+        console.error("Error in getDashboardStats:", error);
+        throw new Error("Failed to fetch dashboard stats");
+      }
+    }
+    
+    
+    
+    async getGrowthData(doctorId: string): Promise<GrowthChartData[]> {
+      try {
+        const doctorObjectId = new mongoose.Types.ObjectId(doctorId);
+       // This is a conceptual example and might require adjustments based on your schema:
+const growthAgg = await AppointmentModel.aggregate([
+  { $match: { doctorId: doctorObjectId } },
+  // Group by patient and month/year to get first appointment per patient
+  {
+    $group: {
+      _id: {
+        patientId: "$patientId",
+        month: { $month: "$date" },
+        year: { $year: "$date" }
+      },
+      firstAppointment: { $min: "$date" },
+      appointmentsInMonth: { $sum: 1 }
+    }
+  },
+  // Separate new and returning patients per month
+  {
+    $group: {
+      _id: { month: "$_id.month", year: "$_id.year" },
+      newPatients: {
+        $sum: {
+          $cond: [{ $eq: ["$firstAppointment", "$$ROOT.firstAppointment"] }, 1, 0]
+        }
+      },
+      totalAppointments: { $sum: "$appointmentsInMonth" }
+    }
+  },
+  { $sort: { "_id.year": 1, "_id.month": 1 } },
+  {
+    $project: {
+      month: {
+        $concat: [{ $toString: "$_id.month" }, "/", { $toString: "$_id.year" }],
+      },
+      newPatients: 1,
+      returningPatients: { $subtract: ["$totalAppointments", "$newPatients"] },
+      total: "$totalAppointments",
+      _id: 0,
+    },
+  },
+]);
+
+        return growthAgg;
+      } catch (error: any) {
+        throw new Error(error.message);
+      }
+    }    
+    async getDashboardHome(doctorId: string): Promise<DashboardHomeData> {
+      try {
+        const doctorObjectId = new mongoose.Types.ObjectId(doctorId);
+  
+        const doctorProfile = await doctorModel
+          .findById(doctorObjectId)
+          .populate("speciality", "name")
+          .lean();
+  
+        const visitsToday = await AppointmentModel.countDocuments({
+          doctorId: doctorObjectId,
+          date: { $gte: startOfToday(), $lt: endOfToday() },
+        });
+  
+        const monthlyAchieved = await AppointmentModel.countDocuments({
+          doctorId: doctorObjectId,
+          status: "completed",
+          date: { $gte: startOfMonth(), $lt: endOfMonth() },
+        });
+        const monthlyTarget = (doctorProfile as any)?.monthlyTarget || 50;
+  
+        const newPatientsAgg = await AppointmentModel.aggregate([
+          { $match: { doctorId: doctorObjectId } },
+          {
+            $group: {
+              _id: "$patientId",
+              firstAppointment: { $min: "$date" },
+            },
+          },
+          {
+            $match: {
+              firstAppointment: { $gte: startOfMonth(), $lt: endOfMonth() },
+            },
+          },
+          { $count: "newPatients" },
+        ]);
+        const newPatients = newPatientsAgg[0]?.newPatients || 0;
+  
+        const oldPatientsAgg = await AppointmentModel.aggregate([
+          { $match: { doctorId: doctorObjectId, date: { $gte: startOfMonth(), $lt: endOfMonth() } } },
+          {
+            $group: {
+              _id: "$patientId",
+              firstAppointment: { $min: "$date" },
+            },
+          },
+          {
+            $match: {
+              firstAppointment: { $lt: startOfMonth() },
+            },
+          },
+          { $count: "oldPatients" },
+        ]);
+        const oldPatients = oldPatientsAgg[0]?.oldPatients || 0;
+  
+        const totalAppointments = await AppointmentModel.countDocuments({ doctorId: doctorObjectId });
+  
+        const avgVisitTimeAgg = await AppointmentModel.aggregate([
+          { $match: { doctorId: doctorObjectId, duration: { $exists: true } } },
+          {
+            $group: {
+              _id: null,
+              avgDuration: { $avg: "$duration" },
+            },
+          },
+        ]);
+        const avgVisitTime = Math.round(avgVisitTimeAgg[0]?.avgDuration || 0);
+  
+        const dashboardStats = {
+          visitsToday,
+          growthPercentage: 0, 
+          monthlyTarget,
+          monthlyAchieved,
+          statCards: [
+            { label: "New Patients", value: newPatients, percentage: 0 },
+            { label: "Old Patients", value: oldPatients, percentage: 0 },
+            { label: "Appointments", value: totalAppointments, percentage: 0 },
+            { label: "Avg. Visit Time", value: avgVisitTime },
+          ],
+        };
+  
+        const todaysAppointments = await AppointmentModel.find({
+          doctorId: doctorObjectId,
+          status: "accepted",
+          date: { $gte: startOfToday(), $lt: endOfToday() },
+        })
+          .populate("patientId", "name email gender age")
+          .sort({ date: 1, time: 1 })
+          .lean();
+  
+     
+        const monthlyPatientIds = await AppointmentModel.find({
+          doctorId: doctorObjectId,
+          date: { $gte: startOfMonth(), $lt: endOfMonth() },
+        }).distinct("patientId");
+  
+        const patients = await userModel.find({ _id: { $in: monthlyPatientIds } }).lean();
+  
+        const demographics = patients.reduce(
+          (acc, patient) => {
+            if (patient.gender === "male") acc.male += 1;
+            else if (patient.gender === "female") acc.female += 1;
+            if (patient.age !== undefined && patient.age >= 18 && patient.age <= 35) acc.age18to35 += 1;
+            return acc;
+          },
+          { male: 0, female: 0, age18to35: 0 }
+        );
+  
+        return {
+          doctorProfile,
+          dashboardStats,
+          todaysAppointments,
+          demographics,
+        };
+      } catch (error: any) {
+        throw new Error(error.message);
+      }
+    }
 }

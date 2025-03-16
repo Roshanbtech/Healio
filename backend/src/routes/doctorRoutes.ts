@@ -141,6 +141,21 @@ route.get(
   DoctorControllerInstance.getDoctorAvailableSlots.bind(DoctorControllerInstance)
 );
 
+//_____________ Doctor Dashboard ______________//
+route.get(
+  "/dashboard/:id",
+  DoctorControllerInstance.getDashboardHome.bind(DoctorControllerInstance)
+)
+route.get(
+  "/dashboard-stats/:id",
+  DoctorControllerInstance.getDashboardStats.bind(DoctorControllerInstance)
+)
+
+route.get(
+  "/dashboard-chart/:id",
+  DoctorControllerInstance.getGrowthData.bind(DoctorControllerInstance)
+)
+
 route.post(
   "/logout",
   AuthControllerInstance.logoutDoctor.bind(AuthControllerInstance)

@@ -12,6 +12,7 @@ import { IAppointment } from "../../model/appointmentModel";
 import { Iuser } from "../../model/userModel";
 import { addMinutes, format, isBefore } from "date-fns";
 import sendMail from "../../config/emailConfig";
+import { GrowthChartData,DashboardStatsData, DashboardHomeData, DashboardStatsResponse } from "../../interface/doctorInterface/dashboardInterface";
 
 interface Slot {
   slot: string;
@@ -335,5 +336,32 @@ export class DoctorService implements IDoctorService {
       }
     }
   
+    async fetchDashboardStats(doctorId: string): Promise<DashboardStatsResponse | null> {
+      try {
+        return await this.DoctorRepository.getDashboardStats(doctorId);
+      } catch (error: any) {
+        throw new Error(error.message);
+      }
+    }
+    
+    
+    async fetchGrowthData(doctorId: string): Promise<GrowthChartData[]> {
+      try{
+        const growthData = await this.DoctorRepository.getGrowthData(doctorId);
+        return growthData;
+      }catch(error: any){
+        throw new Error(error.message);
+      }
+    }
+
+    async getDashboardHome(doctorId: string): Promise<DashboardHomeData> {
+      try {
+        const data = await this.DoctorRepository.getDashboardHome(doctorId);
+        return data;
+      } catch (error: any) {
+        throw new Error(error.message);
+      }
+    }
+    
 
 }
