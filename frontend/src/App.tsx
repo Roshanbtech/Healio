@@ -14,6 +14,7 @@ const App = () => {
   return (
     <ErrorBoundary>
       <Router>
+      <ToastContainer />
       <GlobalNotifications />
         <Routes>
           <Route path="/*" element={<UserRoutes />} />
@@ -22,7 +23,6 @@ const App = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
-      <ToastContainer position="top-right" autoClose={3000} newestOnTop />
     </ErrorBoundary>
   );
 };

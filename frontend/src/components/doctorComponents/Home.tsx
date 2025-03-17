@@ -5,7 +5,6 @@ import { DashboardStats } from "../common/doctorCommon/Dashboard-stats";
 import { GrowthChart } from "../common/doctorCommon/Growth-chart"; // Uncomment if needed
 import { Calendar, Clock, Bell, Mail } from "lucide-react";
 import axiosInstance from "../../utils/axiosInterceptors";
-import { assets } from "../../assets/assets";
 import { useNavigate } from "react-router-dom";
 
 // Define interfaces for aggregated data

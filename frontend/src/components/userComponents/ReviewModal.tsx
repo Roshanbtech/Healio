@@ -23,51 +23,47 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = "auto";
     };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate input
     if (rating === 0) {
       toast.error("Please select a rating");
       return;
     }
-    
+
     // Limit description length to 500 characters
     if (description.length > 500) {
       toast.error("Review description cannot exceed 500 characters");
       return;
     }
-    
+
     try {
-      // Prevent multiple submissions
       setIsSubmitting(true);
-      
-      // Call the parent component's submit handler
+
       await onSubmit(rating, description);
-      
-      // If we reach here, it means the submission was successful
-      // The parent component will close the modal
     } catch (error) {
-      // Error handling is done in parent component
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-transparent bg-opacity-40 backdrop-blur-md flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden animate-fadeIn transform transition-all">
         <div className="bg-gradient-to-r from-red-600 to-red-700 p-5 flex justify-between items-center">
           <h2 className="text-white text-lg font-bold">
-            {appointment.review?.rating ? "Edit Review" : "Rate Your Experience"}
+            {appointment.review?.rating
+              ? "Edit Review"
+              : "Rate Your Experience"}
           </h2>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="text-white hover:text-red-200 transition-colors"
             disabled={isSubmitting}
           >
@@ -134,17 +130,23 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
               <button
                 type="submit"
                 className={`px-5 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-md hover:from-red-700 hover:to-red-800 transition-all font-medium shadow-md ${
-                  rating === 0 || isSubmitting ? "opacity-70 cursor-not-allowed" : ""
+                  rating === 0 || isSubmitting
+                    ? "opacity-70 cursor-not-allowed"
+                    : ""
                 }`}
                 disabled={rating === 0 || isSubmitting}
               >
                 {isSubmitting ? (
                   <span className="flex items-center justify-center">
                     <span className="mr-2 h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin"></span>
-                    {appointment.review?.rating ? "Updating..." : "Submitting..."}
+                    {appointment.review?.rating
+                      ? "Updating..."
+                      : "Submitting..."}
                   </span>
+                ) : appointment.review?.rating ? (
+                  "Update Review"
                 ) : (
-                  appointment.review?.rating ? "Update Review" : "Submit Review"
+                  "Submit Review"
                 )}
               </button>
             </div>

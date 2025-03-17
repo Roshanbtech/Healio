@@ -23,8 +23,7 @@ const AddScheduleModal: React.FC<IAddScheduleModalProps> = ({
   onClose,
   onScheduleAdded,
 }) => {
-  // Get doctorId from session storage (assumes it has been set)
-  const doctor = sessionStorage.getItem("doctorId") || "";
+  const doctor = localStorage.getItem("doctorId") || "";
 
   // Basic schedule states
   const [isRecurring, setIsRecurring] = useState(false);

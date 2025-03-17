@@ -109,7 +109,6 @@ const DoctorScheduleManagement: React.FC = () => {
   // Selected date for recurring schedules (default to today)
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
-  // Retrieve the doctorId from session storage.
   const doctorId = localStorage.getItem("doctorId");
 
   useEffect(() => {
