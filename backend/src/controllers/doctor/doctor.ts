@@ -386,21 +386,44 @@ export class DoctorController {
     }
     
 
+    // async getGrowthData(req: Request, res: Response): Promise<any> {
+    //   try{
+    //     const { id: doctorId } = req.params;
+    //     const growthData = await this.doctorService.fetchGrowthData(doctorId);
+    //     return res.status(HTTP_statusCode.OK).json({
+    //       status: true,
+    //       data: { growthData },
+    //       message: "Growth data fetched successfully",
+    //     })
+    //   }catch(error:any){
+    //     console.log("error in getting growth data", error);
+    //     return res.status(HTTP_statusCode.InternalServerError).json({
+    //       status: false,
+    //       message: "Something went wrong, please try again later.",
+    //     })
+    //   }
+    // }
+
     async getGrowthData(req: Request, res: Response): Promise<any> {
-      try{
+      try {
         const { id: doctorId } = req.params;
-        const growthData = await this.doctorService.fetchGrowthData(doctorId);
-        return res.status(HTTP_statusCode.OK).json({
+        // Default to "yearly" if timeRange is not provided
+        const timeRange = (req.query.timeRange as "daily" | "weekly" | "monthly" | "yearly") || "yearly";
+        const dateParam = req.query.date as string | undefined;
+        
+        const growthData = await this.doctorService.fetchGrowthData(doctorId, timeRange, dateParam);
+        
+        return res.status(200).json({
           status: true,
           data: { growthData },
-          message: "Growth data fetched successfully",
-        })
-      }catch(error:any){
-        console.log("error in getting growth data", error);
-        return res.status(HTTP_statusCode.InternalServerError).json({
+          message: "Growth data fetched successfully"
+        });
+      } catch (error: any) {
+        console.error("Error in getGrowthData:", error);
+        return res.status(500).json({
           status: false,
-          message: "Something went wrong, please try again later.",
-        })
+          message: "Something went wrong, please try again later."
+        });
       }
     }
 

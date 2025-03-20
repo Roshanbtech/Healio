@@ -34,7 +34,7 @@ import { Service } from "../../interface/doctorInterface/Interface";
 import { Schedule } from "../../interface/doctorInterface/Interface";
 import { IAppointment } from "../../model/appointmentModel";
 import { Iuser } from "../../model/userModel";
-import { DashboardHomeData, DashboardStatsData, growthChartData, DashboardStatsResponse } from "../doctorInterface/dashboardInterface";
+import { DashboardHomeData, DashboardStatsData, GrowthChartData, DashboardStatsResponse } from "../doctorInterface/dashboardInterface";
 export interface IDoctorService {
   getServices(): Promise<Service[]>;
   addQualification(data: any, files: any): Promise<any>;
@@ -60,7 +60,12 @@ export interface IDoctorService {
   rescheduleAppointment(id: string, date: string, time: string, reason: string): Promise<IAppointment | null>;
   getDoctorAvailableSlots(id: string): Promise<any>;
   fetchDashboardStats(docotrId: string): Promise<DashboardStatsResponse | null>;
-  fetchGrowthData(doctorId: string): Promise<growthChartData[]>;
+  // fetchGrowthData(doctorId: string): Promise<growthChartData[]>;
+  fetchGrowthData(
+    doctorId: string,
+    timeRange: "daily" | "weekly" | "monthly" | "yearly",
+    dateParam?: string
+  ): Promise<GrowthChartData[]>;
   getDashboardHome(doctorId: string): Promise<DashboardHomeData>;
 
 

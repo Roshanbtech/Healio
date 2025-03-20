@@ -5,6 +5,8 @@ import couponModel from "../../model/couponModel";
 import { paginate, PaginationOptions } from "../../helper/pagination";
 import { IAuthRepository } from "../../interface/admin/Auth.repository.interface";
 import sendMail from "../../config/emailConfig";
+import AppointmentModel from "../../model/appointmentModel";
+import { IDashboardStats, ITopDoctor, ITopUser, IAppointmentAnalytics } from "../../interface/adminInterface/dashboard";
 
 export class AuthRepository implements IAuthRepository {
   async logout(refreshToken: string): Promise<any> {
@@ -220,4 +222,135 @@ Team Healio`;
       throw new Error(error.message);
     }
   }
+
+  async fetchDashboardStats(): Promise<IDashboardStats> {
+    try {
+      const totalCustomers = await userModel.countDocuments({});
+      const totalDoctors = await doctorModel.countDocuments({$or: [{ isDoctor: true }, { docStatus: "approved" }] });
+      const completedBookings = await AppointmentModel.countDocuments({ status: "completed" });
+      const revenueResult = await AppointmentModel.aggregate([
+        { $match: { status: "completed", fees: { $exists: true } } },
+        { $group: { _id: null, totalRevenue: { $sum: "$fees" } } }
+      ]);
+      const totalRevenue = revenueResult[0]?.totalRevenue || 0;
+      return { totalCustomers, totalDoctors, completedBookings, totalRevenue };
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+
+  async fetchTopDoctors(): Promise<ITopDoctor[]> {
+    try {
+      const topDoctors = await AppointmentModel.aggregate([
+        { $match: { status: "completed" } },
+        { $group: {
+            _id: "$doctorId",
+            appointmentsCount: { $sum: 1 },
+            totalEarnings: { $sum: "$fees" }
+        }},
+        { $lookup: {
+            from: "doctors",
+            localField: "_id",
+            foreignField: "_id",
+            as: "doctorDetails"
+        }},
+        { $unwind: "$doctorDetails" },
+        { $sort: { 
+            appointmentsCount: -1,
+            "doctorDetails.averageRating": -1 
+        }},
+        { $limit: 5 }
+      ]);
+      return topDoctors;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+  
+  async fetchTopUsers(): Promise<ITopUser[]> {
+    try {
+      const topUsers = await AppointmentModel.aggregate([
+        { $group: {
+            _id: "$patientId",
+            bookingsCount: { $sum: 1 },
+            totalSpent: { $sum: "$fees" },
+            lastVisit: { $max: "$date" }
+        }},
+        { $lookup: {
+            from: "users",
+            localField: "_id",
+            foreignField: "_id",
+            as: "userDetails"
+        }},
+        { $unwind: "$userDetails" },
+        { $sort: { bookingsCount: -1 } },
+        { $limit: 5 }
+      ]);
+      return topUsers;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+  
+
+  async fetchAppointmentAnalytics(timeFrame: string): Promise<IAppointmentAnalytics[]> {
+    try {
+      if (timeFrame === "weekly") {
+        // Group by the day of week (1 = Sunday, ..., 7 = Saturday)
+        const analytics = await AppointmentModel.aggregate([
+          {
+            $group: {
+              _id: { dayOfWeek: { $dayOfWeek: "$date" } },
+              completed: { $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] } },
+              canceled: { $sum: { $cond: [{ $eq: ["$status", "cancelled"] }, 1, 0] } }
+            }
+          },
+          {
+            $project: {
+              _id: 0,
+              dayOfWeek: "$_id.dayOfWeek",
+              completed: 1,
+              canceled: 1
+            }
+          },
+          { $sort: { dayOfWeek: 1 } }
+        ]);
+        const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        const transformedAnalytics = analytics.map(item => ({
+          _id: weekDays[item.dayOfWeek - 1], 
+          completed: item.completed,
+          canceled: item.canceled
+        }));
+        return transformedAnalytics;
+      } else {
+        const groupFormat = {
+          daily: "%Y-%m-%d",
+          monthly: "%Y-%m",
+          yearly: "%Y"
+        }[timeFrame] || "%Y-%m-%d";
+    
+        const analytics = await AppointmentModel.aggregate([
+          {
+            $group: {
+              _id: { $dateToString: { format: groupFormat, date: "$date" } },
+              completed: {
+                $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] }
+              },
+              canceled: {
+                $sum: { $cond: [{ $eq: ["$status", "cancelled"] }, 1, 0] }
+              }
+            }
+          },
+          { $sort: { _id: 1 } }
+        ]);
+        return analytics;
+      }
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+  
+  
+
+
 }

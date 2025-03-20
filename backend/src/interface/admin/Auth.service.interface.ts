@@ -1,4 +1,5 @@
 import { PaginationOptions } from "../../helper/pagination";
+import { IAppointmentAnalytics, IDashboardStats, ITopDoctor, ITopUser } from "../adminInterface/dashboard"
 
 export interface IAuthService {
   login(AdminData: {
@@ -23,6 +24,10 @@ export interface IAuthService {
   getCoupons(): Promise<any>;
   toggleCoupon(id: string): Promise<any>;
   editCoupon(id: string, couponData: any): Promise<any>;
+  getDashboardStats(): Promise<IDashboardStats>;
+  getTopDoctors(): Promise<ITopDoctor[]>;
+  getTopUsers(): Promise<ITopUser[]>;
+  getAppointmentAnalytics(timeFrame: string): Promise<IAppointmentAnalytics[]>;
 }
 
 export type AdminType = {

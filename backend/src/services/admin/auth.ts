@@ -3,6 +3,7 @@ import { config } from "dotenv";
 import { IAuthService } from "../../interface/admin/Auth.service.interface";
 import { IAuthRepository } from "../../interface/admin/Auth.repository.interface";
 import { PaginationOptions } from "../../helper/pagination";
+import { IDashboardStats, ITopDoctor, ITopUser, IAppointmentAnalytics } from "../../interface/adminInterface/dashboard";
 config();
 
 export class AuthService implements IAuthService {
@@ -282,4 +283,38 @@ export class AuthService implements IAuthService {
       throw new Error(error.message);
     }
   }
+
+  async getDashboardStats(): Promise<IDashboardStats> {
+    try {
+      const stats = await this.AuthRepository.fetchDashboardStats();
+      return stats;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+  async getTopDoctors(): Promise<ITopDoctor[]>{
+    try {
+      const topDoctors = await this.AuthRepository.fetchTopDoctors();
+      return topDoctors;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+   async getTopUsers(): Promise<ITopUser[]>{
+    try {
+      const topUsers = await this.AuthRepository.fetchTopUsers();
+      return topUsers;
+    } catch (error: any) {
+      throw new Error(error.message);
+    } 
+   }
+   async getAppointmentAnalytics(timeFrame: string): Promise<IAppointmentAnalytics[]>{
+    try {
+      const analytics = await this.AuthRepository.fetchAppointmentAnalytics(timeFrame);
+      return analytics;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+   }
+  
 }

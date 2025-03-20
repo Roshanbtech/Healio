@@ -480,55 +480,178 @@ export class DoctorRepository implements IDoctorRepository {
     
     
     
-    async getGrowthData(doctorId: string): Promise<GrowthChartData[]> {
-      try {
-        const doctorObjectId = new mongoose.Types.ObjectId(doctorId);
-       // This is a conceptual example and might require adjustments based on your schema:
-const growthAgg = await AppointmentModel.aggregate([
-  { $match: { doctorId: doctorObjectId } },
-  // Group by patient and month/year to get first appointment per patient
-  {
-    $group: {
-      _id: {
-        patientId: "$patientId",
+//     async getGrowthData(doctorId: string): Promise<GrowthChartData[]> {
+//       try {
+//         const doctorObjectId = new mongoose.Types.ObjectId(doctorId);
+//        // This is a conceptual example and might require adjustments based on your schema:
+// const growthAgg = await AppointmentModel.aggregate([
+//   { $match: { doctorId: doctorObjectId } },
+//   // Group by patient and month/year to get first appointment per patient
+//   {
+//     $group: {
+//       _id: {
+//         patientId: "$patientId",
+//         month: { $month: "$date" },
+//         year: { $year: "$date" }
+//       },
+//       firstAppointment: { $min: "$date" },
+//       appointmentsInMonth: { $sum: 1 }
+//     }
+//   },
+//   // Separate new and returning patients per month
+//   {
+//     $group: {
+//       _id: { month: "$_id.month", year: "$_id.year" },
+//       newPatients: {
+//         $sum: {
+//           $cond: [{ $eq: ["$firstAppointment", "$$ROOT.firstAppointment"] }, 1, 0]
+//         }
+//       },
+//       totalAppointments: { $sum: "$appointmentsInMonth" }
+//     }
+//   },
+//   { $sort: { "_id.year": 1, "_id.month": 1 } },
+//   {
+//     $project: {
+//       month: {
+//         $concat: [{ $toString: "$_id.month" }, "/", { $toString: "$_id.year" }],
+//       },
+//       newPatients: 1,
+//       returningPatients: { $subtract: ["$totalAppointments", "$newPatients"] },
+//       total: "$totalAppointments",
+//       _id: 0,
+//     },
+//   },
+// ]);
+
+//         return growthAgg;
+//       } catch (error: any) {
+//         throw new Error(error.message);
+//       }
+//     }    
+
+async getGrowthData(
+  doctorId: string,
+  timeRange: "daily" | "weekly" | "monthly" | "yearly",
+  dateParam?: string
+): Promise<any> {
+  try {
+    const doctorObjectId = new mongoose.Types.ObjectId(doctorId);
+    const currentDate = new Date();
+    let startDate: Date;
+    let endDate: Date;
+
+    // Set up filtering based on time range
+    if (timeRange === "daily") {
+      if (!dateParam) {
+        throw new Error("Date is required for daily time range");
+      }
+      const selectedDate = new Date(dateParam);
+      startDate = new Date(selectedDate.setHours(0, 0, 0, 0));
+      endDate = new Date(selectedDate.setHours(23, 59, 59, 999));
+    } else if (timeRange === "weekly") {
+      startDate = new Date();
+      startDate.setDate(currentDate.getDate() - 7);
+      endDate = currentDate;
+    } else if (timeRange === "monthly") {
+      startDate = new Date();
+      // Using a 30-day window; you could also use setMonth(currentDate.getMonth() - 1)
+      startDate.setDate(currentDate.getDate() - 30);
+      endDate = currentDate;
+    } else if (timeRange === "yearly") {
+      startDate = new Date();
+      startDate.setFullYear(currentDate.getFullYear() - 1);
+      endDate = currentDate;
+    } else {
+      // Fallback to all data if an invalid time range is provided
+      startDate = new Date(0);
+      endDate = currentDate;
+    }
+
+    // Build the match stage to filter by doctorId and the date range
+    const matchStage = {
+      doctorId: doctorObjectId,
+      date: { $gte: startDate, $lte: endDate }
+    };
+
+    // Define grouping and projection based on the timeRange
+    let groupId: any;
+    let projectStage: any;
+
+    if (timeRange === "daily") {
+      // Group by hour for a single day
+      groupId = { hour: { $hour: "$date" } };
+      projectStage = {
+        $project: {
+          timeLabel: { $concat: [{ $toString: "$_id.hour" }, ":00"] },
+          newPatients: 1,
+          returningPatients: { $subtract: ["$totalAppointments", "$newPatients"] },
+          total: "$totalAppointments",
+          _id: 0
+        }
+      };
+    } else if (timeRange === "weekly" || timeRange === "monthly") {
+      // Group by day, month, and year
+      groupId = {
+        day: { $dayOfMonth: "$date" },
         month: { $month: "$date" },
         year: { $year: "$date" }
-      },
-      firstAppointment: { $min: "$date" },
-      appointmentsInMonth: { $sum: 1 }
+      };
+      projectStage = {
+        $project: {
+          timeLabel: {
+            $concat: [
+              { $toString: "$_id.day" },
+              "/",
+              { $toString: "$_id.month" },
+              "/",
+              { $toString: "$_id.year" }
+            ]
+          },
+          newPatients: 1,
+          returningPatients: { $subtract: ["$totalAppointments", "$newPatients"] },
+          total: "$totalAppointments",
+          _id: 0
+        }
+      };
+    } else if (timeRange === "yearly") {
+      // Group by month and year
+      groupId = {
+        month: { $month: "$date" },
+        year: { $year: "$date" }
+      };
+      projectStage = {
+        $project: {
+          timeLabel: { $concat: [{ $toString: "$_id.month" }, "/", { $toString: "$_id.year" }] },
+          newPatients: 1,
+          returningPatients: { $subtract: ["$totalAppointments", "$newPatients"] },
+          total: "$totalAppointments",
+          _id: 0
+        }
+      };
     }
-  },
-  // Separate new and returning patients per month
-  {
-    $group: {
-      _id: { month: "$_id.month", year: "$_id.year" },
-      newPatients: {
-        $sum: {
-          $cond: [{ $eq: ["$firstAppointment", "$$ROOT.firstAppointment"] }, 1, 0]
+
+    // Build and run the aggregation pipeline
+    const growthAgg = await AppointmentModel.aggregate([
+      { $match: matchStage },
+      {
+        $group: {
+          _id: groupId,
+          totalAppointments: { $sum: 1 },
+          newPatients: { $sum: { $cond: ["$isNewPatient", 1, 0] } }
         }
       },
-      totalAppointments: { $sum: "$appointmentsInMonth" }
-    }
-  },
-  { $sort: { "_id.year": 1, "_id.month": 1 } },
-  {
-    $project: {
-      month: {
-        $concat: [{ $toString: "$_id.month" }, "/", { $toString: "$_id.year" }],
-      },
-      newPatients: 1,
-      returningPatients: { $subtract: ["$totalAppointments", "$newPatients"] },
-      total: "$totalAppointments",
-      _id: 0,
-    },
-  },
-]);
+      { $sort: { "_id": 1 } },
+      projectStage
+    ]);
 
-        return growthAgg;
-      } catch (error: any) {
-        throw new Error(error.message);
-      }
-    }    
+    return growthAgg;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+
+
     async getDashboardHome(doctorId: string): Promise<DashboardHomeData> {
       try {
         const doctorObjectId = new mongoose.Types.ObjectId(doctorId);

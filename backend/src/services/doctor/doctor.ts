@@ -343,17 +343,20 @@ export class DoctorService implements IDoctorService {
         throw new Error(error.message);
       }
     }
-    
-    
-    async fetchGrowthData(doctorId: string): Promise<GrowthChartData[]> {
-      try{
-        const growthData = await this.DoctorRepository.getGrowthData(doctorId);
+
+    async fetchGrowthData(
+      doctorId: string,
+      timeRange: "daily" | "weekly" | "monthly" | "yearly",
+      dateParam?: string
+    ): Promise<any> {
+      try {
+        const growthData = await this.DoctorRepository.getGrowthData(doctorId, timeRange, dateParam);
         return growthData;
-      }catch(error: any){
+      } catch (error: any) {
         throw new Error(error.message);
       }
     }
-
+  
     async getDashboardHome(doctorId: string): Promise<DashboardHomeData> {
       try {
         const data = await this.DoctorRepository.getDashboardHome(doctorId);

@@ -23,6 +23,12 @@ route.post(
 // ___________ Admin Protected Routes are listed below ____________ // Token required - admin only
 route.use(verifyToken(["admin"]));
 
+//____________ Dashboard ______________//
+route.get("/stats", AuthControllerInstance.getDashboardStats.bind(AuthControllerInstance));
+route.get("/top-doctors", AuthControllerInstance.getTopDoctors.bind(AuthControllerInstance));
+route.get("/top-users", AuthControllerInstance.getTopUsers.bind(AuthControllerInstance));
+route.get("/analytics", AuthControllerInstance.getAppointmentAnalytics.bind(AuthControllerInstance));
+
 // ___________ User management ____________ //
 route.get(
   "/users",

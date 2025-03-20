@@ -5,7 +5,7 @@ import { UserProfile } from "../userInterface/interface";
 import { IAppointment } from "../../model/appointmentModel";
 import { IDoctor } from "../../model/doctorModel";
 import { Iuser } from "../../model/userModel";
-import { DashboardHomeData, DashboardStatsData, DashboardStatsResponse, growthChartData } from "../doctorInterface/dashboardInterface";
+import { DashboardHomeData, DashboardStatsData, DashboardStatsResponse, DoctorProfile, GrowthChartData } from "../doctorInterface/dashboardInterface";
 
 export interface IAuthRepository {
   existDoctor(email: string): Promise<{ existEmail: boolean }>;
@@ -40,6 +40,11 @@ export interface IDoctorRepository{
   rescheduleAppointment(id: string, date: string, time: string, reason: string): Promise<IAppointment | null>;
   getDoctorAvailableSlots(id: string): Promise<any>;
   getDashboardStats(doctorId: string): Promise<DashboardStatsResponse | null> 
-    getGrowthData(doctorId: string): Promise<growthChartData[]>;
+    // getGrowthData(doctorId: string): Promise<growthChartData[]>;
+    getGrowthData(
+      doctorId: string,
+      timeRange:"daily" | "weekly" | "monthly" | "yearly",
+      dateParam?: string
+    ): Promise<GrowthChartData[]>;
   getDashboardHome(doctorId: string): Promise<DashboardHomeData>;
 }

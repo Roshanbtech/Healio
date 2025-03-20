@@ -87,7 +87,7 @@ export const QualificationForm: React.FC = () => {
     try {
       const doctorId = localStorage.getItem("doctorId");
       if (!doctorId) {
-        throw new Error("Doctor ID not found in session storage.");
+        throw new Error("Doctor ID not found in local storage.");
       }
       const response = await axiosInstance.get(`/doctor/qualifications/${doctorId}`);
       if (response.data.status && response.data.data.qualifications) {
@@ -131,7 +131,7 @@ export const QualificationForm: React.FC = () => {
         return;
       }
       setIsLoading(true);
-      const doctorId = sessionStorage.getItem("doctorId");
+      const doctorId = localStorage.getItem("doctorId");
       const formData = new FormData();
 
       Object.keys(values).forEach((key) => {

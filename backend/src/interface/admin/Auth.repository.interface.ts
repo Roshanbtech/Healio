@@ -1,6 +1,7 @@
 import { UserProfile, userType } from "../userInterface/interface";
 import { DoctorResult, doctorType } from "../doctorInterface/Interface";
 import { PaginationOptions } from "../../helper/pagination";
+import { IDashboardStats, ITopDoctor, ITopUser, IAppointmentAnalytics } from "../adminInterface/dashboard";
 
 export interface Service {
   serviceId: string;
@@ -36,4 +37,8 @@ export interface IAuthRepository {
   toggleCoupon(id: string): Promise<any>;
   editCoupon(id: string, couponData: any): Promise<any>;
   existCoupon(code:string): Promise<any>;
+  fetchDashboardStats(): Promise<IDashboardStats>;
+  fetchTopDoctors(): Promise<ITopDoctor[]>;
+  fetchTopUsers(): Promise<ITopUser[]>;
+  fetchAppointmentAnalytics(timeFrame: string): Promise<IAppointmentAnalytics[]>;
 }

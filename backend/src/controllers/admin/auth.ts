@@ -349,4 +349,41 @@ export class AuthController {
       console.error("Error in editCoupon:", error);
     }
   }
+
+  async getDashboardStats(req: Request, res: Response): Promise<any> {
+    try {
+      const stats = await this.authService.getDashboardStats();
+      return res.status(HTTP_statusCode.OK).json({ status: true, data: stats });
+    } catch (error: any) {
+      return res.status(HTTP_statusCode.InternalServerError).json({ status: false, message: error.message });
+    }
+  }
+
+  async getTopDoctors(req: Request, res: Response): Promise<any> {
+    try {
+      const topDoctors = await this.authService.getTopDoctors();
+      return res.status(HTTP_statusCode.OK).json({ status: true, data: topDoctors });
+    } catch (error: any) {
+      return res.status(HTTP_statusCode.InternalServerError).json({ status: false, message: error.message });
+    }
+  }
+
+  async getTopUsers(req: Request, res: Response): Promise<any> {
+    try {
+      const topUsers = await this.authService.getTopUsers();
+      return res.status(HTTP_statusCode.OK).json({ status: true, data: topUsers });
+    } catch (error: any) {
+      return res.status(HTTP_statusCode.InternalServerError).json({ status: false, message: error.message });
+    }
+  }
+
+  async getAppointmentAnalytics(req: Request, res: Response): Promise<any> {
+    try {
+      const timeFrame = req.query.timeFrame as string;
+      const analytics = await this.authService.getAppointmentAnalytics(timeFrame);
+      return res.status(HTTP_statusCode.OK).json({ status: true, data: analytics });
+    } catch (error: any) {
+      return res.status(HTTP_statusCode.InternalServerError).json({ status: false, message: error.message });
+    }
+  }
 }
