@@ -386,4 +386,41 @@ export class AuthController {
       return res.status(HTTP_statusCode.InternalServerError).json({ status: false, message: error.message });
     }
   }
+
+  async getReports(req: Request, res: Response): Promise<any> {
+    try {
+      const { startDate, endDate, page, limit, search, status } = req.query;
+      const pageLimit = parseInt(limit as string, 10) || 10;
+      const pageNumber = parseInt(page as string, 10) || 1;
+      const searchQuery = search as string;
+      const statusQuery = status as string;
+
+    
+      const start = new Date(startDate as string);
+      const end = new Date(endDate as string);
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return res.status(HTTP_statusCode.BadRequest).json({
+          status: false,
+          message: "Invalid date format provided.",
+        });
+      }
+      if (start > end) {
+        return res.status(HTTP_statusCode.BadRequest).json({
+          status: false,
+          message: "Start date cannot be greater than end date.",
+        });
+      }
+      const reports = await this.authService.getReports(start, end, statusQuery, {
+        page: pageNumber,
+        limit: pageLimit,
+        search: searchQuery,});
+      return res.status(HTTP_statusCode.OK).json({ status: true, data: reports });
+    } catch (error: any) {
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: error.message,
+      });
+    }
+  }
+  
 }

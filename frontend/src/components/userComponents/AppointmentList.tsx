@@ -15,7 +15,7 @@ import { Sidebar } from "../common/userCommon/Sidebar";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import ReviewModal from "./ReviewModal";
-// Define the Appointment interface matching your API response
+import PrescriptionModal from "./PrescriptionModal";
 export interface IAppointment {
   _id: string;
   appointmentId: string;
@@ -30,7 +30,7 @@ export interface IAppointment {
   };
   date: string;
   time: string;
-  status: "pending" | "accepted" | "completed" | "cancelled" ;
+  status: "pending" | "accepted" | "completed" | "cancelled";
   reason?: string;
   fees?: number;
   paymentMethod?: "razorpay";
@@ -60,6 +60,34 @@ export interface IAppointment {
   isApplied?: boolean;
   createdAt?: string;
   updatedAt?: string;
+}
+
+interface PrescriptionData {
+  _id?: string | { $oid?: string };
+  diagnosis: string;
+  medicines: Medicine[];
+  labTests?: string[];
+  advice?: string;
+  followUpDate?: string | { $date?: string };
+  doctorNotes?: string;
+  signature?: string;
+  createdAt?: string | { $date?: string };
+  updatedAt?: string | { $date?: string };
+  doctor: {
+    name: string;
+    speciality: string;
+    phone?: string;
+    email?: string;
+  };
+  patient: {
+    name: string;
+    age: number;
+    gender: string;
+    phone?: string;
+    email?: string;
+    address?: string;
+    dateOfBirth?: string;
+  };
 }
 
 // --- Reschedule Modal Component ---
@@ -576,6 +604,10 @@ const UserAppointments: React.FC = () => {
   const [showReviewModal, setShowReviewModal] = useState<boolean>(false);
   const [selectedReviewAppointment, setSelectedReviewAppointment] =
     useState<IAppointment | null>(null);
+  const [showPrescriptionModal, setShowPrescriptionModal] =
+    useState<boolean>(false);
+  const [selectedPrescription, setSelectedPrescription] =
+    useState<PrescriptionData | null>(null);
 
   const userId = localStorage.getItem("userId");
   const navigate = useNavigate();
@@ -707,49 +739,79 @@ const UserAppointments: React.FC = () => {
 
   const confirmReview = async (rating: number, description: string) => {
     if (!selectedReviewAppointment) return;
-    
+
     try {
       const { data } = await axiosInstance.patch(
         `/appointments/${selectedReviewAppointment._id}/review`,
         { rating, description }
       );
-      
+
       if (data.status) {
         setAppointments((prev) =>
           prev.map((appt) =>
-            appt._id === selectedReviewAppointment._id 
-              ? { 
-                  ...appt, 
-                  review: { 
-                    rating, 
-                    description 
-                  } 
-                } 
+            appt._id === selectedReviewAppointment._id
+              ? {
+                  ...appt,
+                  review: {
+                    rating,
+                    description,
+                  },
+                }
               : appt
           )
         );
-        
+
         setShowReviewModal(false);
         setSelectedReviewAppointment(null);
-        
+
         toast.success(data.message || "Review submitted successfully");
-        return Promise.resolve(); 
+        return Promise.resolve();
       } else {
         toast.error(data.message || "Error submitting review");
-        return Promise.reject(new Error(data.message)); 
+        return Promise.reject(new Error(data.message));
       }
     } catch (error: any) {
       console.error("Error submitting review:", error);
       toast.error(error.response?.data?.message || "Error submitting review");
-      return Promise.reject(error); 
+      return Promise.reject(error);
     }
   };
-  
 
   const handleViewDetails = (appointment: IAppointment) => {
     setSelectedAppointment(appointment);
     setShowDetailsModal(true);
   };
+
+  const handleViewPrescription = (appointment: IAppointment) => {
+    if (!appointment.prescription) return;
+  
+    // Ensure that appointment.prescription is an object
+    if (typeof appointment.prescription !== "object") return;
+  
+    const prescriptionObject = appointment.prescription as PrescriptionData;
+  
+    const prescriptionData: PrescriptionData = {
+      ...prescriptionObject,
+      doctor: {
+        name: appointment.doctorId.name,
+        // Extract only the name of the speciality
+        speciality: appointment.doctorId.speciality?.name || "",
+        phone: appointment.doctorId.phone || "",
+        email: appointment.doctorId.email || "",
+      },
+      patient: {
+        name: appointment.patientId?.name || "",
+        age: appointment.patientId?.age || 0,
+        gender: appointment.patientId?.gender || "",
+        phone: appointment.patientId?.phone || "",
+        email: appointment.patientId?.email || "",
+      },
+    };
+  
+    setSelectedPrescription(prescriptionData);
+    setShowPrescriptionModal(true);
+  };
+  
 
   const statusTabs = [
     { id: "pending", label: "Pending" },
@@ -957,6 +1019,14 @@ const UserAppointments: React.FC = () => {
                             ? "Edit Review"
                             : "Add Review"}
                         </button>
+                        {appointment.prescription && (
+                          <button
+                            onClick={() => handleViewPrescription(appointment)}
+                            className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-sm font-medium"
+                          >
+                            View Prescription
+                          </button>
+                        )}
                       </>
                     )}
                   </div>
@@ -1050,6 +1120,15 @@ const UserAppointments: React.FC = () => {
             setSelectedReviewAppointment(null);
           }}
           onSubmit={confirmReview}
+        />
+      )}
+      {showPrescriptionModal && selectedPrescription && (
+        <PrescriptionModal
+          prescription={selectedPrescription}
+          onClose={() => {
+            setShowPrescriptionModal(false);
+            setSelectedPrescription(null);
+          }}
         />
       )}
     </div>

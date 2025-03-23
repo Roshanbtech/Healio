@@ -6,6 +6,7 @@ export interface PaginationOptions {
   search?: string;
   speciality?: string;
   populate?: any;
+  select?: string;
 }
 
 export const paginate = async <T>(
@@ -39,6 +40,10 @@ export const paginate = async <T>(
   }
 
   let queryBuilder = model.find(query).skip(skip).limit(limit);
+  if (options.select) {
+    queryBuilder = queryBuilder.select(options.select);
+  }
+
   if (options.populate) {
     queryBuilder = queryBuilder.populate(options.populate);
   }

@@ -139,8 +139,7 @@ route.patch(
 route.get(
   "/appointments/doctor/:id",
   BookingControllerInstance.getDoctorAppointments.bind(
-    BookingControllerInstance
-  )
+    BookingControllerInstance)
 );
 
 route.patch(

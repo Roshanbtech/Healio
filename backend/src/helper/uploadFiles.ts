@@ -23,6 +23,29 @@ export class awsFileUpload {
     return uploadedCertificates;
   }
 
+  async uploadPrescriptionSignature(
+    doctorId: string,
+    signature: Express.Multer.File
+  ) {
+    console.log("Helper - Doctor ID:", doctorId);
+    const signatureKey = `doctor/signature/${doctorId}/`;
+    console.log("Helper - Signature Key:", signatureKey);
+
+    const uploadedKey = await this.awsConfig.uploadFileToS3(
+      signatureKey,
+      signature
+    );
+    console.log("Helper - Uploaded Key:", uploadedKey);
+
+    const signatureUrl = await this.awsConfig.getfile(
+      uploadedKey.split("/").pop()!,
+      signatureKey
+    );
+    console.log("Helper - Signature URL:", signatureUrl);
+
+    return signatureUrl.split("?")[0];
+  }
+
   async uploadDoctorProfileImage(
     doctorId: string,
     profilePicture: Express.Multer.File

@@ -5,6 +5,9 @@ import { AuthController } from "../controllers/doctor/auth";
 import { DoctorService } from "../services/doctor/doctor";
 import { DoctorController } from "../controllers/doctor/doctor";
 import { DoctorRepository } from "../repository/doctor/doctor";
+import { PrescriptionRepository } from "../repository/doctor/prescription";
+import { PrescriptionService } from "../services/doctor/prescription";
+import { PrescriptionController } from "../controllers/doctor/prescription";
 import { upload } from "../config/multerConfig";
 import verifyToken from "../helper/accessToken";
 
@@ -17,6 +20,10 @@ const AuthControllerInstance = new AuthController(AuthServiceInstance);
 const DoctorRepositoryInstance = new DoctorRepository();
 const DoctorServiceInstance = new DoctorService(DoctorRepositoryInstance);
 const DoctorControllerInstance = new DoctorController(DoctorServiceInstance);
+
+const PrescriptionRepositoryInstance = new PrescriptionRepository();
+const PrescriptionServiceInstance = new PrescriptionService(PrescriptionRepositoryInstance)
+const PrescriptionControllerInstance = new PrescriptionController(PrescriptionServiceInstance)
 
 // ____________  Doctor Public Auth Routes ____________ // No token required
 route.post(
@@ -139,6 +146,13 @@ route.patch(
 route.get(
   "/slots/:id",
   DoctorControllerInstance.getDoctorAvailableSlots.bind(DoctorControllerInstance)
+);
+
+//_____________ Prescription Route ____________ //
+route.post(
+  "/appointments/:appointmentId/prescription",
+  upload.single("signatureFile"),
+  PrescriptionControllerInstance.addPrescription.bind(PrescriptionControllerInstance)
 );
 
 //_____________ Doctor Dashboard ______________//

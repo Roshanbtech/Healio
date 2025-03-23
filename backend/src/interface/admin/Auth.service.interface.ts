@@ -1,4 +1,6 @@
 import { PaginationOptions } from "../../helper/pagination";
+import { IAppointment } from "../../model/appointmentModel";
+import { PaginatedResult } from "../../services/admin/auth";
 import { IAppointmentAnalytics, IDashboardStats, ITopDoctor, ITopUser } from "../adminInterface/dashboard"
 
 export interface IAuthService {
@@ -28,7 +30,12 @@ export interface IAuthService {
   getTopDoctors(): Promise<ITopDoctor[]>;
   getTopUsers(): Promise<ITopUser[]>;
   getAppointmentAnalytics(timeFrame: string): Promise<IAppointmentAnalytics[]>;
-}
+getReports(
+    startDate: Date,
+    endDate: Date,
+    status: string,
+    options: PaginationOptions
+  ): Promise<PaginatedResult<IAppointment>>}
 
 export type AdminType = {
   email: string;

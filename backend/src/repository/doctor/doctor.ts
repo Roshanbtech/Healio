@@ -219,8 +219,18 @@ export class DoctorRepository implements IDoctorRepository {
   async getAppointments(id: string): Promise<any> {
     try {
       const appointments = await AppointmentModel.find({ doctorId: id })
-        .populate('patientId', 'name email phone')  
-        .populate('doctorId', 'name specialty')  
+        .populate('patientId', 'name email phone age gender')
+        .populate({
+          path: 'doctorId',
+          select: 'name speciality',
+          populate: {
+            path: 'speciality',
+            model: 'Service',
+            select: 'name'
+          }
+        })
+        .populate('prescription', '_id diagnosis medicines labTests advice followUpDate doctorNotes signature createdAt updatedAt')
+        .sort({ date: -1 })
         .exec();
       return appointments;
     } catch (error: any) {
@@ -228,6 +238,7 @@ export class DoctorRepository implements IDoctorRepository {
       throw error;
     }
   }
+  
 
   async acceptAppointment(id: string): Promise<IAppointment | null>{
     try{

@@ -8,6 +8,8 @@ import Services from "../pages/adminPages/Services";
 import Coupons from "../pages/adminPages/Coupon";
 import ErrorBoundary from "../components/common/ErrorBoundary";
 import NotFound from "../pages/adminPages/NotFound";
+import ReportManagement from "../components/adminComponents/Reports";
+import AdminHome from "../components/adminComponents/AdminHome";
 
 const AdminRoutes = () => {
   return (
@@ -29,6 +31,12 @@ const AdminRoutes = () => {
         </Route>
         <Route element={<ProtectedRoute role="admin" />}>
           <Route path="/coupons" element={<Coupons />} />
+        </Route>
+        <Route element={<ProtectedRoute role="admin" />}>
+          <Route path="/reports" element={<ReportManagement />} />
+        </Route>
+        <Route element={<ProtectedRoute role="admin" />}>
+          <Route path="/adminHome" element={<AdminHome />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

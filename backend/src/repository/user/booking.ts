@@ -57,16 +57,17 @@ export class BookingRepository implements IBookingRepository {
     return (
       this.appointmentRepo
         .findAllQuery({ patientId: id })
-        .populate("patientId", "name email phone")
+        .populate("patientId", "name email phone age gender")
         .populate({
           path: "doctorId",
           select: "name image speciality",
           populate: {
             path: "speciality",
+            model: "Service",
             select: "name",
           },
         })
-        // .populate("prescription")
+        .populate("prescription", "_id diagnosis medicines labTests advice followUpDate doctorNotes signature createdAt updatedAt")
         .exec()
     );
   }

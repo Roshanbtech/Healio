@@ -6,9 +6,9 @@ import {
   UserCog,
   Wrench,
   Tag,
-  Star,
   LogOut,
   Menu,
+  File,
   X
 } from "lucide-react";
 import { assets } from "../../../assets/assets";
@@ -50,7 +50,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCollapse }) => {
     { icon: <UserCog />, label: "Doctors", path: "/admin/doctors" },
     { icon: <Wrench />, label: "Services", path: "/admin/services" },
     { icon: <Tag />, label: "Coupons", path: "/admin/coupons" },
-    { icon: <Star />, label: "Reviews", path: "/admin/reviews" },
+    { icon: <File />, label: "Reports", path: "/admin/reports" },
   ];
 
   const toggleCollapse = () => {

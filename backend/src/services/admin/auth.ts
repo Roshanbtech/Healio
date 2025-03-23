@@ -4,7 +4,18 @@ import { IAuthService } from "../../interface/admin/Auth.service.interface";
 import { IAuthRepository } from "../../interface/admin/Auth.repository.interface";
 import { PaginationOptions } from "../../helper/pagination";
 import { IDashboardStats, ITopDoctor, ITopUser, IAppointmentAnalytics } from "../../interface/adminInterface/dashboard";
+import { IAppointment } from "../../model/appointmentModel";
 config();
+export interface PaginatedResult<T> {
+  data: T[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
 
 export class AuthService implements IAuthService {
   private AuthRepository: IAuthRepository;
@@ -316,5 +327,20 @@ export class AuthService implements IAuthService {
       throw new Error(error.message);
     }
    }
+
+   async getReports(
+    startDate: Date,
+    endDate: Date,
+    status: string,
+    options: PaginationOptions
+  ): Promise<PaginatedResult<IAppointment>> {
+    try {
+      return await this.AuthRepository.fetchReports(startDate, endDate, status, options);
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+  
+   
   
 }

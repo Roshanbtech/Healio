@@ -97,4 +97,10 @@ route.patch(
   AuthControllerInstance.editCoupon.bind(AuthControllerInstance)
 );
 
+//___________________Report management____________________//
+route.get(
+  "/reports",
+  AuthControllerInstance.getReports.bind(AuthControllerInstance)
+);
+
 export default route;

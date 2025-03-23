@@ -5,7 +5,7 @@ import couponModel from "../../model/couponModel";
 import { paginate, PaginationOptions } from "../../helper/pagination";
 import { IAuthRepository } from "../../interface/admin/Auth.repository.interface";
 import sendMail from "../../config/emailConfig";
-import AppointmentModel from "../../model/appointmentModel";
+import AppointmentModel, { IAppointment } from "../../model/appointmentModel";
 import { IDashboardStats, ITopDoctor, ITopUser, IAppointmentAnalytics } from "../../interface/adminInterface/dashboard";
 
 export class AuthRepository implements IAuthRepository {
@@ -296,7 +296,6 @@ Team Healio`;
   async fetchAppointmentAnalytics(timeFrame: string): Promise<IAppointmentAnalytics[]> {
     try {
       if (timeFrame === "weekly") {
-        // Group by the day of week (1 = Sunday, ..., 7 = Saturday)
         const analytics = await AppointmentModel.aggregate([
           {
             $group: {
@@ -349,8 +348,46 @@ Team Healio`;
       throw new Error(error.message);
     }
   }
+
+  async fetchReports(
+    startDate: Date,
+    endDate: Date,
+    status: string,
+    options: PaginationOptions
+  ): Promise<{
+    data: IAppointment[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  }> {
+    try {
+      const query: Record<string, any> = {
+        createdAt: { $gte: startDate, $lte: endDate },
+        status: { $in: ["completed", "cancelled"] }
+      };
+  
+      if (status) {
+        query.status = status;
+      }
+  
+      // Add the select field in the options
+      const paginatedResult = await paginate(AppointmentModel, {
+        ...options,
+        select: 'appointmentId date time status fees paymentMethod paymentStatus couponCode couponDiscount isApplied createdAt updatedAt',
+        populate: [
+          { path: "doctorId", select: "name email phone docStatus fees averageRating" },
+          { path: "patientId", select: "name email phone address" }
+        ]
+      }, query);
+  
+      return paginatedResult;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
   
   
-
-
 }
