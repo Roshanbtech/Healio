@@ -1,17 +1,21 @@
 import { GenericRepository } from "../GenericRepository";
 import CouponModel, { ICoupon } from "../../model/couponModel";
 import AppointmentModel, { IAppointment } from "../../model/appointmentModel";
+import UserModel, { Iuser } from "../../model/userModel";
 import { IBookingRepository } from "../../interface/user/Booking.repository.interface";
 
 export class BookingRepository implements IBookingRepository {
   private couponRepo: GenericRepository<ICoupon>;
   private appointmentRepo: GenericRepository<IAppointment>;
+  private userRepo: GenericRepository<Iuser>;
+  
 
   constructor() {
     this.couponRepo = new GenericRepository<ICoupon>(CouponModel);
     this.appointmentRepo = new GenericRepository<IAppointment>(
       AppointmentModel
     );
+    this.userRepo = new GenericRepository<Iuser>(UserModel);
   }
 
   async getCoupons(): Promise<ICoupon[]> {
@@ -34,6 +38,38 @@ export class BookingRepository implements IBookingRepository {
   async bookAppointment(data: Partial<IAppointment>): Promise<any> {
     return this.appointmentRepo.create(data);
   }
+
+  async bookAppointmentUsingWallet(data: IAppointment): Promise<IAppointment> {
+    try {
+      const patient = await this.userRepo.findById(data.patientId as unknown as string);
+      if (!patient) {
+        throw new Error("Patient not found");
+      }
+      if (patient.wallet?.balance === undefined || data.fees === undefined) {
+        throw new Error("Invalid data");
+      }
+      if (patient.wallet.balance < data.fees) {
+        throw new Error("Insufficient balance");
+      }
+      const newBalance = patient.wallet.balance - data.fees;
+      const newTransaction = {
+        amount: data.fees,
+        transactionType: "debit" as "debit",
+        description: "Deducted for appointment booking using wallet",
+        date: new Date(),
+      };
+      const updatedTransactions = [...(patient.wallet.transactions || []), newTransaction];
+      await this.userRepo.update(String(patient._id), {
+        wallet: { balance: newBalance, transactions: updatedTransactions },
+      });
+      const newAppointment = await this.appointmentRepo.create(data);
+      return newAppointment;
+    } catch (error: any) {
+      console.error("Error in bookAppointmentUsingWallet:", error);
+      throw error;
+    }
+  }
+  
 
   async findAppointmentByPatientId(
     appointmentId: string

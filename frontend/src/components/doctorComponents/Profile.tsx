@@ -132,7 +132,7 @@ const Profile: React.FC = () => {
       const formData = new FormData();
 
       for (const key in editProfile) {
-        if (["image", "wallet", "isBlocked"].includes(key)) continue;
+        if (["image", "wallet", "isBlocked", "__v"].includes(key)) continue;
         
         if (key === "speciality") {
           const specialityObj = editProfile.speciality as any;

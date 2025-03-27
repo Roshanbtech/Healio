@@ -110,6 +110,30 @@ export class BookingController {
     }
   }
 
+  async retryPayment(req: Request, res: Response): Promise<any> {
+    try{
+      const {bookingId} = req.params;
+      if(!bookingId){
+        return res.status(HTTP_statusCode.BadRequest).json({
+          status: false,
+          message: "Booking ID is required.",
+        });
+      }
+      const appointment = await this.bookingService.retryPayment(bookingId);
+      return res.status(HTTP_statusCode.OK).json({
+        status: true,
+        message: "Payment retried successfully.",
+        appointment,
+      });
+    }catch(error : any){
+      console.log("Error in retryPayment:", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: "Something went wrong, please try again later.",
+      });
+    }
+  }
+
   async getPatientAppointments(req: Request, res: Response): Promise<any> {
     try {
       const { id } = req.params;
@@ -129,6 +153,37 @@ export class BookingController {
       return res.status(HTTP_statusCode.InternalServerError).json({
         status: false,
         message: "Something went wrong, please try again later.",
+      });
+    }
+  }
+
+  async bookAppointmentUsingWallet(req: Request, res: Response): Promise<any> {
+    try{
+      const { patientId, doctorId, date, time, fees, isApplied, couponCode, couponDiscount, paymentMethod } = req.body;
+      const data = {
+        patientId,
+        doctorId,
+        date,
+        time,
+        fees,
+        isApplied,
+        couponCode,
+        couponDiscount,
+        paymentMethod,
+        status : "pending" as "pending",
+        paymentStatus : "payment completed" as "payment completed",
+      } as IAppointment;
+      const appointment = await this.bookingService.bookAppointmentUsingWallet(data);
+      return res.status(HTTP_statusCode.OK).json({
+        status: true,
+        message: "Appointment booked successfully.",
+        appointment,
+      });
+    }catch(error:any){
+      console.error("Error in bookAppointmentUsingWallet:", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: error.message || "Something went wrong, please try again later.",
       });
     }
   }

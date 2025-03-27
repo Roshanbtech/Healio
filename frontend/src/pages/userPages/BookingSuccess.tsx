@@ -5,6 +5,12 @@ import SuccessPage from "../../components/userComponents/BookingSuccess";
 const BookingSuccess: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+
+  if (!location.state) {
+    navigate("/home");
+    return null;
+  }
+
   const {
     transactionId,
     amount,
@@ -15,33 +21,35 @@ const BookingSuccess: React.FC = () => {
     doctorName,
     appointmentTime,
     healioLogo,
-  } = location.state || {};
-
-  // Fallback if state is missing
-  if (!transactionId) {
-    navigate("/home");
-    return null;
-  }
+  } = location.state as {
+    transactionId: string;
+    amount: string;
+    date: string;
+    patientName: string;
+    email: string;
+    address: string;
+    doctorName?: string;
+    appointmentTime?: string;
+    healioLogo?: string;
+  };
 
   const handleBackToHome = () => {
-    navigate("/home");
+    navigate("/appointments");
   };
 
   return (
-    <div>
-      <SuccessPage
-        transactionId={transactionId}
-        amount={amount}
-        date={date}
-        patientName={patientName}
-        email={email}
-        address={address}
-        doctorName={doctorName}
-        appointmentTime={appointmentTime}
-        onBackToHome={handleBackToHome}
-        healioLogo={healioLogo}
-      />
-    </div>
+    <SuccessPage
+      transactionId={transactionId}
+      amount={amount}
+      date={date}
+      patientName={patientName}
+      email={email}
+      address={address}
+      doctorName={doctorName}
+      appointmentTime={appointmentTime}
+      onBackToHome={handleBackToHome}
+      healioLogo={healioLogo}
+    />
   );
 };
 

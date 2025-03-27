@@ -14,6 +14,7 @@ export interface IBookingRepository {
   getCoupons(): Promise<ICoupon[]>;
   findConflictingAppointments(doctorId: string, date: Date, time: string): Promise<IAppointment[]>;
   bookAppointment(data: Partial<IAppointment>): Promise<any>;
+  bookAppointmentUsingWallet(data: Partial<IAppointment>): Promise<IAppointment>;
   findAppointmentByPatientId(appointmentId: string): Promise<IAppointment | null>;
   updateByAppointmentId(appointmentId: string, data: Partial<IAppointment>): Promise<IAppointment | null>;
   getPatientAppointments(id: string): Promise<IAppointment[]>;

@@ -70,12 +70,12 @@ export class BookingService implements IBookingService {
         doctorId: appointmentData.doctorId,
         date: appointmentData.date,
         time: appointmentData.time,
-        status: "pending",
+        status: "failed",
         fees: appointmentData.fees,
         paymentMethod: appointmentData.paymentMethod || "razorpay",
         paymentStatus:
           appointmentData.fees && appointmentData.paymentMethod === "razorpay"
-            ? "payment pending"
+            ? "payment failed"
             : "anonymous",
         couponCode: appointmentData.couponCode,
         couponDiscount: appointmentData.couponDiscount,
@@ -163,6 +163,56 @@ export class BookingService implements IBookingService {
     }
   }
 
+  
+    async retryPayment(id: string): Promise<any>{
+     try{
+      const appointment = await this.bookingRepository.findAppointmentById(id);
+      if(!appointment){
+        throw new Error("Appointment not found");
+      }
+      // const conflictingAppointments =
+      //   await this.bookingRepository.findConflictingAppointments(
+      //     appointment.doctorId.toString(),
+      //     appointment.date,
+      //     appointment.time
+      //   );
+
+      // if (conflictingAppointments.length > 0) {
+      //   throw new Error("Doctor already has an appointment at this time");
+      // }
+      if(!appointment.fees){
+        throw new Error("Fees not found for this appointment");
+      }
+      const options = {
+        amount: appointment.fees * 100,
+        currency: "INR",
+        receipt: `receipt_appointment_${Math.floor(Math.random() * 1000)}`,
+        payment_capture: 1,
+      };
+    
+      const order = await razorPayInstance.orders.create(options);
+      return order;
+     }catch(error: any){
+      throw new Error(error.message);
+     }
+    }
+
+  async bookAppointmentUsingWallet(data: IAppointment): Promise<IAppointment> {
+    try {
+      const appointmentId = `APT${Date.now().toString().slice(-5)}${Math.floor(Math.random() * 10)}`;
+      const appointmentData: Partial<IAppointment> = { ...data, appointmentId };
+      const appointment = await this.bookingRepository.bookAppointmentUsingWallet(appointmentData);
+      await this.doctorRepository.updateWalletTransaction(appointment.doctorId.toString(), appointment.fees || 0, appointmentId);
+      return appointment;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("An unexpected error occurred while booking the appointment.");
+    }
+  }
+  
+
   async addMedicalRecord(
     appointmentId: string,
     newMedicalRecord: any
@@ -245,19 +295,6 @@ export class BookingService implements IBookingService {
       throw new Error(error.message);
     }
   }
-
-  // async addReviewForDoctor(id: string, rating: number, description: string): Promise<IAppointment | null>{
-  //   try{
-  //     const updatedAppointment = await this.bookingRepository.addReviewForDoctor(id, rating, description);
-  //     if(updatedAppointment){
-  //       const doctorId = updatedAppointment.doctorId.toString();
-  //       await this.doctorRepository.updateDoctorAggregatedReview(doctorId);
-  //     }
-  //     return updatedAppointment
-  //   }catch(error: any){
-  //     throw new Error(error.message);
-  //   }
-  // }
 
   async addReviewForDoctor(
     id: string,

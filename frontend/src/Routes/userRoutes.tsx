@@ -18,6 +18,7 @@ import Success from "../pages/userPages/BookingSuccess";
 import UserAppointments from "../components/userComponents/AppointmentList";
 import Wallet from "../components/userComponents/Wallet";
 import About from "../components/common/userCommon/About";
+import ContactPage from "../components/common/userCommon/Contact";
 import ErrorBoundary from "../components/common/ErrorBoundary";
 import NotFound from "../pages/userPages/NotFound";
 // import Landing from "../pages/userPages/Landing";
@@ -70,6 +71,7 @@ const UserRoutes = () => {
           <Route path="/appointments" element={<UserAppointments />} />
           <Route path="/wallet" element={<Wallet />} />
           <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<ContactPage />} />
         </Route>
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />

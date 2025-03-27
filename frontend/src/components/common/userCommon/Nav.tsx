@@ -1,35 +1,40 @@
-import { useState, useEffect } from "react";
-import { assets } from "../../../assets/assets";
+import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import axiosInstance from "../../../utils/axiosInterceptors";
 import { toast } from "react-toastify";
+import { assets } from "../../../assets/assets";
 
-const Navbar = () => {
+const Navbar: React.FC = () => {
   const navigate = useNavigate();
-  const [token, setToken] = useState(() => localStorage.getItem("authToken"));
-  const [userImage, setUserImage] = useState(() => localStorage.getItem("image"));
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem("authToken"));
+  const [userImage, setUserImage] = useState<string | null>(() => localStorage.getItem("image"));
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
 
   useEffect(() => {
     setToken(localStorage.getItem("authToken"));
     setUserImage(localStorage.getItem("image"));
   }, []);
 
-  const handleLogout = async () => {
+  const handleLogout = async (): Promise<void> => {
     try {
-      await axiosInstance.post("/logout");
-      toast.success("Logout successful");
-    } catch (error) {
-      console.error("Logout failed:", error);
+      const response = await axiosInstance.post<{ message?: string }>("/logout");
+      toast.success(response.data.message || "Logout successful");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Logout failed:", error.message);
+      } else {
+        console.error("An unexpected error occurred during logout");
+      }
+      toast.error("Logout failed. Please try again.");
     }
-
     localStorage.clear();
     setToken(null);
     setUserImage(null);
     navigate("/login");
   };
 
-  // Active link style handler
-  const activeStyle = ({ isActive }: { isActive: boolean }) => ({
+  const activeStyle = ({ isActive }: { isActive: boolean }): React.CSSProperties => ({
     borderBottom: isActive ? "2px solid #dc2626" : "none",
     paddingBottom: "4px",
     transition: "border-color 0.3s ease",
@@ -48,41 +53,29 @@ const Navbar = () => {
       {/* Navigation Links */}
       <ul className="hidden md:flex items-start gap-8 font-medium">
         <NavLink to="/home">
-          {({ isActive }) => (
-            <li 
-              className="py-1 text-green-900 relative"
-              style={activeStyle({ isActive })}
-            >
+          {({ isActive }: { isActive: boolean }) => (
+            <li className="py-1 text-green-900 relative" style={activeStyle({ isActive })}>
               HOME
             </li>
           )}
         </NavLink>
         <NavLink to="/doctors">
-          {({ isActive }) => (
-            <li 
-              className="py-1 text-green-900"
-              style={activeStyle({ isActive })}
-            >
+          {({ isActive }: { isActive: boolean }) => (
+            <li className="py-1 text-green-900" style={activeStyle({ isActive })}>
               ALL DOCTORS
             </li>
           )}
         </NavLink>
         <NavLink to="/about">
-          {({ isActive }) => (
-            <li 
-              className="py-1 text-green-900"
-              style={activeStyle({ isActive })}
-            >
+          {({ isActive }: { isActive: boolean }) => (
+            <li className="py-1 text-green-900" style={activeStyle({ isActive })}>
               ABOUT
             </li>
           )}
         </NavLink>
         <NavLink to="/contact">
-          {({ isActive }) => (
-            <li 
-              className="py-1 text-green-900"
-              style={activeStyle({ isActive })}
-            >
+          {({ isActive }: { isActive: boolean }) => (
+            <li className="py-1 text-green-900" style={activeStyle({ isActive })}>
               CONTACT
             </li>
           )}
@@ -92,39 +85,71 @@ const Navbar = () => {
       {/* User Profile/Login Section */}
       <div className="flex items-center gap-2">
         {token ? (
-          <div className="flex items-center gap-2 cursor-pointer group relative">
-            {/* Profile Picture */}
-            <img
-              className="w-16 h-16 rounded-full border-2 border-red-600 object-cover"
-              src={userImage || assets.userDefault1}
-              alt="Profile"
-            />
-            {/* Dropdown Icon */}
-            <img className="w-2.5" src={assets.dropdown_icon} alt="Dropdown" />
+          <div className="relative">
+            <motion.div
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <img
+                className="w-16 h-16 rounded-full border-2 border-gray-300 object-cover shadow-md transition-all duration-300 hover:shadow-lg"
+                src={userImage || assets.userDefault1}
+                alt="Profile"
+              />
+              <motion.img
+                animate={{ rotate: isDropdownOpen ? 180 : 0 }}
+                className="w-2.5 transition-transform"
+                src={assets.dropdown_icon}
+                alt="Dropdown"
+              />
+            </motion.div>
 
-            {/* Dropdown Menu */}
-            <div className="absolute top-0 right-0 pt-14 text-base font-medium text-gray-600 z-20 hidden group-hover:block">
-              <div className="min-w-48 bg-stone-100 rounded flex flex-col gap-4 p-4 border border-green-400">
-                <p
-                  onClick={() => navigate("/profile")}
-                  className="hover:text-red-600 cursor-pointer"
+            <AnimatePresence>
+              {isDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute top-full right-0 mt-4 text-base font-medium text-gray-700 z-20"
                 >
-                  My Profile
-                </p>
-                <p
-                  onClick={() => navigate("appointments")}
-                  className="hover:text-red-600 cursor-pointer"
-                >
-                  My Appointments
-                </p>
-                <p
-                  onClick={handleLogout}
-                  className="hover:text-red-600 cursor-pointer"
-                >
-                  Logout
-                </p>
-              </div>
-            </div>
+                  <div className="min-w-[12rem] bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
+                    <motion.div 
+                      className="flex flex-col"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ staggerChildren: 0.1 }}
+                    >
+                      {[
+                        { label: "My Profile", path: "/profile" },
+                        { label: "My Appointments", path: "/appointments" },
+                        { label: "Logout", action: handleLogout }
+                      ].map((item, index) => (
+                        <motion.p
+                          key={item.label}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          whileHover={{ 
+                            backgroundColor: "#fff1f1", 
+                            color: "#dc2626", 
+                            paddingLeft: "1rem" 
+                          }}
+                          onClick={() => {
+                            setIsDropdownOpen(false);
+                            item.path ? navigate(item.path) : item.action && item.action();
+                          }}
+                          className="px-4 py-3 cursor-pointer transition-all duration-300 hover:bg-red-50"
+                        >
+                          {item.label}
+                        </motion.p>
+                      ))}
+                    </motion.div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         ) : (
           <button

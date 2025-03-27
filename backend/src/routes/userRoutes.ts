@@ -121,6 +121,17 @@ route.post(
   "/verifyBooking",
   BookingControllerInstance.verifyBooking.bind(BookingControllerInstance)
 );
+route.post(
+  "/retryPayment/:bookingId",
+  BookingControllerInstance.retryPayment.bind(BookingControllerInstance)
+);
+
+route.post(
+  "/bookings/wallet",
+  BookingControllerInstance.bookAppointmentUsingWallet.bind(
+    BookingControllerInstance
+  )
+)
 route.get(
   "/appointments/:id",
   BookingControllerInstance.getPatientAppointments.bind(

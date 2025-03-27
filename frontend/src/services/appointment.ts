@@ -20,3 +20,12 @@ export const verifyAppointment = async (response: any, data: any) => {
         console.log(err);
     }
 }
+
+export const bookAppointmentUsingWallet = async (data: any) => {
+    try{
+        const response = await axiosInstance.post("/bookings/wallet", data);
+        return response.data
+    }catch(err: any){
+        console.log(err);
+    }
+}

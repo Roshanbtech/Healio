@@ -223,7 +223,7 @@ export class AuthController {
         sameSite: "strict",
         path: "/",
       });
-      res.status(HTTP_statusCode.OK).json({ status: true, message: "Logout" });
+      res.status(HTTP_statusCode.OK).json({ status: true, message: "Logout successful" });
     } catch (error) {
       console.error(error);
       res
