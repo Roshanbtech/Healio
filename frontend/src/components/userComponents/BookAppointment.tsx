@@ -124,7 +124,7 @@
 
 //   const handleProceed = async () => {
 //     const user = localStorage.getItem("userId");
-  
+
 //     const data = {
 //       currency: "INR",
 //       fees: paymentBreakdown.payable,
@@ -137,9 +137,9 @@
 //       couponDiscount: appliedCoupon ? appliedCoupon.discount : null,
 //       paymentMethod: selectedPayment,
 //     };
-  
+
 //     console.log("Selected Date & Time:", data.date, data.time);
-  
+
 //     try {
 //       let appointment;
 //       if (selectedPayment === "wallet") {
@@ -177,16 +177,16 @@
 //           }
 //           toast.error(errorMessage);
 //         }
-        
+
 //       }
-      
+
 //       else if (selectedPayment === "razorpay") {
 //         appointment = await createAppointment(data);
 //         if (!appointment) {
 //           toast.error("Failed to create order. Try again.");
 //           return;
 //         }
-//         console.log("Order Data:", appointment); 
+//         console.log("Order Data:", appointment);
 //         openRazorpay(appointment?.appointment?.order);
 //       } else {
 //         return;
@@ -197,7 +197,6 @@
 //       toast.error(errorMessage);
 //     }
 //   };
-  
 
 //   const routeData = {
 //     patientId: localStorage.getItem("userId"),
@@ -684,7 +683,7 @@ const BookAppointment: React.FC = () => {
     consultingFees,
     taxCharges: 100,
     discount: discountAmount,
-    payable: (consultingFees + 100) - discountAmount,
+    payable: consultingFees + 100 - discountAmount,
   };
 
   const fetchDoctorDetails = async () => {
@@ -860,6 +859,9 @@ const BookAppointment: React.FC = () => {
       theme: {
         color: string;
       };
+      modal?: {
+        ondismiss?: () => void;
+      };
     }
     if (!window.Razorpay) {
       toast.error("Razorpay SDK not loaded. Please try again.");
@@ -890,6 +892,11 @@ const BookAppointment: React.FC = () => {
             healioLogo: assets.logo,
           };
           navigate("/success", { state: successData });
+        } else {
+          toast.error("Payment failed. Redirecting to your appointments.");
+          setTimeout(() => {
+            navigate("/appointments");
+          }, 1500);
         }
       },
       prefill: {
@@ -898,6 +905,14 @@ const BookAppointment: React.FC = () => {
       },
       theme: {
         color: "#dc2626",
+      },
+      modal: {
+        ondismiss: () => {
+          toast.error("Payment cancelled. Redirecting to your appointments.");
+          setTimeout(() => {
+            navigate("/appointments");
+          }, 1500);
+        },
       },
     };
     const rzp = new window.Razorpay(options);
