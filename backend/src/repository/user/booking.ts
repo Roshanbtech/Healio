@@ -22,6 +22,27 @@ export class BookingRepository implements IBookingRepository {
     return this.couponRepo.findAll({ isActive: true });
   }
 
+  async delCoupons(id: string): Promise<boolean> {
+    try{
+      const coupon = await this.couponRepo.findById(id);
+      if (!coupon) {
+        throw new Error("Coupon not found");
+      }
+      const couponUsedCount = await this.appointmentRepo.countDocuments({couponCode: coupon.code});
+      if (couponUsedCount < 50) {
+        throw new Error("Coupon cannot be deleted as it has been used in appointments");
+      }
+      const result = await this.couponRepo.delete(id);
+      if (!result) {
+        throw new Error("Failed to delete coupon");
+      }
+      return true;
+    }catch(error){
+      console.error("Error in delCoupons:", error);
+      throw error;
+    }
+  }
+
   async findConflictingAppointments(
     doctorId: string,
     date: Date,

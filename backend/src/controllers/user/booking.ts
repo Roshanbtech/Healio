@@ -23,6 +23,25 @@ export class BookingController {
     }
   }
 
+  async delCoupons(req: Request, res: Response): Promise<any>{
+    try{
+      const { id } = req.params;
+      const coupon = await this.bookingService.delCoupons(id);
+      return res.status(HTTP_statusCode.OK).json({
+        status: true,
+        message: "Coupon deleted successfully",
+      });
+    }catch(error:any){
+      console.error("Error in delCoupons:", error);
+      return res.status(HTTP_statusCode.InternalServerError).json({
+        status: false,
+        message: "Something went wrong, please try again later.",
+      });
+    }
+  }
+
+  
+
   async bookAppointment(req: Request, res: Response): Promise<any> {
     try {
       const {

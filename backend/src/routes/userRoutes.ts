@@ -113,6 +113,11 @@ route.get(
   BookingControllerInstance.getCoupons.bind(BookingControllerInstance)
 );
 
+route.delete(
+  "/coupons/:id/delete",
+  BookingControllerInstance.delCoupons.bind(BookingControllerInstance)
+)
+
 route.post(
   "/bookings",
   BookingControllerInstance.bookAppointment.bind(BookingControllerInstance)

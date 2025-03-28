@@ -12,6 +12,7 @@ import { IAppointment } from "../../model/appointmentModel";
 
 export interface IBookingRepository {
   getCoupons(): Promise<ICoupon[]>;
+  delCoupons(id: string): Promise<boolean>;
   findConflictingAppointments(doctorId: string, date: Date, time: string): Promise<IAppointment[]>;
   bookAppointment(data: Partial<IAppointment>): Promise<any>;
   bookAppointmentUsingWallet(data: Partial<IAppointment>): Promise<IAppointment>;

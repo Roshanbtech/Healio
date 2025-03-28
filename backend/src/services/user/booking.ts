@@ -28,6 +28,14 @@ export class BookingService implements IBookingService {
     }
   }
 
+  async delCoupons(id: string): Promise<boolean> {
+    try{
+      return await this.bookingRepository.delCoupons(id);
+    }catch(error: any){
+      throw new Error(error.message);
+    }
+  }
+
   async bookAppointment(appointmentData: IAppointment): Promise<any> {
     try {
       // Check for conflicting appointments
@@ -109,11 +117,10 @@ export class BookingService implements IBookingService {
         razorpay_payment_id,
         razorpay_signature
       );
-
+      console.log("bookingid", bookingId);
       const appointment =
         await this.bookingRepository.findAppointmentByPatientId(bookingId);
       console.log("2");
-
       if (!appointment) {
         throw new Error("Appointment not found");
       }
@@ -166,7 +173,7 @@ export class BookingService implements IBookingService {
   
     async retryPayment(id: string): Promise<any>{
      try{
-      const appointment = await this.bookingRepository.findAppointmentById(id);
+      const appointment = await this.bookingRepository.findAppointmentByPatientId(id);
       if(!appointment){
         throw new Error("Appointment not found");
       }

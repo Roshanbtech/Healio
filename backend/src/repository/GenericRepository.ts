@@ -46,6 +46,10 @@ export class GenericRepository<T extends Document> {
   async updateWithOperators(id: string, data: UpdateQuery<T>): Promise<T | null> {
     return this.model.findOneAndUpdate({ _id: id }, data, { new: true }).exec();
   }
+
+  async countDocuments(filter: FilterQuery<T> = {}): Promise<number> {
+    return this.model.countDocuments(filter).exec();
+  }
 }
 
 

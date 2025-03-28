@@ -1,6 +1,7 @@
 import { IAppointment } from "../../model/appointmentModel";
 export interface IBookingService {
     getCoupons(): Promise<any>;
+    delCoupons(id: string): Promise<boolean>;
     bookAppointment(data: IAppointment): Promise<any>;
     verifyBooking(data: any): Promise<IAppointment>;
     retryPayment(id: string): Promise<any>;

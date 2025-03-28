@@ -225,7 +225,7 @@ const Home: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <motion.button 
+              {/* <motion.button 
                 className="p-2 rounded-full bg-white shadow-md hover:bg-gray-100 transition-colors relative"
                 whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
                 whileTap={{ scale: 0.95 }}
@@ -247,7 +247,7 @@ const Home: React.FC = () => {
                 >
                   2
                 </motion.span>
-              </motion.button>
+              </motion.button> */}
               <motion.div 
                 className="flex items-center bg-white p-2 pr-4 rounded-full shadow-md"
                 whileHover={{ scale: 1.03, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)" }}

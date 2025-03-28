@@ -5,6 +5,7 @@ import SuccessPage from "../../components/userComponents/BookingSuccess";
 const BookingSuccess: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  console.log("Location state:", location.state);
 
   if (!location.state) {
     navigate("/home");

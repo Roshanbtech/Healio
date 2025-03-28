@@ -2005,17 +2005,18 @@ const UserAppointments: React.FC = () => {
         const verify = await verifyAppointment(response, routeData);
         if (verify.status) {
           toast.success("Payment successful!");
-          const successData: SuccessData = {
-            transactionId: response.razorpay_payment_id,
-            amount: paymentBreakdown.payable.toString(),
-            date: new Date().toLocaleString(),
-            patientName: userProfile?.name || "John Doe",
-            email: userProfile?.email || "john.doe@example.com",
-            address: userProfile?.address || "123 Main Street, City",
-            doctorName: doctorName,
-            appointmentTime: selectedTime?.slot,
-            healioLogo: assets.logo,
-          };
+          const successData = {
+                     transactionId: response.razorpay_payment_id,
+                     amount: verify.fees,
+                     date: new Date().toLocaleString(),
+                     patientName: userProfile?.name || "John Doe",
+                     email: userProfile?.email || "john.doe@example.com",
+                     address: userProfile?.address || "123 Main Street, City",
+                     doctorName: docInfo?.name,
+                     appointmentTime: selectedTime?.slot,
+                     healioLogo: assets.logo,
+                   };
+          localStorage.removeItem("bookingId");
           navigate("/success", { state: successData });
         }
       },
@@ -2033,6 +2034,7 @@ const UserAppointments: React.FC = () => {
 
   const handleRetryPayment = async (bookingId: string, doctorName: string) => {
     try {
+      localStorage.setItem("bookingId", bookingId);
       const response = await axiosInstance.post(`/retryPayment/${bookingId}`);
       if (response.data.status) {
         const order: OrderData = response.data.appointment;
@@ -2219,7 +2221,7 @@ const UserAppointments: React.FC = () => {
                       <button
                         onClick={() =>
                           handleRetryPayment(
-                            appointment._id,
+                            appointment.appointmentId,
                             appointment.doctorId?.name || "Doctor"
                           )
                         }
