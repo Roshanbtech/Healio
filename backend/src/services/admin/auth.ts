@@ -96,9 +96,9 @@ export class AuthService implements IAuthService {
     }
   }
 
-  async getDoctor(): Promise<any> {
+  async getDoctor(options: PaginationOptions): Promise<any> {
     try {
-      const doctors = await this.AuthRepository.getAllDoctors();
+      const doctors = await this.AuthRepository.getAllDoctors(options);
       if (!doctors) {
         return null;
       }

@@ -1,3 +1,4 @@
+import { l } from "vite/dist/node/types.d-aGj9QkWt";
 import HTTP_statusCode from "../../enums/httpStatusCode";
 import { IAuthService } from "../../interface/admin/Auth.service.interface";
 import { Request, Response } from "express";
@@ -106,7 +107,14 @@ export class AuthController {
 
   async getDoctorList(req: Request, res: Response): Promise<any> {
     try {
-      const doctorList = await this.authService.getDoctor();
+      const options = {
+        page: parseInt(req.query.page as string, 10) || 1,
+        limit: parseInt(req.query.limit as string, 10) || 10,
+        search: req.query.search as string,
+        speciality: req.query.category as string,
+        status: req.query.status as string,
+      }
+      const doctorList = await this.authService.getDoctor(options);
       return res.status(HTTP_statusCode.OK).json({ status: true, doctorList });
     } catch (error: any) {
       console.error("Error in getDoctorList:", error);

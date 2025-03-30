@@ -3,12 +3,12 @@ import jwt from "jsonwebtoken";
 import HTTP_statusCode from "../enums/httpStatusCode";
 
 const refresh = (req: Request, res: Response): any => {
-  console.log("Incoming Cookies Object:", req.cookies); // Debugging all cookies
+  console.log("Incoming Cookies Object:", req.cookies); 
   const refreshToken = req.cookies.refreshToken;
   console.log("Extracted Refresh Token:", refreshToken);
 
   if (!refreshToken) {
-    console.log("No refresh token received!"); // Log if token is missing
+    console.log("No refresh token received!"); 
     return res.status(HTTP_statusCode.Unauthorized).json({
       status: false,
       message: "Unauthorized. No refresh token found.",

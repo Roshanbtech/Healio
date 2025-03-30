@@ -30,12 +30,14 @@ export class AuthRepository implements IAuthRepository {
     }
   }
 
-  async getAllDoctors(): Promise<any> {
+  async getAllDoctors(options: PaginationOptions): Promise<any> {
     try {
-      const doctors = await doctorModel
-        .find()
-        .populate({ path: "speciality", model: "Service", select: "name" })
-        .lean();
+      const paginationOptions: PaginationOptions = {
+        ...options,
+        populate: { path: "speciality", model: "Service", select: "name" },
+      };
+  
+      const doctors = await paginate(doctorModel, paginationOptions, {});
       return doctors;
     } catch (error: any) {
       throw new Error(error.message);

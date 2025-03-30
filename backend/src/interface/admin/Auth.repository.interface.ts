@@ -22,7 +22,7 @@ export interface Coupon {
 export interface IAuthRepository {
   logout(refreshToken: string): Promise<any>;
   getAllUsers(options:PaginationOptions): Promise<UserProfile[]>;
-  getAllDoctors(): Promise<DoctorResult[]>;
+  getAllDoctors(options:PaginationOptions): Promise<DoctorResult[]>;
   toggleUser(id: string): Promise<any>;
   toggleDoctor(id: string): Promise<any>;
   getAllServices(): Promise<Service[]>;

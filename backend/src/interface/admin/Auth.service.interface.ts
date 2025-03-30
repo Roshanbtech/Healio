@@ -12,7 +12,7 @@ export interface IAuthService {
   >;
   logout(refreshToken: string): Promise<any>;
   getUser(options:PaginationOptions): Promise<any>;
-  getDoctor(): Promise<any>;
+  getDoctor(options:PaginationOptions): Promise<any>;
   toggleUser(id: string): Promise<any>;
   toggleDoctor(id: string): Promise<any>;
   getService(): Promise<any>;

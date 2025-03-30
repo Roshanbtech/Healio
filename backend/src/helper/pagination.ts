@@ -5,6 +5,7 @@ export interface PaginationOptions {
   limit?: number;
   search?: string;
   speciality?: string;
+  status?: string;
   populate?: any;
   select?: string;
 }
@@ -25,7 +26,6 @@ export const paginate = async <T>(
   const page = options.page && options.page > 0 ? options.page : 1;
   const limit = options.limit && options.limit > 0 ? options.limit : 10;
   const skip = (page - 1) * limit;
-
   const query: Record<string, any> = { ...additionalQuery };
 
   if (options.search) {
@@ -39,18 +39,19 @@ export const paginate = async <T>(
     query.speciality = options.speciality;
   }
 
+  if (options.status) {
+    query.docStatus = options.status;
+  }
+
   let queryBuilder = model.find(query).skip(skip).limit(limit);
   if (options.select) {
     queryBuilder = queryBuilder.select(options.select);
   }
-
   if (options.populate) {
     queryBuilder = queryBuilder.populate(options.populate);
   }
-
   const dataPromise = queryBuilder;
   const countPromise = model.countDocuments(query);
-
   const [data, total] = await Promise.all([dataPromise, countPromise]);
   const totalPages = Math.ceil(total / limit);
 

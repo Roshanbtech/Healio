@@ -12,30 +12,28 @@ import AppointmentsList from "../components/doctorComponents/Appointments";
 import Wallet from "../components/doctorComponents/Wallet";
 import ErrorBoundary from "../components/common/ErrorBoundary";
 import NotFound from "../pages/doctorPages/NotFound";
-import Prescription from "../components/doctorComponents/appointments/PrescriptionModal";
-
+// import Prescription from "../components/doctorComponents/appointments/PrescriptionModal";
 
 const DoctorRoutes = () => {
   return (
     <div className="mx-4 sm:mx-[10%]">
       <ErrorBoundary>
-      <Routes>
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        {/* </Route>        */}
-        <Route path="/home" element={<Home />} />
-        <Route path="/qualifications" element={<Qualification />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/schedules" element={<Schedule />} />
-        <Route path="/appointments" element={<AppointmentsList />} />
-        <Route path="/wallet" element={<Wallet />} />
-        <Route path="/chats" element={<Chat />} />
-        <Route path="*" element={<NotFound />} />
-        <Route path="/prescription" element={<Prescription />} />
-
-      </Routes>
+        <Routes>
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          {/* </Route>        */}
+          <Route path="/home" element={<Home />} />
+          <Route path="/qualifications" element={<Qualification />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/schedules" element={<Schedule />} />
+          <Route path="/appointments" element={<AppointmentsList />} />
+          <Route path="/wallet" element={<Wallet />} />
+          <Route path="/chats" element={<Chat />} />
+          <Route path="*" element={<NotFound />} />
+          {/* <Route path="/prescription" element={<Prescription />} /> */}
+        </Routes>
       </ErrorBoundary>
     </div>
   );

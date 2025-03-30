@@ -228,11 +228,6 @@ const Profile: React.FC = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-green-800">Doctor Profile</h1>
         </div>
-        <button onClick={() => toast.info("Test toast from doctor profile!")}>
-  Test Toast
-</button>
-
-
         <div className="grid md:grid-cols-2 gap-8">
           {/* Display Profile Information */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden">

@@ -50,6 +50,23 @@ export class GenericRepository<T extends Document> {
   async countDocuments(filter: FilterQuery<T> = {}): Promise<number> {
     return this.model.countDocuments(filter).exec();
   }
+
+  async findOneWithPopulate(filter: FilterQuery<T>, populateFields: string[]): Promise<T | null> {
+    let query = this.model.findOne(filter);
+    populateFields.forEach(field => {
+      query = query.populate(field);
+    });
+    return query.exec();
+  }
+  
+  async updateOneWithPopulate(filter: FilterQuery<T>, data: Partial<T>, populateFields: string[]): Promise<T | null> {
+    let query = this.model.findOneAndUpdate(filter, data, { new: true });
+    populateFields.forEach(field => {
+      query = query.populate(field);
+    });
+    return query.exec();
+  }
+  
 }
 
 
