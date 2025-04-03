@@ -57,6 +57,7 @@ const BookAppointment: React.FC = () => {
   const [appliedCoupon, setAppliedCoupon] = useState<ICoupon | null>(null);
   const [userProfile, setUserProfile] = useState<IUserProfile | null>(null);
   const [isProcessingWallet, setIsProcessingWallet] = useState<boolean>(false);
+  const [isVerifying, setIsVerifying] = useState<boolean>(false);
 
   const consultingFees = docInfo?.fees ?? 0;
   const discountPercentage = appliedCoupon?.discount || 0;
@@ -257,9 +258,11 @@ const BookAppointment: React.FC = () => {
       description: `Payment for appointment with Dr. ${docInfo?.name}`,
       order_id: appointmentData.id,
       handler: async function (response: any) {
+        setIsVerifying(true);
         console.log("Payment Response:", response);
         const verify = await verifyAppointment(response, routeData);
         console.log("Verify Response:", verify.success);
+        setIsVerifying(false);
         if (verify.status) {
           toast.success("Payment successful!");
           const successData = {
@@ -313,6 +316,25 @@ const BookAppointment: React.FC = () => {
       </div>
     );
   }
+
+  if (isVerifying || isProcessingWallet) {
+    const message = isVerifying
+      ? "Payment verifying, please wait..."
+      : "Processing your wallet payment, please wait...";
+    const instruction = isVerifying
+      ? "Please stay on this page until your payment is complete."
+      : "Please do not refresh or navigate away from this page.";
+  
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-red-600 mb-4"></div>
+        <p className="text-lg font-medium text-gray-700">{message}</p>
+        <p className="mt-2 text-sm text-gray-600">{instruction}</p>
+      </div>
+    );
+  }
+  
+  
 
   if (!docInfo)
     return (

@@ -4,16 +4,23 @@ import { motion, AnimatePresence } from "framer-motion";
 import axiosInstance from "../../../utils/axiosInterceptors";
 import { toast } from "react-toastify";
 import { assets } from "../../../assets/assets";
+import { signedUrltoNormalUrl } from "../../../utils/getUrl";
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
+  
+  // Initialize state using the helper to convert the signed URL
   const [token, setToken] = useState<string | null>(() => localStorage.getItem("authToken"));
-  const [userImage, setUserImage] = useState<string | null>(() => localStorage.getItem("image"));
+  const [userImage, setUserImage] = useState<string | null>(() => {
+    const storedImage = localStorage.getItem("image");
+    return storedImage ? signedUrltoNormalUrl(storedImage) : null;
+  });
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
 
   useEffect(() => {
     setToken(localStorage.getItem("authToken"));
-    setUserImage(localStorage.getItem("image"));
+    const storedImage = localStorage.getItem("image");
+    setUserImage(storedImage ? signedUrltoNormalUrl(storedImage) : null);
   }, []);
 
   const handleLogout = async (): Promise<void> => {

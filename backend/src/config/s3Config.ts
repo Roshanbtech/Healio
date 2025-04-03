@@ -36,7 +36,7 @@ export class AwsConfig {
 
       const getCommand = new GetObjectCommand(options);
       const url = await getSignedUrl(this.s3client, getCommand, {
-        expiresIn: 60 * 60,
+        expiresIn: 1 * 60
       });
       return url;
     } catch (error) {

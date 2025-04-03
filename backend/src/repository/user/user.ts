@@ -1,5 +1,5 @@
 import userModel, { Iuser } from "../../model/userModel";
-import doctorModel, { IDoctor} from "../../model/doctorModel";
+import doctorModel, { IDoctor } from "../../model/doctorModel";
 import serviceModel from "../../model/serviceModel";
 import slotModel from "../../model/slotModel";
 import AppointmentModel from "../../model/appointmentModel";
@@ -7,12 +7,12 @@ import { Schedule } from "../../interface/doctorInterface/Interface";
 import {
   DoctorDetails,
   Service,
-
 } from "../../interface/userInterface/interface";
 import { IUserRepository } from "../../interface/user/User.repository.interface";
 import { paginate, PaginationOptions } from "../../helper/pagination";
 import bcrypt from "bcrypt";
 import ChatModel from "../../model/chatModel";
+import { getUrl } from "../../helper/getUrl";
 
 export class UserRepository implements IUserRepository {
   async getDoctors(options: PaginationOptions): Promise<any> {
@@ -25,6 +25,11 @@ export class UserRepository implements IUserRepository {
         },
         { isDoctor: true, isBlocked: false }
       );
+      for (const doctor of doctors.data) {
+        if (doctor.image) {
+          doctor.image = await getUrl(doctor.image);
+        }
+      }
       return doctors;
     } catch (error: any) {
       throw new Error(error.message);
@@ -37,6 +42,9 @@ export class UserRepository implements IUserRepository {
         .findById(id)
         .populate({ path: "speciality", select: "name" })
         .lean();
+        if(doctor && doctor.image){
+          doctor.image = await getUrl(doctor.image);
+        }
       return doctor;
     } catch (error: any) {
       throw new Error(error.message);
@@ -55,6 +63,9 @@ export class UserRepository implements IUserRepository {
     try {
       const user = await userModel.findById(id);
       if (!user) return null;
+      if(user.image){
+        user.image = await getUrl(user.image);
+      }
       return user;
     } catch (error: any) {
       throw new Error(error.message);
@@ -107,7 +118,10 @@ export class UserRepository implements IUserRepository {
 
   async getAppointmentDoctors(id: string): Promise<IDoctor[]> {
     try {
-      const appointments = await AppointmentModel.find({ patientId: id, status: "accepted" });
+      const appointments = await AppointmentModel.find({
+        patientId: id,
+        status: "accepted",
+      });
       if (!appointments || appointments.length === 0) return [];
       const doctorIds: string[] = [];
       for (let i = 0; i < appointments.length; i++) {
@@ -120,13 +134,16 @@ export class UserRepository implements IUserRepository {
         .find({ _id: { $in: doctorIds } })
         .select("-wallet -password -certificate")
         .populate({ path: "speciality", select: "name" });
+        for(const doctor of doctorDetails){
+          if(doctor.image){
+            doctor.image = await getUrl(doctor.image);
+          }
+        }
       return doctorDetails;
     } catch (error: any) {
       throw new Error(error.message);
     }
   }
-  
-  
 
   async uploadChatImage(
     chatId: string,
@@ -180,7 +197,12 @@ export class UserRepository implements IUserRepository {
 
   async refundToUser(userId: string, refundAmount: number): Promise<Iuser> {
     try {
-      console.log("refundToUser: Starting refund for userId:", userId, "with refundAmount:", refundAmount);
+      console.log(
+        "refundToUser: Starting refund for userId:",
+        userId,
+        "with refundAmount:",
+        refundAmount
+      );
       const user = await userModel.findById(userId);
       console.log("refundToUser: Retrieved user:", user);
       if (!user) throw new Error("User not found for refund");
@@ -190,16 +212,22 @@ export class UserRepository implements IUserRepository {
       }
       if (!user.wallet) {
         user.wallet = { balance: 0, transactions: [] };
-    }
+      }
       user.wallet.balance += refundAmount;
-      console.log("refundToUser: Updated wallet balance =", user?.wallet.balance);
+      console.log(
+        "refundToUser: Updated wallet balance =",
+        user?.wallet.balance
+      );
       user.wallet.transactions.push({
         amount: refundAmount,
         transactionType: "credit",
         description: `Refund for cancelled appointment from ${user.name}`,
         date: new Date(),
       });
-      console.log("refundToUser: Pushed transaction:", user.wallet.transactions[user.wallet.transactions.length - 1]);
+      console.log(
+        "refundToUser: Pushed transaction:",
+        user.wallet.transactions[user.wallet.transactions.length - 1]
+      );
       await user.save();
       console.log("refundToUser: User saved successfully");
       return user;
@@ -208,6 +236,4 @@ export class UserRepository implements IUserRepository {
       throw error;
     }
   }
-  
-  
 }

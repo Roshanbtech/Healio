@@ -2,6 +2,7 @@ import React from "react";
 import ToggleButton from "../../common/adminCommon/ToggleButton";
 import { assets } from "../../../assets/assets";
 import { Doctor, PaginationInfo } from "../../../types/admin/doctorListTypes";
+import { signedUrltoNormalUrl } from "../../../utils/getUrl";
 
 interface DoctorTableProps {
   doctors: Doctor[];
@@ -54,7 +55,7 @@ const DoctorTable: React.FC<DoctorTableProps> = ({
                     {(pagination.page - 1) * pagination.limit + index + 1}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <img src={doctor.image || assets.doc11} alt={doctor.name} className="w-10 h-10 rounded-full object-cover border-2 border-gray-200" />
+                    <img src={doctor.image ? signedUrltoNormalUrl(doctor.image) : assets.doc11} alt={doctor.name} className="w-10 h-10 rounded-full object-cover border-2 border-gray-200" />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{doctor.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{doctor.speciality?.name || "N/A"}</td>

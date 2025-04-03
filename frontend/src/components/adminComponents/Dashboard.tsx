@@ -8,6 +8,7 @@ import TopUsersTable from "./dashboardComponents/TopUsersTable";
 import AppointmentChart from "./dashboardComponents/AppointmentChart";
 import { Sidebar } from "../common/adminCommon/Sidebar";
 import { Users, UserIcon, Calendar, DollarSign } from "lucide-react";
+import { signedUrltoNormalUrl } from "../../utils/getUrl";
 
 interface DashboardStats {
   totalCustomers: number;
@@ -64,7 +65,14 @@ const Dashboard: React.FC = () => {
       try {
         const response = await axiosInstance.get("/admin/top-doctors");
         if (response.data.status) {
-          setDoctors(response.data.data);
+          const doctorsWithNormalUrls = response.data.data.map((doctor: any) => ({
+            ...doctor,
+            doctorDetails: {
+              ...doctor.doctorDetails,
+              image: signedUrltoNormalUrl(doctor.doctorDetails.image),
+            },
+          }));
+          setDoctors(doctorsWithNormalUrls);
         }
       } catch (error) {
         console.error("Error fetching top doctors:", error);
@@ -72,13 +80,20 @@ const Dashboard: React.FC = () => {
     }
     fetchTopDoctors();
   }, []);
-
+  
   useEffect(() => {
     async function fetchTopUsers() {
       try {
         const response = await axiosInstance.get("/admin/top-users");
         if (response.data.status) {
-          setUsers(response.data.data);
+          const usersWithNormalUrls = response.data.data.map((user: any) => ({
+            ...user,
+            userDetails: {
+              ...user.userDetails,
+              image: signedUrltoNormalUrl(user.userDetails.image),
+            },
+          }));
+          setUsers(usersWithNormalUrls);
         }
       } catch (error) {
         console.error("Error fetching top users:", error);
@@ -86,6 +101,7 @@ const Dashboard: React.FC = () => {
     }
     fetchTopUsers();
   }, []);
+  
 
   useEffect(() => {
     async function fetchAnalytics() {

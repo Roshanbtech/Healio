@@ -3,10 +3,11 @@ import React, { useState, useEffect } from "react";
 import { Sidebar } from "../common/doctorCommon/Sidebar";
 import { DashboardStats } from "../common/doctorCommon/Dashboard-stats";
 import { GrowthChart } from "../common/doctorCommon/Growth-chart";
-import { Calendar, Clock, Bell, Mail, ChevronRight } from "lucide-react";
+import { Calendar, Clock, ChevronRight } from "lucide-react";
 import axiosInstance from "../../utils/axiosInterceptors";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { signedUrltoNormalUrl } from "../../utils/getUrl";
 
 // Define interfaces for aggregated data
 interface DoctorProfile {
@@ -225,29 +226,6 @@ const Home: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              {/* <motion.button 
-                className="p-2 rounded-full bg-white shadow-md hover:bg-gray-100 transition-colors relative"
-                whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Bell size={20} className="text-gray-600" />
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 rounded-full text-white text-xs flex items-center justify-center shadow-sm">3</span>
-              </motion.button>
-              <motion.button 
-                className="p-2 rounded-full bg-white shadow-md hover:bg-gray-100 transition-colors relative"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Mail size={20} className="text-gray-600" />
-                <motion.span 
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 15 }}
-                  className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 rounded-full text-white text-xs flex items-center justify-center shadow-sm"
-                >
-                  2
-                </motion.span>
-              </motion.button> */}
               <motion.div 
                 className="flex items-center bg-white p-2 pr-4 rounded-full shadow-md"
                 whileHover={{ scale: 1.03, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)" }}
@@ -257,7 +235,7 @@ const Home: React.FC = () => {
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.2 }}
-                    src={doctorProfile.image}
+                    src={signedUrltoNormalUrl(doctorProfile.image)}
                     alt={doctorProfile.name}
                     className="w-10 h-10 rounded-full object-cover border-2 border-red-100"
                   />

@@ -6,6 +6,7 @@ export interface PaginationOptions {
   search?: string;
   speciality?: string;
   status?: string;
+  searchFields?: string[]; 
   populate?: any;
   select?: string;
 }
@@ -26,13 +27,16 @@ export const paginate = async <T>(
   const page = options.page && options.page > 0 ? options.page : 1;
   const limit = options.limit && options.limit > 0 ? options.limit : 10;
   const skip = (page - 1) * limit;
+
   const query: Record<string, any> = { ...additionalQuery };
 
-  if (options.search) {
-    query.$or = [
-      { name: { $regex: options.search, $options: "i" } },
-      { email: { $regex: options.search, $options: "i" } },
-    ];
+  if (options.search && options.searchFields && options.searchFields.length > 0) {
+    query.$or = options.searchFields.map((field) => ({
+      [field]: { $regex: options.search, $options: "i" }
+    }));
+  } else if (options.search) {
+    // Fallback to search by 'name' if no searchFields provided.
+    query.$or = [{ name: { $regex: options.search, $options: "i" } }];
   }
 
   if (options.speciality) {

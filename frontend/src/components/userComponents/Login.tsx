@@ -8,6 +8,7 @@ import { assets } from "../../assets/assets";
 import { Google } from "../common/userCommon/GoogleAuth";
 import axiosInstance from "../../utils/axiosInterceptors";
 import { jwtDecode } from "jwt-decode";
+import { signedUrltoNormalUrl } from "../../utils/getUrl";
 
 const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -44,7 +45,9 @@ const Login: React.FC = () => {
         localStorage.setItem("authToken", data.accessToken);
 
         localStorage.setItem("userId", data.user._id);
-        localStorage.setItem("image", data.user.image);
+        localStorage.setItem("image", signedUrltoNormalUrl(data.user.image));
+        console.log("User image from API:", data.user.image);
+
 
         const decodedToken = jwtDecode(data.accessToken) as { role: string };
         localStorage.setItem("userRole", decodedToken.role);

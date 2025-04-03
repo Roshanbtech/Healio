@@ -1,6 +1,11 @@
 import { AwsConfig } from "../config/s3Config";
 export class awsFileUpload {
   constructor(private awsConfig: AwsConfig) {}
+
+  async getPresignedUrl(filename: string, folder: string): Promise<string> {
+    return this.awsConfig.getfile(filename, folder);
+  }
+  
   async uploadCertificates(
     doctorId: string,
     certificates: Express.Multer.File[]
@@ -37,13 +42,14 @@ export class awsFileUpload {
     );
     console.log("Helper - Uploaded Key:", uploadedKey);
 
-    const signatureUrl = await this.awsConfig.getfile(
-      uploadedKey.split("/").pop()!,
-      signatureKey
-    );
-    console.log("Helper - Signature URL:", signatureUrl);
+    // const signatureUrl = await this.awsConfig.getfile(
+    //   uploadedKey.split("/").pop()!,
+    //   signatureKey
+    // );
 
-    return signatureUrl.split("?")[0];
+    // return signatureUrl.split("?")[0];
+
+    return uploadedKey;
   }
 
   async uploadDoctorProfileImage(
@@ -60,13 +66,15 @@ export class awsFileUpload {
     );
     console.log("Helper - Uploaded Key:", uploadedKey);
 
-    const profileUrl = await this.awsConfig.getfile(
-      uploadedKey.split("/").pop()!,
-      profileKey
-    );
-    console.log("Helper - Profile URL:", profileUrl);
+    // const profileUrl = await this.awsConfig.getfile(
+    //   uploadedKey.split("/").pop()!,
+    //   profileKey
+    // );
+    // console.log("Helper - Profile URL:", profileUrl);
 
-    return profileUrl.split("?")[0];
+    // return profileUrl.split("?")[0];
+
+    return uploadedKey;
   }
 
   async uploadUserProfileImage(
@@ -83,13 +91,14 @@ export class awsFileUpload {
     );
     console.log("Helper - Uploaded Key:", uploadedKey);
 
-    const profileUrl = await this.awsConfig.getfile(
-      uploadedKey.split("/").pop()!,
-      profileKey
-    );
-    console.log("Helper - Profile URL:", profileUrl);
+    // const profileUrl = await this.awsConfig.getfile(
+    //   uploadedKey.split("/").pop()!,
+    //   profileKey
+    // );
+    // console.log("Helper - Profile URL:", profileUrl);
 
-    return profileUrl.split("?")[0];
+    // return profileUrl.split("?")[0];
+    return uploadedKey;
   }
 
   async uploadChatImage(
@@ -107,13 +116,15 @@ export class awsFileUpload {
       );
       console.log("Helper - Uploaded Key:", uploadedKey);
 
-      const imageUrl = await this.awsConfig.getfile(
-        uploadedKey.split("/").pop()!,
-        chatImageKey
-      );
-      console.log("Helper - Image URL:", imageUrl);
+      // const imageUrl = await this.awsConfig.getfile(
+      //   uploadedKey.split("/").pop()!,
+      //   chatImageKey
+      // );
+      // console.log("Helper - Image URL:", imageUrl);
 
-      return imageUrl.split("?")[0];
+      // return imageUrl.split("?")[0];
+
+      return uploadedKey;
     } catch (error) {
       console.error("Error uploading chat image:", error);
       throw error;

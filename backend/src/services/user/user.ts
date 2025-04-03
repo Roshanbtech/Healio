@@ -13,6 +13,7 @@ import { Schedule } from "../../interface/doctorInterface/Interface";
 import { IDoctor } from "../../model/doctorModel";
 import { ISchedule } from "../../model/slotModel";
 import { isScheduleExpired } from "../../helper/schedule";
+import { getUrl } from "../../helper/getUrl";
 interface Slot {
   slot: string;
   datetime: Date;
@@ -34,6 +35,7 @@ export class UserService implements IUserService {
       if (!doctors) {
         return null;
       }
+      
       return doctors;
     } catch (error: any) {
       throw new Error(error.message);
@@ -67,6 +69,7 @@ export class UserService implements IUserService {
       if (!user) {
         return null;
       }
+     
       return user;
     } catch (error: any) {
       throw new Error(error.message);
@@ -91,6 +94,10 @@ export class UserService implements IUserService {
         id,
         updatedData
       );
+
+      if (updatedUser.image) {
+        updatedUser.image = await getUrl(updatedUser.image);
+      }
 
       return updatedUser;
     } catch (error: any) {

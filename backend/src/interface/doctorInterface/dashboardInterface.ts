@@ -52,6 +52,7 @@ export interface StatCard {
   }
   
   export interface DashboardHomeData {
+    image: any;
     doctorProfile: any; // Ideally use your IDoctor interface
     dashboardStats: DashboardStatsData;
     todaysAppointments: any[]; // e.g. IAppointment[]

@@ -12,6 +12,7 @@ import { useParams } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInterceptors";
 import { useNavigate } from "react-router-dom";
 import RelatedDoctors from "../../components/common/userCommon/RelatedDoctors";
+import { signedUrltoNormalUrl } from "../../utils/getUrl";
 
 const DoctorDetails: React.FC = ({}) => {
   const { id } = useParams();
@@ -63,7 +64,7 @@ const DoctorDetails: React.FC = ({}) => {
             {/* Circular Image */}
             <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-white shadow-lg items-center">
               <img
-                src={image || "/default-avatar.png"}
+                src={signedUrltoNormalUrl(image) || image || "/default-avatar.png"}
                 alt={name || "Doctor profile"}
                 className="w-full h-full object-cover bg-green-100"
                 loading="lazy"

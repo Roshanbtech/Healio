@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../../utils/axiosInterceptors";
 import Pagination from "./Pagination";
+import { signedUrltoNormalUrl } from "../../../utils/getUrl";
 
 interface Doctor {
   _id: string;
@@ -86,7 +87,7 @@ const RelatedDoctors: React.FC<RelatedDoctorsProps> = ({ speciality, docId }) =>
             <div className="relative w-full h-48 bg-green-100">
               <img
                 className="w-full h-full object-cover"
-                src={item.image || "/placeholder.svg"}
+                src={signedUrltoNormalUrl(item.image) || "/placeholder.svg"}
                 alt={item.name}
               />
             </div>

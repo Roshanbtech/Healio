@@ -6,7 +6,8 @@ dotenv.config();
 const sendMail = async (
   email: string,
   subject: string,
-  text: string
+  text: string,
+  html?: string
 ): Promise<boolean> => {
   return new Promise((resolve, reject) => {
     const transporter = nodemailer.createTransport({
@@ -17,12 +18,17 @@ const sendMail = async (
       },
     });
 
-    const mailOptions = {
+    const mailOptions: { from: string; to: string; subject: string; text: string; html?: string } = {
       from: process.env.EMAIL as string,
       to: email,
       subject: subject,
       text: text,
     };
+
+    if (html && !text.trim().startsWith("<html>")) {
+      mailOptions.html = html;
+    }
+
 
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {

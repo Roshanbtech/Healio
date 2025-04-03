@@ -7,6 +7,7 @@ import { IAppointment } from "../../model/appointmentModel";
 import crypto from "crypto";
 import dotenv from "dotenv";
 import sendMail from "../../config/emailConfig";
+import { emailSend } from "../../helper/emailSend";
 dotenv.config();
 
 export class BookingService implements IBookingService {
@@ -154,50 +155,13 @@ export class BookingService implements IBookingService {
       console.log("6");
       const { doctorId, fees, appointmentId } = updatedAppointment;
       await this.doctorRepository.updateWalletTransaction(
-        doctorId.toString(),
+        doctorId._id.toString(),
         fees ?? 0,
         appointmentId
       );
-      const doctor = updatedAppointment.doctorId as any;
-      const patient = updatedAppointment.patientId as any;
-      const date = updatedAppointment.date as any;
-      const time = updatedAppointment.time as any;
-      const fess = updatedAppointment.fees as any;
+      console.log('6.5',updatedAppointment)
+      await emailSend(updatedAppointment);
 
-      if (patient && patient.email) {
-        const patientEmailSubject =
-          "Appointment Confirmed: Your Appointment Details";
-        const patientEmailBody = `Dear ${patient.name},
-
-Your appointment has been successfully confirmed.
-Details:
-Doctor: ${doctor ? doctor.name : "N/A"}
-Date: ${updatedAppointment.date}
-Time: ${updatedAppointment.time}
-Fees: ${updatedAppointment.fees}
-
-Thank you for choosing our service.
-Best regards,
-The Healio Team`;
-        await sendMail(patient.email, patientEmailSubject, patientEmailBody);
-      }
-
-      if (doctor && doctor.email) {
-        const doctorEmailSubject = "New Appointment Scheduled: Patient Details";
-        const doctorEmailBody = `Dear Dr. ${doctor.name},
-  
-  You have a new appointment scheduled.
-  Details:
-  Patient: ${patient ? patient.name : "N/A"}
-  Date: ${updatedAppointment.date}
-  Time: ${updatedAppointment.time}
-  Fees: ${updatedAppointment.fees}
-  
-  Please check your dashboard for more details.
-  Best regards,
-  The Healio Team`;
-        await sendMail(doctor.email, doctorEmailSubject, doctorEmailBody);
-      }
 
       return updatedAppointment;
     } catch (error: any) {

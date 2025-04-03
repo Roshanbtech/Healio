@@ -33,9 +33,25 @@ export class GenericRepository<T extends Document> {
   }
 
   // for appointment purpose only
+  // async updateOne(id: string, data: Partial<T>): Promise<T | null> {
+  //   return this.model.findOneAndUpdate({ appointmentId: id }, data, { new: true }).exec();
+  // }
+
   async updateOne(id: string, data: Partial<T>): Promise<T | null> {
-    return this.model.findOneAndUpdate({ appointmentId: id }, data, { new: true }).exec();
+    if ('doctorId' in data && typeof (data as any).doctorId === 'object' && (data as any).doctorId?._id) {
+      (data as any).doctorId = (data as any).doctorId._id;
+    }
+    if ('patientId' in data && typeof (data as any).patientId === 'object' && (data as any).patientId?._id) {
+      (data as any).patientId = (data as any).patientId._id;
+    }
+    
+    return this.model
+      .findOneAndUpdate({ appointmentId: id }, data, { new: true })
+      .populate("patientId", "name email")
+      .populate("doctorId", "name email")
+      .exec();
   }
+  
 
   async delete(id: string): Promise<boolean> {
     const result = await this.model.findByIdAndDelete(id).exec();

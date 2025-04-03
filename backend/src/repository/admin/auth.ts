@@ -7,6 +7,7 @@ import { IAuthRepository } from "../../interface/admin/Auth.repository.interface
 import sendMail from "../../config/emailConfig";
 import AppointmentModel, { IAppointment } from "../../model/appointmentModel";
 import { IDashboardStats, ITopDoctor, ITopUser, IAppointmentAnalytics } from "../../interface/adminInterface/dashboard";
+import { getUrl } from "../../helper/getUrl";
 
 export class AuthRepository implements IAuthRepository {
   async logout(refreshToken: string): Promise<any> {
@@ -21,9 +22,17 @@ export class AuthRepository implements IAuthRepository {
       throw new Error(error.message);
     }
   }
+  
   async getAllUsers(options: PaginationOptions): Promise<any> {
     try {
-      const users = await paginate(userModel, options);
+      const projection = "-password -__v -wallet -userId -createdAt -updatedAt";
+      const updatedOptions = { ...options, select: projection };
+      const users = await paginate(userModel, updatedOptions, {});
+      for(const user of users.data){
+        if(user.image){
+          user.image = await getUrl(user.image);
+        }
+      }
       return users;
     } catch (error: any) {
       throw new Error(error.message);
@@ -34,10 +43,16 @@ export class AuthRepository implements IAuthRepository {
     try {
       const paginationOptions: PaginationOptions = {
         ...options,
+        select: "-password -__v -createdAt -updatedAt -wallet -averageRating -reviewCount",
         populate: { path: "speciality", model: "Service", select: "name" },
       };
   
       const doctors = await paginate(doctorModel, paginationOptions, {});
+      for(const doctor of doctors.data){
+        if(doctor.image){
+          doctor.image = await getUrl(doctor.image);
+        }
+      }
       return doctors;
     } catch (error: any) {
       throw new Error(error.message);
@@ -86,9 +101,9 @@ export class AuthRepository implements IAuthRepository {
     }
   }
 
-  async getAllCoupons(): Promise<any> {
+  async getAllCoupons(options: PaginationOptions): Promise<any> {
     try {
-      const coupons = await couponModel.find().lean();
+      const coupons = await paginate(couponModel, options, {});
       return coupons;
     } catch (error: any) {
       throw new Error(error.message);
@@ -154,9 +169,9 @@ export class AuthRepository implements IAuthRepository {
     }
   }
 
-  async getAllServices(): Promise<any> {
+  async getAllServices(options: PaginationOptions): Promise<any> {
     try {
-      const services = await serviceModel.find().lean();
+      const services = await paginate(serviceModel, options, {});
       return services;
     } catch (error: any) {
       throw new Error(error.message);
@@ -240,29 +255,46 @@ Team Healio`;
       throw new Error(error.message);
     }
   }
-
+  
   async fetchTopDoctors(): Promise<ITopDoctor[]> {
     try {
       const topDoctors = await AppointmentModel.aggregate([
         { $match: { status: "completed" } },
-        { $group: {
+        { 
+          $group: {
             _id: "$doctorId",
             appointmentsCount: { $sum: 1 },
             totalEarnings: { $sum: "$fees" }
-        }},
-        { $lookup: {
+          }
+        },
+        { 
+          $lookup: {
             from: "doctors",
             localField: "_id",
             foreignField: "_id",
             as: "doctorDetails"
-        }},
+          }
+        },
         { $unwind: "$doctorDetails" },
-        { $sort: { 
+        { 
+          $addFields: {
+            "doctorDetails.averageRating": { $ifNull: [ "$doctorDetails.averageRating", 0 ] }
+          }
+        },
+        { 
+          $sort: { 
             appointmentsCount: -1,
             "doctorDetails.averageRating": -1 
-        }},
+          }
+        },
         { $limit: 5 }
       ]);
+  
+      for (const doctor of topDoctors) {
+        if (doctor.doctorDetails.image) {
+          doctor.doctorDetails.image = await getUrl(doctor.doctorDetails.image);
+        }
+      }
       return topDoctors;
     } catch (error: any) {
       throw new Error(error.message);
@@ -285,9 +317,24 @@ Team Healio`;
             as: "userDetails"
         }},
         { $unwind: "$userDetails" },
-        { $sort: { bookingsCount: -1 } },
+        { 
+          $addFields: {
+            "userDetails.averageRating": { $ifNull: [ "$userDetails.averageRating", 0 ] }
+          }
+        },
+        { 
+          $sort: { 
+            appointmentsCount: -1,
+            "userDetails.averageRating": -1 
+          }
+        },
         { $limit: 5 }
       ]);
+      for (const user of topUsers) {
+        if (user.userDetails.image) {
+          user.userDetails.image = await getUrl(user.userDetails.image);
+        }
+      }
       return topUsers;
     } catch (error: any) {
       throw new Error(error.message);

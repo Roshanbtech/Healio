@@ -12,6 +12,7 @@ import {
   resendOtpUtil,
   resendOtp,
 } from "../../config/redisClient";
+import { getUrl } from "../../helper/getUrl";
 
 export class AuthService implements IAuthService {
   private AuthRepository: IAuthRepository;
@@ -212,6 +213,10 @@ export class AuthService implements IAuthService {
 
       if (user.isBlocked) {
         throw new Error("User is blocked. Ask admin for access.");
+      }
+
+      if(user?.image){
+        user.image = await getUrl(user.image);
       }
 
       const isPasswordValid = await bcrypt.compare(password, user.password);

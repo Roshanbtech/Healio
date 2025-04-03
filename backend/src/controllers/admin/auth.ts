@@ -94,6 +94,7 @@ export class AuthController {
         limit,
         search,
         speciality,
+        searchFields: ["name", "email"],
       });
       return res.status(HTTP_statusCode.OK).json({ status: true, ...userList });
     } catch (error: any) {
@@ -113,6 +114,7 @@ export class AuthController {
         search: req.query.search as string,
         speciality: req.query.category as string,
         status: req.query.status as string,
+        searchFields: ["name", "email"],
       }
       const doctorList = await this.authService.getDoctor(options);
       return res.status(HTTP_statusCode.OK).json({ status: true, doctorList });
@@ -157,7 +159,13 @@ export class AuthController {
 
   async getServices(req: Request, res: Response): Promise<any> {
     try {
-      const serviceList = await this.authService.getService();
+      const options = {
+        page: parseInt(req.query.page as string, 10) || 1,
+        limit: parseInt(req.query.limit as string, 10) || 10,
+        search: req.query.search as string,
+        speciality: req.query.category as string
+      }
+      const serviceList = await this.authService.getService(options);
 
       if (!serviceList || serviceList.length === 0) {
         return res.status(HTTP_statusCode.NotFound).json({
@@ -313,7 +321,14 @@ export class AuthController {
 
   async getCoupons(req: Request, res: Response): Promise<any> {
     try {
-      const coupons = await this.authService.getCoupons();
+      const options = {
+        page: parseInt(req.query.page as string) || 1,
+        limit: parseInt(req.query.limit as string) || 10,
+        search: req.query.search as string,
+        speciality: req.query.speciality as string,
+        searchFields: ["name", "code"] 
+      }
+      const coupons = await this.authService.getCoupons(options);
       return res.status(HTTP_statusCode.OK).json({ status: true, coupons });
     } catch (error: any) {
       console.error("Error in getCoupons:", error);

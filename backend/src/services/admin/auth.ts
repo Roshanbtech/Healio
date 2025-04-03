@@ -5,6 +5,8 @@ import { IAuthRepository } from "../../interface/admin/Auth.repository.interface
 import { PaginationOptions } from "../../helper/pagination";
 import { IDashboardStats, ITopDoctor, ITopUser, IAppointmentAnalytics } from "../../interface/adminInterface/dashboard";
 import { IAppointment } from "../../model/appointmentModel";
+import { UserListResponse } from "../../interface/adminInterface/userlist";
+import { getUrl } from "../../helper/getUrl";
 config();
 export interface PaginatedResult<T> {
   data: T[];
@@ -95,6 +97,7 @@ export class AuthService implements IAuthService {
       throw new Error(error.message);
     }
   }
+  
 
   async getDoctor(options: PaginationOptions): Promise<any> {
     try {
@@ -144,8 +147,8 @@ export class AuthService implements IAuthService {
         throw new Error("Service name cannot be empty.");
       }
 
-      if (name.length > 12) {
-        throw new Error("Service name cannot exceed 12 characters.");
+      if (name.length > 20) {
+        throw new Error("Service name cannot exceed 20 characters.");
       }
 
       const existingService = await this.AuthRepository.findServiceByName(name);
@@ -209,9 +212,9 @@ export class AuthService implements IAuthService {
     }
   }
 
-  async getService(): Promise<any> {
+  async getService(options: PaginationOptions): Promise<any> {
     try {
-      const services = await this.AuthRepository.getAllServices();
+      const services = await this.AuthRepository.getAllServices(options);
       if (!services) {
         return null;
       }
@@ -283,9 +286,9 @@ export class AuthService implements IAuthService {
     }
   }
 
-  async getCoupons(): Promise<any> {
+  async getCoupons(options: PaginationOptions): Promise<any> {
     try {
-      const coupons = await this.AuthRepository.getAllCoupons();
+      const coupons = await this.AuthRepository.getAllCoupons(options);
       if (!coupons) {
         return null;
       }

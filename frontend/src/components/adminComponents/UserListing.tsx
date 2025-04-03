@@ -5,20 +5,8 @@ import { assets } from "../../assets/assets";
 import ToggleButton from "../common/adminCommon/ToggleButton";
 import { Sidebar } from "../common/adminCommon/Sidebar";
 import Pagination from "../common/adminCommon/Pagination";
-
-// Debounce hook (same as before)
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-    return () => clearTimeout(handler);
-  }, [value, delay]);
-
-  return debouncedValue;
-}
+import useDebounce from "../../hooks/useDebounce";
+import { signedUrltoNormalUrl } from "../../utils/getUrl";
 
 interface User {
   _id: string;
@@ -43,23 +31,22 @@ const UserList: React.FC = () => {
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  // Debounced search term
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
-
-  // Items per page
   const itemsPerPage = 10;
 
   const fetchUsers = async () => {
     try {
       const response = await axiosInstance.get("/admin/users", {
-        params: {
-          page: currentPage,
-          limit: itemsPerPage,
-          search: debouncedSearchTerm,
-        },
+        params: { page: currentPage, limit: itemsPerPage, search: debouncedSearchTerm },
       });
       if (response.data?.status) {
-        setUsers(response.data.data);
+        const usersWithNormalUrl = response.data.data.map((user: User) => {
+          if (user.image) {
+            return { ...user, image: signedUrltoNormalUrl(user.image) };
+          }
+          return user;
+        });
+        setUsers(usersWithNormalUrl);
         setPagination(response.data.pagination);
       }
     } catch (error) {
@@ -67,6 +54,7 @@ const UserList: React.FC = () => {
       toast.error("Failed to fetch users");
     }
   };
+  
 
   useEffect(() => {
     fetchUsers();
@@ -92,20 +80,12 @@ const UserList: React.FC = () => {
   return (
     <div className="flex min-h-screen">
       <Sidebar onCollapse={setSidebarCollapsed} />
-
-      <div
-        className={`flex-1 transition-all duration-300 ${
-          sidebarCollapsed ? "ml-16" : "ml-64"
-        }`}
-      >
+      <div className={`flex-1 transition-all duration-300 ${sidebarCollapsed ? "ml-16" : "ml-64"}`}>
         <div className="p-8">
           <div className="max-w-7xl mx-auto">
-            {/* Page Header */}
             <div className="bg-white rounded-lg shadow-sm mb-6">
               <div className="p-6 flex flex-col md:flex-row justify-between items-center gap-4">
                 <h1 className="text-2xl font-bold text-gray-800">Users</h1>
-
-                {/* Custom Search Bar */}
                 <div className="flex items-center bg-white rounded-full shadow-md px-4 py-2 w-full md:w-80 relative">
                   <input
                     type="text"
@@ -136,8 +116,6 @@ const UserList: React.FC = () => {
                 </div>
               </div>
             </div>
-
-            {/* Users Table */}
             <div className="bg-white rounded-lg shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -197,8 +175,6 @@ const UserList: React.FC = () => {
                 </table>
               </div>
             </div>
-
-            {/* Pagination */}
             {pagination && (
               <Pagination
                 currentPage={pagination.page}

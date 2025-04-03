@@ -13,6 +13,7 @@ import { Iuser } from "../../model/userModel";
 import { addMinutes, format, isBefore } from "date-fns";
 import sendMail from "../../config/emailConfig";
 import { GrowthChartData,DashboardStatsData, DashboardHomeData, DashboardStatsResponse } from "../../interface/doctorInterface/dashboardInterface";
+import { getUrl } from "../../helper/getUrl";
 
 interface Slot {
   slot: string;
@@ -95,6 +96,9 @@ export class DoctorService implements IDoctorService {
   async getDoctorProfile(id: string): Promise<any> {
     try {
       const doctor = await this.DoctorRepository.getDoctorProfile(id);
+      if(doctor.image){
+        doctor.image = await getUrl(doctor.image);
+      }
       return doctor;
     } catch (error: any) {
       throw new Error(error.message);
@@ -119,6 +123,9 @@ export class DoctorService implements IDoctorService {
         id,
         updatedData
       );
+      if(updatedDoctor.image){
+        updatedDoctor.image = await getUrl(updatedDoctor.image);
+      }
 
       return updatedDoctor;
     } catch (error: any) {
@@ -360,6 +367,7 @@ export class DoctorService implements IDoctorService {
     async getDashboardHome(doctorId: string): Promise<DashboardHomeData> {
       try {
         const data = await this.DoctorRepository.getDashboardHome(doctorId);
+        
         return data;
       } catch (error: any) {
         throw new Error(error.message);

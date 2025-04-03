@@ -18,6 +18,7 @@ import ReviewModal from "./ReviewModal";
 import PrescriptionModal from "./PrescriptionModal";
 import { verifyAppointment } from "../../services/appointment";
 import { assets } from "../../assets/assets";
+import { signedUrltoNormalUrl } from "../../utils/getUrl";
 
 export interface IAppointment {
   _id: string;
@@ -231,9 +232,10 @@ const RescheduleModal: React.FC<{
       }
       const slotDate = new Date(selectedSlot.datetime);
       const isoDate = slotDate.toISOString().split("T")[0];
-      const isoTime = `${String(slotDate.getUTCHours()).padStart(2, "0")}:${String(
-        slotDate.getUTCMinutes()
-      ).padStart(2, "0")}`;
+      const isoTime = `${String(slotDate.getUTCHours()).padStart(
+        2,
+        "0"
+      )}:${String(slotDate.getUTCMinutes()).padStart(2, "0")}`;
       onReschedule(isoDate, isoTime);
     }
   };
@@ -241,15 +243,22 @@ const RescheduleModal: React.FC<{
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden animate-fadeIn transform transition-all">
         <div className="bg-gradient-to-r from-red-600 to-red-700 p-5 flex justify-between items-center">
-          <h2 className="text-white text-lg font-bold">Reschedule Appointment</h2>
-          <button onClick={onClose} className="text-white hover:text-red-200 transition-colors">
+          <h2 className="text-white text-lg font-bold">
+            Reschedule Appointment
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-white hover:text-red-200 transition-colors"
+          >
             <X size={20} />
           </button>
         </div>
         <div className="p-6">
           <form onSubmit={handleSubmit}>
             <div className="mb-5">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Select Date</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select Date
+              </label>
               <input
                 type="date"
                 className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 transition-all"
@@ -260,14 +269,20 @@ const RescheduleModal: React.FC<{
               />
             </div>
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Available Time Slots</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Available Time Slots
+              </label>
               {loadingSlots ? (
                 <div className="text-center py-4">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
-                  <p className="mt-2 text-sm text-gray-600">Loading available slots...</p>
+                  <p className="mt-2 text-sm text-gray-600">
+                    Loading available slots...
+                  </p>
                 </div>
               ) : slotError ? (
-                <div className="text-center py-4 text-red-600 text-sm">{slotError}</div>
+                <div className="text-center py-4 text-red-600 text-sm">
+                  {slotError}
+                </div>
               ) : availableSlots.length > 0 ? (
                 <div className="grid grid-cols-2 gap-2">
                   {availableSlots.map((slot) => (
@@ -286,11 +301,17 @@ const RescheduleModal: React.FC<{
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-4 text-gray-500 text-sm">No slots available for selected date</div>
+                <div className="text-center py-4 text-gray-500 text-sm">
+                  No slots available for selected date
+                </div>
               )}
             </div>
             <div className="flex justify-end space-x-3">
-              <button type="button" onClick={onClose} className="px-5 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-all font-medium">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-5 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-all font-medium"
+              >
                 Cancel
               </button>
               <button
@@ -313,9 +334,17 @@ const RescheduleModal: React.FC<{
 const MedicalReportsModal: React.FC<{
   appointment: IAppointment;
   onClose: () => void;
-  onSubmit: (data: { recordDate: string; condition: string; symptoms: string; medications: string; notes: string }) => void;
+  onSubmit: (data: {
+    recordDate: string;
+    condition: string;
+    symptoms: string;
+    medications: string;
+    notes: string;
+  }) => void;
 }> = ({ appointment, onClose, onSubmit }) => {
-  const [recordDate, setRecordDate] = useState<string>(new Date().toISOString().split("T")[0]);
+  const [recordDate, setRecordDate] = useState<string>(
+    new Date().toISOString().split("T")[0]
+  );
   const [condition, setCondition] = useState<string>("");
   const [symptoms, setSymptoms] = useState<string>("");
   const [medications, setMedications] = useState<string>("");
@@ -338,15 +367,22 @@ const MedicalReportsModal: React.FC<{
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden animate-fadeIn transform transition-all">
         <div className="bg-gradient-to-r from-red-600 to-red-700 p-5 flex justify-between items-center">
-          <h2 className="text-white text-lg font-bold">Submit Medical Report</h2>
-          <button onClick={onClose} className="text-white hover:text-red-200 transition-colors">
+          <h2 className="text-white text-lg font-bold">
+            Submit Medical Report
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-white hover:text-red-200 transition-colors"
+          >
             <X size={20} />
           </button>
         </div>
         <div className="p-6">
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Record Date</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Record Date
+              </label>
               <input
                 type="date"
                 className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 transition-all"
@@ -356,7 +392,9 @@ const MedicalReportsModal: React.FC<{
               />
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Condition</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Condition
+              </label>
               <input
                 type="text"
                 className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 transition-all"
@@ -367,7 +405,9 @@ const MedicalReportsModal: React.FC<{
               />
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Symptoms (comma separated)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Symptoms (comma separated)
+              </label>
               <input
                 type="text"
                 className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 transition-all"
@@ -377,7 +417,9 @@ const MedicalReportsModal: React.FC<{
               />
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Medications (comma separated)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Medications (comma separated)
+              </label>
               <input
                 type="text"
                 className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 transition-all"
@@ -387,7 +429,9 @@ const MedicalReportsModal: React.FC<{
               />
             </div>
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Additional Notes</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Additional Notes
+              </label>
               <textarea
                 className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 transition-all"
                 value={notes}
@@ -397,10 +441,17 @@ const MedicalReportsModal: React.FC<{
               ></textarea>
             </div>
             <div className="flex justify-end space-x-3">
-              <button type="button" onClick={onClose} className="px-5 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-all font-medium">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-5 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-all font-medium"
+              >
                 Cancel
               </button>
-              <button type="submit" className="px-5 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-md hover:from-red-700 hover:to-red-800 transition-all font-medium shadow-md">
+              <button
+                type="submit"
+                className="px-5 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-md hover:from-red-700 hover:to-red-800 transition-all font-medium shadow-md"
+              >
                 Submit Report
               </button>
             </div>
@@ -435,11 +486,17 @@ const AppointmentDetailsModal: React.FC<{
   }, []);
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="absolute inset-0 bg-black opacity-60" onClick={onClose}></div>
+      <div
+        className="absolute inset-0 bg-black opacity-60"
+        onClick={onClose}
+      ></div>
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-lg overflow-hidden transform transition-all animate-fadeIn">
         <div className="bg-gradient-to-r from-red-600 to-red-700 p-5 flex justify-between items-center">
           <h2 className="text-white text-xl font-bold">Appointment Details</h2>
-          <button onClick={onClose} className="text-white hover:text-red-200 transition-colors">
+          <button
+            onClick={onClose}
+            className="text-white hover:text-red-200 transition-colors"
+          >
             <X size={20} />
           </button>
         </div>
@@ -447,8 +504,12 @@ const AppointmentDetailsModal: React.FC<{
           <div className="bg-gray-50 p-4 rounded-lg mb-6 border-l-4 border-red-600">
             <div className="grid grid-cols-2 gap-4 mb-3">
               <div>
-                <p className="text-sm font-semibold text-gray-500">Appointment ID:</p>
-                <p className="text-base font-medium">{appointment.appointmentId}</p>
+                <p className="text-sm font-semibold text-gray-500">
+                  Appointment ID:
+                </p>
+                <p className="text-base font-medium">
+                  {appointment.appointmentId}
+                </p>
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-500">Status:</p>
@@ -471,7 +532,9 @@ const AppointmentDetailsModal: React.FC<{
                 <Calendar className="w-5 h-5 text-red-600" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-500">Date & Time</p>
+                <p className="text-sm font-semibold text-gray-500">
+                  Date & Time
+                </p>
                 <p className="text-base">
                   {formatDate(appointment.date)} at {appointment.time}
                 </p>
@@ -479,10 +542,14 @@ const AppointmentDetailsModal: React.FC<{
             </div>
             <div className="flex items-center p-3 border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-shadow">
               <div className="bg-red-50 p-2 rounded-full mr-3">
-                <span className="flex items-center justify-center w-5 h-5 text-red-600 font-bold">₹</span>
+                <span className="flex items-center justify-center w-5 h-5 text-red-600 font-bold">
+                  ₹
+                </span>
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-500">Payment Status</p>
+                <p className="text-sm font-semibold text-gray-500">
+                  Payment Status
+                </p>
                 <p className="text-base">
                   {appointment.paymentStatus || "N/A"}{" "}
                   {appointment.fees ? `(₹${appointment.fees})` : ""}
@@ -491,13 +558,19 @@ const AppointmentDetailsModal: React.FC<{
             </div>
             {appointment.reason && (
               <div className="p-3 border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                <p className="text-sm font-semibold text-gray-500 mb-1">Reason for Visit</p>
+                <p className="text-sm font-semibold text-gray-500 mb-1">
+                  Reason for Visit
+                </p>
                 <p className="text-base">{appointment.reason}</p>
               </div>
             )}
             <div className="p-3 border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-              <p className="text-sm font-semibold text-gray-500 mb-1">Speciality</p>
-              <p className="text-base">{appointment.doctorId.speciality.name}</p>
+              <p className="text-sm font-semibold text-gray-500 mb-1">
+                Speciality
+              </p>
+              <p className="text-base">
+                {appointment.doctorId.speciality.name}
+              </p>
             </div>
           </div>
         </div>
@@ -522,18 +595,28 @@ const UserAppointments: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 5;
-  const [showRescheduleModal, setShowRescheduleModal] = useState<boolean>(false);
-  const [selectedAppointment, setSelectedAppointment] = useState<IAppointment | null>(null);
+  const [showRescheduleModal, setShowRescheduleModal] =
+    useState<boolean>(false);
+  const [selectedAppointment, setSelectedAppointment] =
+    useState<IAppointment | null>(null);
   const [showMedicalModal, setShowMedicalModal] = useState<boolean>(false);
-  const [selectedMedicalAppointment, setSelectedMedicalAppointment] = useState<IAppointment | null>(null);
+  const [selectedMedicalAppointment, setSelectedMedicalAppointment] =
+    useState<IAppointment | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState<boolean>(false);
   const [showReviewModal, setShowReviewModal] = useState<boolean>(false);
-  const [selectedReviewAppointment, setSelectedReviewAppointment] = useState<IAppointment | null>(null);
-  const [showPrescriptionModal, setShowPrescriptionModal] = useState<boolean>(false);
-  const [selectedPrescription, setSelectedPrescription] = useState<PrescriptionData | null>(null);
+  const [selectedReviewAppointment, setSelectedReviewAppointment] =
+    useState<IAppointment | null>(null);
+  const [showPrescriptionModal, setShowPrescriptionModal] =
+    useState<boolean>(false);
+  const [selectedPrescription, setSelectedPrescription] =
+    useState<PrescriptionData | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [paymentBreakdown, setPaymentBreakdown] = useState<{ payable: number }>({ payable: 0 });
-  const [selectedTime, setSelectedTime] = useState<{ slot: string } | null>(null);
+  const [paymentBreakdown, setPaymentBreakdown] = useState<{ payable: number }>(
+    { payable: 0 }
+  );
+  const [selectedTime, setSelectedTime] = useState<{ slot: string } | null>(
+    null
+  );
   const [docInfo, setDocInfo] = useState<{ name?: string } | null>(null);
   const userId = localStorage.getItem("userId");
   const navigate = useNavigate();
@@ -550,7 +633,9 @@ const UserAppointments: React.FC = () => {
           setError("Failed to fetch appointments");
         }
       } catch (err: any) {
-        setError(err.message || "An error occurred while fetching appointments");
+        setError(
+          err.message || "An error occurred while fetching appointments"
+        );
       } finally {
         setLoading(false);
       }
@@ -580,7 +665,11 @@ const UserAppointments: React.FC = () => {
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
+      return date.toLocaleDateString("en-US", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
     } catch (error) {
       return "Invalid date";
     }
@@ -590,7 +679,9 @@ const UserAppointments: React.FC = () => {
     try {
       await axiosInstance.patch(`/appointments/${appointmentId}/cancel`);
       setAppointments((prev) =>
-        prev.map((appt) => (appt._id === appointmentId ? { ...appt, status: "cancelled" } : appt))
+        prev.map((appt) =>
+          appt._id === appointmentId ? { ...appt, status: "cancelled" } : appt
+        )
       );
       toast.success("Appointment cancelled successfully");
     } catch (error) {
@@ -607,7 +698,10 @@ const UserAppointments: React.FC = () => {
   const confirmReschedule = async (date: string, time: string) => {
     if (!selectedAppointment) return;
     try {
-      await axiosInstance.put(`/appointments/reschedule/${selectedAppointment._id}`, { date, time });
+      await axiosInstance.put(
+        `/appointments/reschedule/${selectedAppointment._id}`,
+        { date, time }
+      );
       setAppointments((prev) =>
         prev.map((appt) =>
           appt._id === selectedAppointment._id ? { ...appt, date, time } : appt
@@ -734,16 +828,16 @@ const UserAppointments: React.FC = () => {
         if (verify.status) {
           toast.success("Payment successful!");
           const successData = {
-                     transactionId: response.razorpay_payment_id,
-                     amount: verify.fees,
-                     date: new Date().toLocaleString(),
-                     patientName: userProfile?.name || "John Doe",
-                     email: userProfile?.email || "john.doe@example.com",
-                     address: userProfile?.address || "123 Main Street, City",
-                     doctorName: docInfo?.name,
-                     appointmentTime: selectedTime?.slot,
-                     healioLogo: assets.logo,
-                   };
+            transactionId: response.razorpay_payment_id,
+            amount: verify.fees,
+            date: new Date().toLocaleString(),
+            patientName: userProfile?.name || "John Doe",
+            email: userProfile?.email || "john.doe@example.com",
+            address: userProfile?.address || "123 Main Street, City",
+            doctorName: docInfo?.name,
+            appointmentTime: selectedTime?.slot,
+            healioLogo: assets.logo,
+          };
           localStorage.removeItem("bookingId");
           navigate("/success", { state: successData });
         }
@@ -803,12 +897,21 @@ const UserAppointments: React.FC = () => {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar onCollapse={setSidebarCollapsed} collapsed={sidebarCollapsed} />
-      <div className={`flex-1 transition-all duration-300 ${sidebarCollapsed ? "ml-16" : "ml-64"}`}>
+      <div
+        className={`flex-1 transition-all duration-300 ${
+          sidebarCollapsed ? "ml-16" : "ml-64"
+        }`}
+      >
         <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6">
           <div className="bg-white rounded-xl shadow-lg p-6 mb-6 transition-shadow hover:shadow-xl border border-gray-100">
             <div className="flex flex-col sm:flex-row justify-between items-center">
-              <h1 className="text-2xl font-bold text-gray-800 mb-4 sm:mb-0">My Appointments</h1>
-              <button className="sm:hidden p-2 rounded-md hover:bg-gray-100" onClick={() => setSidebarCollapsed(!sidebarCollapsed)}>
+              <h1 className="text-2xl font-bold text-gray-800 mb-4 sm:mb-0">
+                My Appointments
+              </h1>
+              <button
+                className="sm:hidden p-2 rounded-md hover:bg-gray-100"
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              >
                 <Menu size={24} />
               </button>
             </div>
@@ -824,7 +927,9 @@ const UserAppointments: React.FC = () => {
                       setCurrentPage(1);
                     }}
                     className={`whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-all ${
-                      statusFilter === tab.id ? "border-red-600 text-red-600" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      statusFilter === tab.id
+                        ? "border-red-600 text-red-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                     }`}
                   >
                     {tab.label}
@@ -839,24 +944,37 @@ const UserAppointments: React.FC = () => {
             </div>
           ) : error ? (
             <div className="bg-white rounded-xl shadow-lg p-8 text-center border border-gray-100">
-              <div className="text-xl font-semibold text-gray-800 mb-2">Error Loading Appointments</div>
+              <div className="text-xl font-semibold text-gray-800 mb-2">
+                Error Loading Appointments
+              </div>
               <p className="text-gray-600">{error}</p>
             </div>
           ) : currentAppointments.length === 0 ? (
             <div className="bg-white rounded-xl shadow-lg p-8 text-center border border-gray-100">
-              <div className="text-xl font-semibold text-gray-800 mb-2">No Appointments Found</div>
-              <p className="text-gray-600">You don't have any {statusFilter} appointments at the moment.</p>
+              <div className="text-xl font-semibold text-gray-800 mb-2">
+                No Appointments Found
+              </div>
+              <p className="text-gray-600">
+                You don't have any {statusFilter} appointments at the moment.
+              </p>
             </div>
           ) : (
             <div className="space-y-6">
               {currentAppointments.map((appointment) => (
-                <div key={appointment._id} className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden transition-all hover:shadow-xl transform hover:-translate-y-1">
+                <div
+                  key={appointment._id}
+                  className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden transition-all hover:shadow-xl transform hover:-translate-y-1"
+                >
                   <div className="sm:flex items-center p-6 bg-gradient-to-r from-red-600 to-red-700">
                     <div className="sm:flex-shrink-0 mb-4 sm:mb-0">
                       <div className="h-20 w-20 rounded-full overflow-hidden bg-white flex items-center justify-center border-2 border-white mx-auto sm:mx-0 shadow-lg">
-                        {appointment.doctorId.image || appointment.doctorId.profileImage ? (
+                        {appointment.doctorId.image ||
+                        appointment.doctorId.profileImage ? (
                           <img
-                            src={appointment.doctorId.image || appointment.doctorId.profileImage}
+                            src={signedUrltoNormalUrl(
+                              appointment.doctorId.image ||
+                                appointment.doctorId.profileImage
+                            )}
                             alt={appointment.doctorId.name}
                             className="h-full w-full object-cover"
                           />
@@ -867,12 +985,20 @@ const UserAppointments: React.FC = () => {
                     </div>
                     <div className="sm:ml-6 flex-1 text-center sm:text-left">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2">
-                        <h2 className="text-xl font-bold text-white">{appointment.doctorId.name}</h2>
-                        <span className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full ${getStatusColor(appointment.status)} shadow-sm`}>
+                        <h2 className="text-xl font-bold text-white">
+                          {appointment.doctorId.name}
+                        </h2>
+                        <span
+                          className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full ${getStatusColor(
+                            appointment.status
+                          )} shadow-sm`}
+                        >
                           {appointment.status}
                         </span>
                       </div>
-                      <p className="text-sm text-white mb-2">{appointment.doctorId.speciality?.name || "N/A"}</p>
+                      <p className="text-sm text-white mb-2">
+                        {appointment.doctorId.speciality?.name || "N/A"}
+                      </p>
                       <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 mt-3">
                         <div className="flex items-center text-sm text-white bg-red-500 bg-opacity-30 px-3 py-1 rounded-full">
                           <Calendar className="w-4 h-4 mr-2" />
@@ -913,7 +1039,11 @@ const UserAppointments: React.FC = () => {
                         <button
                           onClick={() => {
                             navigate("/chats");
-                            window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+                            window.scrollTo({
+                              top: 0,
+                              left: 0,
+                              behavior: "smooth",
+                            });
                           }}
                           className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-medium"
                         >
@@ -933,7 +1063,9 @@ const UserAppointments: React.FC = () => {
                           className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors text-sm font-medium"
                           onClick={() => handleReview(appointment)}
                         >
-                          {appointment.review?.rating ? "Edit Review" : "Add Review"}
+                          {appointment.review?.rating
+                            ? "Edit Review"
+                            : "Add Review"}
                         </button>
                         {appointment.prescription && (
                           <button
@@ -967,10 +1099,14 @@ const UserAppointments: React.FC = () => {
             <div className="flex justify-center mt-8">
               <nav className="flex items-center space-x-2">
                 <button
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
                   disabled={currentPage === 1}
                   className={`p-2 rounded-md ${
-                    currentPage === 1 ? "text-gray-400 cursor-not-allowed" : "text-gray-700 hover:bg-gray-100"
+                    currentPage === 1
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
                   <ChevronLeft size={20} />
@@ -980,17 +1116,23 @@ const UserAppointments: React.FC = () => {
                     key={index}
                     onClick={() => setCurrentPage(index + 1)}
                     className={`px-4 py-2 rounded-md ${
-                      currentPage === index + 1 ? "bg-red-600 text-white" : "text-gray-700 hover:bg-gray-100"
+                      currentPage === index + 1
+                        ? "bg-red-600 text-white"
+                        : "text-gray-700 hover:bg-gray-100"
                     }`}
                   >
                     {index + 1}
                   </button>
                 ))}
                 <button
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
                   disabled={currentPage === totalPages}
                   className={`p-2 rounded-md ${
-                    currentPage === totalPages ? "text-gray-400 cursor-not-allowed" : "text-gray-700 hover:bg-gray-100"
+                    currentPage === totalPages
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
                   <ChevronRight size={20} />

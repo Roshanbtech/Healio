@@ -4,6 +4,7 @@ import { Sidebar } from "../common/doctorCommon/Sidebar";
 import { Camera } from "lucide-react";
 import { toast } from "react-toastify";
 import { assets } from "../../assets/assets";
+import { signedUrltoNormalUrl } from "../../utils/getUrl";
 
 interface Specialization {
   id: string;
@@ -74,6 +75,10 @@ const Profile: React.FC = () => {
         setEditProfile(fetchedProfile);
         if (fetchedProfile.image) {
           setPreviewUrl(fetchedProfile.image);
+        }
+        if (fetchedProfile.image) {
+          let profile = signedUrltoNormalUrl(fetchedProfile.image);
+          fetchedProfile.image = profile;
         }
       } catch (err) {
         setError("Failed to load profile");
@@ -153,6 +158,10 @@ const Profile: React.FC = () => {
           "Content-Type": "multipart/form-data",
         },
       });
+      if (data.image) {
+        let profile = signedUrltoNormalUrl(data.image);
+        data.image = profile;
+      }
 
       if (data.status) {
         setProfile(editProfile);

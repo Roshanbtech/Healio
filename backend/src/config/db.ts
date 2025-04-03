@@ -8,8 +8,8 @@ const connectDB = async () => {
     // console.log(process.env.MONGO_URL);
     await mongoose.connect(process.env.MONGO_URL as string);
     console.log("Hurray! Database connected");
-  } catch (error) {
-    console.log("Database betrayed us");
+  } catch (error:any) {
+    console.log("Database betrayed us",error.message);
   }
 };
 

@@ -3,6 +3,7 @@ import { X, Download, Printer, FileText } from "lucide-react";
 import { assets } from "../../assets/assets";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { signedUrltoNormalUrl } from "../../utils/getUrl";
 
 interface Medicine {
   name: string;
@@ -541,7 +542,7 @@ const PrescriptionComponent: React.FC<PrescriptionProps> = ({
               {prescription.signature ? (
                 <div className="flex flex-col items-end">
                   <img
-                    src={prescription.signature}
+                    src={signedUrltoNormalUrl(prescription.signature)}
                     alt="Doctor's Signature"
                     className="w-40 h-20 object-contain mb-1"
                     crossOrigin="anonymous"

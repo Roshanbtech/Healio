@@ -25,7 +25,7 @@ export interface IAuthRepository {
   getAllDoctors(options:PaginationOptions): Promise<DoctorResult[]>;
   toggleUser(id: string): Promise<any>;
   toggleDoctor(id: string): Promise<any>;
-  getAllServices(): Promise<Service[]>;
+  getAllServices(options:PaginationOptions): Promise<Service[]>;
   addService(name: string, isActive: boolean): Promise<any>;
   createCoupon(couponData: any): Promise<any>;
   editService(id: string,name: string, isActive: boolean): Promise<any>;
@@ -34,7 +34,7 @@ export interface IAuthRepository {
   getCertificates(id: string): Promise<any>;
   approveDoctor(id: string): Promise<any>;
   rejectDoctor(id: string, reason: string): Promise<any>;
-  getAllCoupons(): Promise<Coupon[]>;
+  getAllCoupons(options:PaginationOptions): Promise<Coupon[]>;
   toggleCoupon(id: string): Promise<any>;
   editCoupon(id: string, couponData: any): Promise<any>;
   existCoupon(code:string): Promise<any>;

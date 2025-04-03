@@ -15,7 +15,7 @@ export interface IAuthService {
   getDoctor(options:PaginationOptions): Promise<any>;
   toggleUser(id: string): Promise<any>;
   toggleDoctor(id: string): Promise<any>;
-  getService(): Promise<any>;
+  getService(options:PaginationOptions): Promise<any>;
   addService(name: string, isActive: boolean): Promise<any>;
   editService(id: string, name: string, isActive: boolean): Promise<any>;
   toggleService(id: string): Promise<any>;
@@ -23,7 +23,7 @@ export interface IAuthService {
   approveDoctor(id: string): Promise<any>;
   rejectDoctor(id: string, reason: string): Promise<any>;
   createCoupon(couponData: any): Promise<any>;
-  getCoupons(): Promise<any>;
+  getCoupons(options:PaginationOptions): Promise<any>;
   toggleCoupon(id: string): Promise<any>;
   editCoupon(id: string, couponData: any): Promise<any>;
   getDashboardStats(): Promise<IDashboardStats>;

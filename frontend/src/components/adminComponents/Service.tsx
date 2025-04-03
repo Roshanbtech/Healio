@@ -1,73 +1,71 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { toast } from "react-toastify";
-import { FaEdit } from "react-icons/fa"; // Import edit icon
-import axiosInstance from "../../utils/axiosInterceptors";
-import ToggleButton from "../common/adminCommon/ToggleButton";
-import { Sidebar } from "../common/adminCommon/Sidebar";
+"use client";
 
-interface Service {
-  _id: string;
-  name: string;
-  isActive: boolean;
-}
+import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import axiosInstance from "../../utils/axiosInterceptors";
+import { Sidebar } from "../common/adminCommon/Sidebar";
+import AddServiceModal from "./serviceComponents/AddServiceModal";
+import EditServiceModal from "./serviceComponents/EditServiceModal";
+import ServiceTable from "./serviceComponents/ServiceTable";
+import type { Service, PaginationInfo, ServiceListResponse } from "../../types/admin/serviceListTypes";
+import useDebounce from "../../hooks/useDebounce";
 
 const Service: React.FC = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    total: 0,
+    page: 1,
+    limit: 10,
+    totalPages: 0,
+  });
+  const itemsPerPage = 10;
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [newService, setNewService] = useState<{ name: string }>({ name: "" });
-  const [errorMessage, setErrorMessage] = useState<string>(""); // For Add modal
-  const [editErrorMessage, setEditErrorMessage] = useState<string>(""); // For Edit modal
+  const [errorMessage, setErrorMessage] = useState<string>("");
   const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [editErrorMessage, setEditErrorMessage] = useState<string>("");
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
-  const itemsPerPage = 10;
 
-  useEffect(() => {
-    const fetchServices = async () => {
-      try {
-        const response = await axiosInstance.get("/admin/services");
-        if (response.data?.data?.serviceList) {
-          setServices(response.data.data.serviceList);
-        }
-      } catch (error) {
-        console.error("Error fetching services:", error);
-        toast.error("Failed to fetch services");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  const fetchServices = async () => {
+    try {
+      const response = await axiosInstance.get("/admin/services", {
+        params: { page: currentPage, limit: itemsPerPage, search: debouncedSearchTerm },
+      });
+      if (response.data?.data?.serviceList) {
+        const res: ServiceListResponse = response.data.data.serviceList;
+        setServices(res.data);
+        setPagination(res.pagination);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching services:", error);
+      toast.error("Failed to fetch services");
+    }
+  };
+
+  // Reset page to 1 when search term changes
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  }, [debouncedSearchTerm]);
+
+  // Refetch services on page or search term change
+  useEffect(() => {
     fetchServices();
-  }, []);
-
-  const filteredServices = useMemo(() => {
-    const lowerCaseSearchTerm = searchTerm.toLowerCase().trim();
-    if (!lowerCaseSearchTerm) return services;
-    return services.filter((service) =>
-      service.name.toLowerCase().includes(lowerCaseSearchTerm)
-    );
-  }, [services, searchTerm]);
-
-  const { currentServices, totalPages } = useMemo(() => {
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    return {
-      currentServices: filteredServices.slice(
-        indexOfFirstItem,
-        indexOfLastItem
-      ),
-      totalPages: Math.ceil(filteredServices.length / itemsPerPage),
-    };
-  }, [filteredServices, currentPage]);
+  }, [currentPage, debouncedSearchTerm]);
 
   const handleToggleService = async (id: string) => {
     try {
       const response = await axiosInstance.patch(`/admin/services/${id}/toggle`);
       if (response.data?.status) {
-        setServices((prevServices) =>
-          prevServices.map((service) =>
-            service._id === id
-              ? { ...service, isActive: !service.isActive }
-              : service
+        setServices((prev) =>
+          prev.map((service) =>
+            service._id === id ? { ...service, isActive: !service.isActive } : service
           )
         );
         toast.success(response.data.service.message);
@@ -83,17 +81,14 @@ const Service: React.FC = () => {
       setErrorMessage("Service name cannot be empty.");
       return;
     }
-    if (newService.name.length > 12) {
-      setErrorMessage("Service name cannot exceed 12 characters.");
+    if (newService.name.length > 20) {
+      setErrorMessage("Service name cannot exceed 20 characters.");
       return;
     }
     try {
-      const response = await axiosInstance.post(
-        "/admin/services",
-        newService
-      );
+      const response = await axiosInstance.post("/admin/services", newService);
       if (response.data?.status) {
-        setServices((prevServices) => [response.data.service, ...prevServices]);
+        fetchServices();
         toast.success("Service added successfully");
         setIsAddModalOpen(false);
         setNewService({ name: "" });
@@ -115,16 +110,13 @@ const Service: React.FC = () => {
       return;
     }
     try {
-      const response = await axiosInstance.patch(
-        `/admin/services/${selectedService._id}`,
-        { name: selectedService.name }
-      );
+      const response = await axiosInstance.patch(`/admin/services/${selectedService._id}`, {
+        name: selectedService.name,
+      });
       if (response.data?.status) {
-        setServices((prevServices) =>
-          prevServices.map((service) =>
-            service._id === selectedService._id
-              ? { ...service, name: selectedService.name }
-              : service
+        setServices((prev) =>
+          prev.map((service) =>
+            service._id === selectedService._id ? { ...service, name: selectedService.name } : service
           )
         );
         toast.success("Service updated successfully");
@@ -138,31 +130,20 @@ const Service: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen ">
+    <div className="flex min-h-screen">
       <Sidebar onCollapse={setSidebarCollapsed} />
-
-      {/* Main Content */}
-      <div
-        className={`flex-1 transition-all duration-300 ${
-          sidebarCollapsed ? "ml-16" : "ml-64"
-        }`}
-      >
+      <div className={`flex-1 transition-all duration-300 ${sidebarCollapsed ? "ml-16" : "ml-64"}`}>
         <div className="p-8">
-          {/* Header & Search */}
           <div className="flex justify-between items-center mb-8 bg-white p-6 rounded-lg shadow-sm">
             <h1 className="text-3xl font-bold text-gray-800">Services</h1>
             <div className="flex items-center space-x-4">
-              {/* Search Bar */}
               <div className="flex items-center bg-white rounded-full shadow-md px-4 py-2 w-96">
                 <input
                   type="text"
                   placeholder="Search Services..."
                   className="flex-grow bg-transparent outline-none text-gray-700 focus:ring-0"
                   value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setCurrentPage(1);
-                  }}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
                 <button
                   type="button"
@@ -189,208 +170,37 @@ const Service: React.FC = () => {
               </button>
             </div>
           </div>
-
-          {/* Service Table */}
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead>
-                  <tr className="bg-red-600">
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
-                      No
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {currentServices.length > 0 ? (
-                    currentServices.map((service, index) => (
-                      <tr
-                        key={service._id}
-                        className="hover:bg-gray-50 transition duration-150 ease-in-out"
-                      >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {(currentPage - 1) * itemsPerPage + index + 1}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {service.name}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {service.isActive ? "Active" : "Inactive"}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center space-x-4">
-                            <ToggleButton
-                              isBlocked={!service.isActive}
-                              onClick={() => handleToggleService(service._id)}
-                            />
-                            <button
-                              onClick={() => handleEditClick(service)}
-                              className="text-green-600 hover:text-green-800 transition duration-150 ease-in-out"
-                            >
-                              <FaEdit size={20} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={4}
-                        className="px-6 py-4 text-center text-gray-500"
-                      >
-                        No services found
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="mt-6 flex justify-center">
-              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
-                  disabled={currentPage === 1}
-                  className="relative inline-flex items-center px-4 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  Previous
-                </button>
-                {Array.from({ length: totalPages }).map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentPage(index + 1)}
-                    className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium ${
-                      currentPage === index + 1
-                        ? "bg-red-600 text-white"
-                        : "bg-white text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    {index + 1}
-                  </button>
-                ))}
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                  }
-                  disabled={currentPage === totalPages}
-                  className="relative inline-flex items-center px-4 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  Next
-                </button>
-              </nav>
-            </div>
-          )}
+          <ServiceTable
+            services={services}
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            pagination={pagination}
+            onToggle={handleToggleService}
+            onEdit={handleEditClick}
+            onPageChange={setCurrentPage}
+          />
         </div>
       </div>
-
-      {/* Add Service Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 bg-gray-900 bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-lg w-96">
-            {/* Header */}
-            <div className="bg-red-600 rounded-t-lg p-4">
-              <h2 className="text-lg font-semibold text-white text-center">
-                Add Service
-              </h2>
-            </div>
-            {/* Content */}
-            <div className="p-6 space-y-3">
-              <input
-                type="text"
-                placeholder="Service Name"
-                value={newService.name}
-                onChange={(e) => {
-                  setNewService({ name: e.target.value });
-                  setErrorMessage("");
-                }}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
-              />
-              {errorMessage && (
-                <p className="text-red-500 text-sm">{errorMessage}</p>
-              )}
-              <div className="flex justify-end space-x-2 pt-2">
-                <button
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors duration-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAddService}
-                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200"
-                >
-                  Add
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <AddServiceModal
+          newService={newService}
+          errorMessage={errorMessage}
+          onNewServiceChange={(value) => setNewService({ name: value })}
+          onClose={() => setIsAddModalOpen(false)}
+          onAdd={handleAddService}
+        />
       )}
-
       {isEditModalOpen && selectedService && (
-        <div className="fixed inset-0 z-50 bg-gray-900 bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-lg w-96">
-            {/* Header */}
-            <div className="bg-red-600 rounded-t-lg p-4">
-              <h2 className="text-lg font-semibold text-white text-center">
-                Edit Service
-              </h2>
-            </div>
-            {/* Content */}
-            <div className="p-6 space-y-3">
-              <input
-                type="text"
-                placeholder="Name"
-                value={selectedService.name}
-                onChange={(e) => {
-                  setSelectedService({
-                    ...selectedService,
-                    name: e.target.value,
-                  });
-                  setEditErrorMessage("");
-                }}
-                className={`w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 ${
-                  editErrorMessage ? "border-red-500" : ""
-                }`}
-              />
-              {editErrorMessage && (
-                <p className="text-red-500 text-sm">{editErrorMessage}</p>
-              )}
-              <div className="flex justify-end space-x-2 pt-2">
-                <button
-                  onClick={() => {
-                    setIsEditModalOpen(false);
-                    setSelectedService(null);
-                  }}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors duration-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleUpdateService}
-                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200"
-                >
-                  Update
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <EditServiceModal
+          selectedService={selectedService}
+          errorMessage={editErrorMessage}
+          onServiceNameChange={(value) => setSelectedService({ ...selectedService, name: value })}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedService(null);
+          }}
+          onUpdate={handleUpdateService}
+        />
       )}
     </div>
   );

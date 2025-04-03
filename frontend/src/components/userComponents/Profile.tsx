@@ -4,6 +4,7 @@ import { Sidebar } from "../common/userCommon/Sidebar";
 import { Camera, Eye, EyeOff } from "lucide-react";
 import { toast } from "react-toastify";
 import { assets } from "../../assets/assets";
+import { signedUrltoNormalUrl } from "../../utils/getUrl";
 
 interface UserProfile {
   id: string;
@@ -66,6 +67,10 @@ const Profile: React.FC = () => {
         if (fetchedProfile.image) {
           setPreviewUrl(fetchedProfile.image);
         }
+        if (fetchedProfile.image) {
+          let profile = signedUrltoNormalUrl(fetchedProfile.image);
+          fetchedProfile.image = profile;
+        }
       } catch (err) {
         setError("Failed to load profile");
       } finally {
@@ -118,7 +123,13 @@ const Profile: React.FC = () => {
     try {
       const formData = new FormData();
       for (const key in editProfile) {
-        if (key === "image" || key === "id" || key === "userId" || key === "wallet") continue;
+        if (
+          key === "image" ||
+          key === "id" ||
+          key === "userId" ||
+          key === "wallet"
+        )
+          continue;
         formData.append(
           key,
           String(editProfile[key as keyof UserProfile] || "")
@@ -134,11 +145,17 @@ const Profile: React.FC = () => {
           headers: { "Content-Type": "multipart/form-data" },
         }
       );
+      
+      // Update the image URL using signedUrltoNormalUrl
       const editedProfile = response.data?.data?.result;
+      if (editedProfile?.image) {
+        editedProfile.image = signedUrltoNormalUrl(editedProfile.image);
+      }
+      
       setEditProfile(editedProfile);
       setProfile(editedProfile);
       toast.success("Profile updated successfully!");
-      localStorage.setItem("image", response.data?.data?.result?.image);
+      localStorage.setItem("image", editedProfile?.image);
     } catch (error) {
       setError("Error updating profile");
       toast.error("Error updating profile");
@@ -146,7 +163,7 @@ const Profile: React.FC = () => {
       setIsSubmittingProfile(false);
     }
   };
-
+  
   // Handle Change Password input changes
   const handleChangePasswordInput = (
     e: React.ChangeEvent<HTMLInputElement>
