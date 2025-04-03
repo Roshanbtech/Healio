@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { TrendingUp, Users, UserPlus, Calendar, Loader } from "lucide-react";
+import { TrendingUp, Users, UserPlus, Calendar } from "lucide-react";
 import axiosInstance from "../../../utils/axiosInterceptors";
 import { assets } from "../../../assets/assets";
 import { motion, AnimatePresence } from "framer-motion";

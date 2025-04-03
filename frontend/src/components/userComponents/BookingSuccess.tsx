@@ -48,7 +48,8 @@ const SuccessPage: React.FC<SuccessPageProps> = ({
       </div>
 
       <div className="relative w-full max-w-lg">
-        <HealingAnimation ref={animationRef} isActive={animationComplete} />
+        <HealingAnimation isActive={animationComplete} />
+        {/* ref={animationRef}  */}
 
         {/* Success card */}
         <div className="bg-white rounded-xl shadow-xl overflow-hidden transition-all duration-500 transform scale-100 z-30 relative">

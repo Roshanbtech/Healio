@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { assets } from "../../assets/assets";
-import error from "../../assets/error.gif";
+// import error from "../../assets/error.gif";
 
 const NotFound: React.FC = () => {
   const navigate = useNavigate();

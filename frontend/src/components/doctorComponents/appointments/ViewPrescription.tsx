@@ -30,7 +30,7 @@ interface PrescriptionData {
   updatedAt?: { $date?: string } | string;
   doctor: {
     name: string;
-    speciality: string;
+    speciality: { name: string } | string;
     phone?: string;
     email?: string;
   };
@@ -417,7 +417,7 @@ const PrescriptionComponent: React.FC<PrescriptionProps> = ({
               </div>
               <div>
                 <p className="font-medium">Specialty</p>
-                <p>{prescription.doctor.speciality?.name}</p>
+                <p>{typeof prescription.doctor.speciality === 'string' ? prescription.doctor.speciality : prescription.doctor.speciality.name}</p>
               </div>
               {prescription.doctor.phone && (
                 <div>
@@ -554,7 +554,7 @@ const PrescriptionComponent: React.FC<PrescriptionProps> = ({
                   />
                   <div className="border-t border-black w-40 text-center pt-1">
                     <p className="font-semibold">{prescription.doctor.name}</p>
-                    <p className="text-sm">{prescription.doctor.speciality?.name}</p>
+                    <p className="text-sm">{typeof prescription.doctor.speciality === 'string' ? prescription.doctor.speciality : prescription.doctor.speciality.name}</p>
                   </div>
                 </div>
               ) : (
@@ -562,7 +562,7 @@ const PrescriptionComponent: React.FC<PrescriptionProps> = ({
                   <div className="h-16 w-40 border-b border-black mb-1"></div>
                   <div className="w-40 text-center">
                     <p className="font-semibold">{prescription.doctor.name}</p>
-                    <p className="text-sm">{prescription.doctor.speciality?.name}</p>
+                    <p className="text-sm">{typeof prescription.doctor.speciality === 'string' ? prescription.doctor.speciality : prescription.doctor.speciality.name}</p>
                   </div>
                 </div>
               )}

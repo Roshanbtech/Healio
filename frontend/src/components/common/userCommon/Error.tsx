@@ -7,7 +7,7 @@ interface ErrorFallbackProps {
   resetErrorBoundary: () => void;
 }
 
-const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetErrorBoundary }) => {
+const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error }) => {
   const navigate = useNavigate();
 
   return (

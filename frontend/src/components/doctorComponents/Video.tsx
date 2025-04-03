@@ -36,8 +36,8 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
   patientName = "Patient",
 }) => {
   const socket = useSocket();
-  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  // const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  // const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [callActive, setCallActive] = useState(false);
   const [peer, setPeer] = useState<SimplePeer.Instance | null>(null);
   const [isMuted, setIsMuted] = useState(false);
@@ -95,7 +95,7 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
         setConnectionStatus("connecting");
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         localStreamRef.current = stream;
-        setLocalStream(stream);
+        // setLocalStream(stream);
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
         }
@@ -224,7 +224,7 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
     if (remoteVideoRef.current && remoteVideoRef.current.srcObject) {
       remoteVideoRef.current.srcObject = null;
     }
-    setRemoteStream(null);
+    // setRemoteStream(null);
     
     // Stop all local tracks
     if (localStreamRef.current) {
@@ -238,7 +238,7 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
       }
       
       localStreamRef.current = null;
-      setLocalStream(null);
+      // setLocalStream(null);
     }
     
     // Reset call duration
@@ -277,7 +277,7 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
     
     newPeer.on("stream", (remoteStreamData) => {
       console.log("Doctor: Received remote stream from user.");
-      setRemoteStream(remoteStreamData);
+      // setRemoteStream(remoteStreamData);
       if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = remoteStreamData;
         
@@ -626,23 +626,23 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
         </div>
 
         {/* Custom Scrollbar Styles */}
-        <style jsx>{`
-          ::-webkit-scrollbar {
+        <style>{`
+          :global(::-webkit-scrollbar) {
             width: 8px;
             height: 8px;
           }
           
-          ::-webkit-scrollbar-track {
+          :global(::-webkit-scrollbar-track) {
             background: rgba(240, 255, 244, 0.3);
             border-radius: 10px;
           }
           
-          ::-webkit-scrollbar-thumb {
+          :global(::-webkit-scrollbar-thumb) {
             background: rgba(220, 38, 38, 0.7);
             border-radius: 10px;
           }
           
-          ::-webkit-scrollbar-thumb:hover {
+          :global(::-webkit-scrollbar-thumb:hover) {
             background: rgba(220, 38, 38, 0.9);
           }
         `}</style>

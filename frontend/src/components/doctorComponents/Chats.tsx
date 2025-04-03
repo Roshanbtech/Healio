@@ -60,7 +60,6 @@ export default function DoctorChat() {
   const socket = useSocket();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterOption, setFilterOption] = useState("all");
 
   // For video call modal
   const [showVideoCall, setShowVideoCall] = useState(false);
@@ -230,9 +229,9 @@ export default function DoctorChat() {
   }, [selectedUser, socket, currentDoctor]);
 
   // Handlers
-  const handleUserSelect = (user: User) => {
-    setSelectedUser(user);
-  };
+  // const handleUserSelect = (user: User) => {
+  //   setSelectedUser(user);
+  // };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);

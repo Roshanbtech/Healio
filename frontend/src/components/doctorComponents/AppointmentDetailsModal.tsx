@@ -1,7 +1,6 @@
 // components/appointments/AppointmentDetailsModal.tsx
 import React from "react";
 import { format } from "date-fns";
-import { X } from "lucide-react";
 import { Appointment } from "../../types/appointmentTypes";
 import CustomButton from "../common/doctorCommon/CustomButton";
 

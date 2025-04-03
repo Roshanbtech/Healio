@@ -544,7 +544,7 @@ const FormField: React.FC<FormFieldProps> = ({
       <div className="relative">
         <input
           type={showPassword ? "text" : "password"}
-          min={type === "number" ? 0 : undefined}
+          // min={type === "number" ? 0 : undefined}
           id={name}
           name={name}
           value={value !== undefined ? value : ""}

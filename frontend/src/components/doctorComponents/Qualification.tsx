@@ -230,7 +230,8 @@ export const QualificationForm: React.FC = () => {
                 <div>
                   <p className="text-gray-600 mb-2">
                     <span className="font-medium">Speciality:</span>{" "}
-                    {submittedData.speciality?.name}
+                    {/* {submittedData.speciality?.name} */} 
+                    {submittedData.speciality}
                   </p>
                   <p className="text-gray-600 mb-2">
                     <span className="font-medium">Hospital:</span>{" "}
@@ -249,7 +250,7 @@ export const QualificationForm: React.FC = () => {
                     Uploaded Documents
                   </h5>
                   <div className="flex flex-wrap gap-2">
-                    {submittedData.files.map((file, index) => (
+                    {submittedData.files.map((_, index) => (
                       <div
                         key={index}
                         className="inline-flex items-center px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-700"

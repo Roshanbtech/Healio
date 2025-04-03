@@ -114,17 +114,17 @@ interface RazorpayResponse {
   razorpay_signature: string;
 }
 
-interface SuccessData {
-  transactionId: string;
-  amount: string;
-  date: string;
-  patientName: string;
-  email: string;
-  address: string;
-  doctorName?: string;
-  appointmentTime?: string;
-  healioLogo: string;
-}
+// interface SuccessData {
+//   transactionId: string;
+//   amount: string;
+//   date: string;
+//   patientName: string;
+//   email: string;
+//   address: string;
+//   doctorName?: string;
+//   appointmentTime?: string;
+//   healioLogo: string;
+// }
 
 interface RazorpayOptions {
   key: string;
@@ -341,7 +341,7 @@ const MedicalReportsModal: React.FC<{
     medications: string;
     notes: string;
   }) => void;
-}> = ({ appointment, onClose, onSubmit }) => {
+}> = ({ onClose, onSubmit }) => {
   const [recordDate, setRecordDate] = useState<string>(
     new Date().toISOString().split("T")[0]
   );
@@ -611,13 +611,13 @@ const UserAppointments: React.FC = () => {
   const [selectedPrescription, setSelectedPrescription] =
     useState<PrescriptionData | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [paymentBreakdown, setPaymentBreakdown] = useState<{ payable: number }>(
-    { payable: 0 }
-  );
-  const [selectedTime, setSelectedTime] = useState<{ slot: string } | null>(
+  // const [paymentBreakdown, setPaymentBreakdown] = useState<{ payable: number }>(
+  //   { payable: 0 }
+  // );
+  const [selectedTime] = useState<{ slot: string } | null>(
     null
   );
-  const [docInfo, setDocInfo] = useState<{ name?: string } | null>(null);
+  const [docInfo] = useState<{ name?: string } | null>(null);
   const userId = localStorage.getItem("userId");
   const navigate = useNavigate();
 
@@ -690,10 +690,10 @@ const UserAppointments: React.FC = () => {
     }
   };
 
-  const handleReschedule = (appointment: IAppointment) => {
-    setSelectedAppointment(appointment);
-    setShowRescheduleModal(true);
-  };
+  // const handleReschedule = (appointment: IAppointment) => {
+  //   setSelectedAppointment(appointment);
+  //   setShowRescheduleModal(true);
+  // };
 
   const confirmReschedule = async (date: string, time: string) => {
     if (!selectedAppointment) return;
@@ -792,7 +792,7 @@ const UserAppointments: React.FC = () => {
       doctor: {
         name: appointment.doctorId.name,
         speciality: appointment.doctorId.speciality?.name || "",
-        phone: appointment.doctorId.phone || "",
+        phone: typeof appointment.doctorId.phone === 'string' ? appointment.doctorId.phone : "",
         email: appointment.doctorId.email || "",
       },
       patient: {
@@ -896,7 +896,7 @@ const UserAppointments: React.FC = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar onCollapse={setSidebarCollapsed} collapsed={sidebarCollapsed} />
+      <Sidebar onCollapse={setSidebarCollapsed} />
       <div
         className={`flex-1 transition-all duration-300 ${
           sidebarCollapsed ? "ml-16" : "ml-64"
@@ -973,7 +973,8 @@ const UserAppointments: React.FC = () => {
                           <img
                             src={signedUrltoNormalUrl(
                               appointment.doctorId.image ||
-                                appointment.doctorId.profileImage
+                                appointment.doctorId.profileImage ||
+                                ''
                             )}
                             alt={appointment.doctorId.name}
                             className="h-full w-full object-cover"

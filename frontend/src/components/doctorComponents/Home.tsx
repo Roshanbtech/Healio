@@ -6,7 +6,7 @@ import { GrowthChart } from "../common/doctorCommon/Growth-chart";
 import { Calendar, Clock, ChevronRight } from "lucide-react";
 import axiosInstance from "../../utils/axiosInterceptors";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { signedUrltoNormalUrl } from "../../utils/getUrl";
 
 // Define interfaces for aggregated data
@@ -168,7 +168,7 @@ const Home: React.FC = () => {
       </motion.div>
     );
 
-  const { doctorProfile, dashboardStats, todaysAppointments, demographics } = dashboardData;
+  const { doctorProfile, todaysAppointments, demographics } = dashboardData;
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -339,7 +339,7 @@ const Home: React.FC = () => {
               className="lg:col-span-2"
               variants={itemVariants}
             >
-              <DashboardStats stats={dashboardStats} />
+              <DashboardStats />
             </motion.div>
             <motion.div 
               className="bg-white p-6 rounded-2xl shadow-md"

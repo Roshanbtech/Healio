@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
-import CustomButton from "../../common/doctorCommon/CustomButton";
 import axiosInstance from "../../../utils/axiosInterceptors";
 import { toast } from "react-toastify";
 import { Appointment } from "../../../types/appointmentTypes";
@@ -9,7 +8,7 @@ const RescheduleModal: React.FC<{
   appointment: Appointment;
   onClose: () => void;
   onReschedule: (date: string, time: string, reason: string) => void;
-}> = ({ appointment, onClose, onReschedule }) => {
+}> = ({ onClose, onReschedule }) => {
   const [date, setDate] = useState<string>("");
   const [time, setTime] = useState<string>("");
   const [reason, setReason] = useState<string>("");

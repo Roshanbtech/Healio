@@ -36,7 +36,7 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
 }) => {
   const socket = useSocket();
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [, setRemoteStream] = useState<MediaStream | null>(null);
   const [callActive, setCallActive] = useState(false);
   const [peer, setPeer] = useState<SimplePeer.Instance | null>(null);
   const [isMuted, setIsMuted] = useState(false);
@@ -537,12 +537,14 @@ const stopLocalStream = () => {
         </div>
 
         {/* Custom Scrollbar Styles */}
-        <style jsx>{`
-          ::-webkit-scrollbar { width: 8px; height: 8px; }
-          ::-webkit-scrollbar-track { background: rgba(254,226,226,0.3); border-radius: 10px; }
-          ::-webkit-scrollbar-thumb { background: rgba(220,38,38,0.7); border-radius: 10px; }
-          ::-webkit-scrollbar-thumb:hover { background: rgba(220,38,38,0.9); }
-        `}</style>
+        <style>
+          {`
+            ::-webkit-scrollbar { width: 8px; height: 8px; }
+            ::-webkit-scrollbar-track { background: rgba(254,226,226,0.3); border-radius: 10px; }
+            ::-webkit-scrollbar-thumb { background: rgba(220,38,38,0.7); border-radius: 10px; }
+            ::-webkit-scrollbar-thumb:hover { background: rgba(220,38,38,0.9); }
+          `}
+        </style>
       </div>
     </div>
   );

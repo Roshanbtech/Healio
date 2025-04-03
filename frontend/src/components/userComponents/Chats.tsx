@@ -17,7 +17,7 @@ import axiosInstance from "../../utils/axiosInterceptors";
 import { Sidebar } from "../common/userCommon/Sidebar";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { BASE_URL } from "../../utils/configSetup";
+// import { BASE_URL } from "../../utils/configSetup";
 import UserVideoCall from "./Video"; // <-- Our new video call component
 import { useSocket } from "../../context/SocketContext";
 import { signedUrltoNormalUrl } from "../../utils/getUrl";

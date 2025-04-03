@@ -17,7 +17,7 @@ interface OTPProps {
   };
 }
 
-const OTP: React.FC<OTPProps> = ({ onSubmit, onResend, formData }) => {
+const OTP: React.FC<OTPProps> = ({ onSubmit, formData }) => {
   const [otp, setOtp] = useState<string[]>(["", "", "", ""]);
   const [timeLeft, setTimeLeft] = useState(30);
   const [canResend, setCanResend] = useState(false);

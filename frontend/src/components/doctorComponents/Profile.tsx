@@ -11,11 +11,11 @@ interface Specialization {
   name: string;
 }
 
-interface Service {
-  _id: string;
-  name: string;
-  isActive: boolean;
-}
+// interface Service {
+//   _id: string;
+//   name: string;
+//   isActive: boolean;
+// }
 
 interface DoctorProfile {
   id: string;
@@ -40,7 +40,7 @@ const Profile: React.FC = () => {
   const [profile, setProfile] = useState<DoctorProfile | null>(null);
   // State for the edit form
   const [editProfile, setEditProfile] = useState<DoctorProfile | null>(null);
-  const [services, setServices] = useState<Service[]>([]);
+  // const [services, setServices] = useState<Service[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -91,21 +91,21 @@ const Profile: React.FC = () => {
   }, [doctor]);
 
   // Fetch services list
-  useEffect(() => {
-    const fetchServices = async () => {
-      try {
-        const response = await axiosInstance.get("/doctor/services");
-        if (response.data?.data?.services) {
-          setServices(response.data.data.services);
-        }
-      } catch (error: any) {
-        console.error("Error fetching services:", error);
-        toast.error("Failed to fetch services");
-      }
-    };
+  // useEffect(() => {
+  //   const fetchServices = async () => {
+  //     try {
+  //       const response = await axiosInstance.get("/doctor/services");
+  //       // if (response.data?.data?.services) {
+  //       //   setServices(response.data.data.services);
+  //       // }
+  //     } catch (error: any) {
+  //       console.error("Error fetching services:", error);
+  //       toast.error("Failed to fetch services");
+  //     }
+  //   };
 
-    fetchServices();
-  }, []);
+  //   fetchServices();
+  // }, []);
 
   // Handle Edit Profile input changes
   const handleInputChange = (

@@ -6,8 +6,6 @@ import {
   Clock,
   MessageCircle,
   Eye,
-  Phone,
-  Search,
   FileText,
   Check,
   Info,
@@ -71,7 +69,7 @@ interface Appointment {
   _id: string;
   appointmentId: string;
   patientId: { _id: string; name: string; email: string; phone: string };
-  doctorId: string;
+  doctorId: { _id: string };
   date: string;
   time: string;
   status:
@@ -331,16 +329,16 @@ const AppointmentsList: React.FC = () => {
     setShowModal(true);
   };
 
-  const openPrescriptionModal = (appointment: Appointment) => {
-    setSelectedAppointment(appointment);
-    setModalViewType("prescription");
-    setShowModal(true);
-  };
+  // const openPrescriptionModal = (appointment: Appointment) => {
+  //   setSelectedAppointment(appointment);
+  //   setModalViewType("prescription");
+  //   setShowModal(true);
+  // };
 
   const handleViewPrescription = (appointment: Appointment) => {
     if (appointment.prescription) {
       const prescriptionWithDetails = {
-        ...appointment.prescription,
+        prescription: appointment.prescription,
         doctor: appointment.doctorId,  
         patient: appointment.patientId, 
       };

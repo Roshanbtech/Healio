@@ -4,7 +4,6 @@ import axiosInstance from "../../../utils/axiosInterceptors";
 import { toast } from "react-toastify";
 import SignatureCanvas from "react-signature-canvas";
 import * as yup from "yup";
-import { signedUrltoNormalUrl } from "../../../utils/getUrl";
 
 interface CustomButtonProps {
   children: React.ReactNode;
@@ -57,7 +56,7 @@ interface Appointment {
   _id: string;
   appointmentId: string;
   patientId: { _id: string; name: string; email: string; phone: string };
-  doctorId: string;
+  doctorId: { _id: string };
   date: string;
   time: string;
   status: string;
