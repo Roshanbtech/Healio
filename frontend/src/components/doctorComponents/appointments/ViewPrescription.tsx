@@ -90,12 +90,12 @@ const PrescriptionComponent: React.FC<PrescriptionProps> = ({
   const downloadPDF = async () => {
     const element = prescriptionRef.current;
     if (!element) return;
-  
+
     try {
       // Create a clone of the element to avoid modifying the original
       const clone = element.cloneNode(true) as HTMLElement;
       document.body.appendChild(clone);
-      
+
       // Set the clone's styles for capturing
       clone.style.position = "absolute";
       clone.style.width = "210mm"; // A4 width
@@ -104,50 +104,54 @@ const PrescriptionComponent: React.FC<PrescriptionProps> = ({
       clone.style.left = "-9999px";
       clone.style.top = "0";
       clone.style.display = "block";
-      
+
       // Make everything black and white to avoid color issues
       const allElements = clone.querySelectorAll("*");
-      allElements.forEach(el => {
+      allElements.forEach((el) => {
         const elementStyle = el as HTMLElement;
-        
+
         // Set all text to black
         elementStyle.style.color = "#000000";
-        
+
         // Set all backgrounds to white
         elementStyle.style.backgroundColor = "#ffffff";
-        
+
         // Remove all shadows, gradients, and advanced styles
         elementStyle.style.boxShadow = "none";
         elementStyle.style.textShadow = "none";
         elementStyle.style.background = "none";
         elementStyle.style.backgroundImage = "none";
-        
+
         // Keep only black borders if they exist
         if (window.getComputedStyle(el).borderWidth !== "0px") {
           elementStyle.style.borderColor = "#000000";
         } else {
           elementStyle.style.border = "none";
         }
-        
+
         // Set full opacity
         elementStyle.style.opacity = "1";
       });
-      
+
       // Handle SVG elements - make them basic black and white
       const svgElements = clone.querySelectorAll("svg");
-      svgElements.forEach(svg => {
-        const svgPaths = svg.querySelectorAll("path, rect, circle, ellipse, line, polyline, polygon");
-        svgPaths.forEach(path => {
+      svgElements.forEach((svg) => {
+        const svgPaths = svg.querySelectorAll(
+          "path, rect, circle, ellipse, line, polyline, polygon"
+        );
+        svgPaths.forEach((path) => {
           path.setAttribute("fill", "#ffffff");
           path.setAttribute("stroke", "#000000");
           path.setAttribute("stroke-width", "1");
         });
       });
-      
+
       // Preserve important colored elements with specific styles if needed
       // For example, to preserve important colored headers or warning text:
-      const importantElements = clone.querySelectorAll(".important-header, .warning-text");
-      importantElements.forEach(el => {
+      const importantElements = clone.querySelectorAll(
+        ".important-header, .warning-text"
+      );
+      importantElements.forEach((el) => {
         // Example: Keep red for warnings
         if ((el as HTMLElement).classList.contains("warning-text")) {
           (el as HTMLElement).style.color = "#ff0000";
@@ -157,10 +161,10 @@ const PrescriptionComponent: React.FC<PrescriptionProps> = ({
           (el as HTMLElement).style.color = "#0000ff";
         }
       });
-      
+
       // Wait for rendering
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      
+
       // html2canvas options
       const options = {
         scale: 2,
@@ -169,37 +173,37 @@ const PrescriptionComponent: React.FC<PrescriptionProps> = ({
         logging: false,
         removeContainer: false,
       };
-      
+
       // Capture with html2canvas
       const canvas = await html2canvas(clone, options);
       document.body.removeChild(clone);
-      
+
       // Use a higher quality setting for the JPEG
       const imgData = canvas.toDataURL("image/jpeg", 1.0);
-      
+
       // Create PDF with jsPDF
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
         format: "a4",
       });
-      
+
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const imgWidth = pdfWidth;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
+
       // Add the image to the PDF
       pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
-      
+
       // Handle multi-page PDFs if needed
       if (imgHeight > pdfHeight) {
         let heightLeft = imgHeight;
         let position = 0;
-        
+
         heightLeft -= pdfHeight;
         position = -pdfHeight;
-        
+
         while (heightLeft > 0) {
           pdf.addPage();
           pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
@@ -207,13 +211,14 @@ const PrescriptionComponent: React.FC<PrescriptionProps> = ({
           position -= pdfHeight;
         }
       }
-      
+
       const prescriptionId = generatePrescriptionId(prescription._id);
       pdf.save(`Healio_Prescription_${prescriptionId}.pdf`);
-      
     } catch (error) {
       console.error("Error generating PDF:", error);
-      alert("Failed to generate PDF. Please try again or use the print option.");
+      alert(
+        "Failed to generate PDF. Please try again or use the print option."
+      );
     }
   };
 
@@ -302,7 +307,9 @@ const PrescriptionComponent: React.FC<PrescriptionProps> = ({
                 crossOrigin="anonymous"
               />
             </div>
-            <h2 className="text-white text-2xl font-bold">Healio Prescription</h2>
+            <h2 className="text-white text-2xl font-bold">
+              Healio Prescription
+            </h2>
           </div>
           <div className="flex items-center space-x-2">
             <button
@@ -417,7 +424,11 @@ const PrescriptionComponent: React.FC<PrescriptionProps> = ({
               </div>
               <div>
                 <p className="font-medium">Specialty</p>
-                <p>{typeof prescription.doctor.speciality === 'string' ? prescription.doctor.speciality : prescription.doctor.speciality.name}</p>
+                <p>
+                  {typeof prescription.doctor.speciality === "string"
+                    ? prescription.doctor.speciality
+                    : prescription.doctor.speciality.name}
+                </p>
               </div>
               {prescription.doctor.phone && (
                 <div>
@@ -459,22 +470,31 @@ const PrescriptionComponent: React.FC<PrescriptionProps> = ({
                   </tr>
                 </thead>
                 <tbody>
-                  {prescription.medicines.map((med, index) => (
-                    <tr
-                      key={index}
-                      className={index % 2 === 0 ? "bg-green-50" : "bg-white"}
-                    >
-                      <td className="px-4 py-2 border">{med.name}</td>
-                      <td className="px-4 py-2 border">{med.dosage}</td>
-                      <td className="px-4 py-2 border">{med.frequency}</td>
-                      <td className="px-4 py-2 border">
-                        {med.duration || "-"}
-                      </td>
-                      <td className="px-4 py-2 border">
-                        {med.instructions || "-"}
+                  {prescription.medicines &&
+                  prescription.medicines.length > 0 ? (
+                    prescription.medicines.map((med, index) => (
+                      <tr
+                        key={index}
+                        className={index % 2 === 0 ? "bg-green-50" : "bg-white"}
+                      >
+                        <td className="px-4 py-2 border">{med.name}</td>
+                        <td className="px-4 py-2 border">{med.dosage}</td>
+                        <td className="px-4 py-2 border">{med.frequency}</td>
+                        <td className="px-4 py-2 border">
+                          {med.duration || "-"}
+                        </td>
+                        <td className="px-4 py-2 border">
+                          {med.instructions || "-"}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="text-center py-4">
+                        No medicines prescribed.
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
@@ -554,7 +574,11 @@ const PrescriptionComponent: React.FC<PrescriptionProps> = ({
                   />
                   <div className="border-t border-black w-40 text-center pt-1">
                     <p className="font-semibold">{prescription.doctor.name}</p>
-                    <p className="text-sm">{typeof prescription.doctor.speciality === 'string' ? prescription.doctor.speciality : prescription.doctor.speciality.name}</p>
+                    <p className="text-sm">
+                      {typeof prescription.doctor.speciality === "string"
+                        ? prescription.doctor.speciality
+                        : prescription.doctor.speciality.name}
+                    </p>
                   </div>
                 </div>
               ) : (
@@ -562,7 +586,11 @@ const PrescriptionComponent: React.FC<PrescriptionProps> = ({
                   <div className="h-16 w-40 border-b border-black mb-1"></div>
                   <div className="w-40 text-center">
                     <p className="font-semibold">{prescription.doctor.name}</p>
-                    <p className="text-sm">{typeof prescription.doctor.speciality === 'string' ? prescription.doctor.speciality : prescription.doctor.speciality.name}</p>
+                    <p className="text-sm">
+                      {typeof prescription.doctor.speciality === "string"
+                        ? prescription.doctor.speciality
+                        : prescription.doctor.speciality.name}
+                    </p>
                   </div>
                 </div>
               )}
@@ -572,7 +600,9 @@ const PrescriptionComponent: React.FC<PrescriptionProps> = ({
 
         {/* Footer */}
         <div className="px-6 py-3 border-t flex justify-between items-center bg-gray-50">
-          <p className="text-sm text-gray-500">© 2025 Healio Medical Services</p>
+          <p className="text-sm text-gray-500">
+            © 2025 Healio Medical Services
+          </p>
           <div className="flex space-x-2">
             <button
               onClick={downloadPDF}

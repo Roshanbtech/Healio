@@ -17,14 +17,16 @@ interface Service {
   isActive: boolean;
 }
 
-interface QualificationDetails {
-  degree: string;
-  experience: string;
-  country: string;
-  speciality: string;
-  hospital: string;
-  achievements: string;
-}
+// interface BaseQualificationDetails {
+//   degree: string;
+//   experience: string;
+//   country: string;
+//   speciality: {
+//     name: string;
+//   };
+//   hospital: string;
+//   achievements: string;
+// }
 
 interface FormValues {
   degree: string;
@@ -35,7 +37,10 @@ interface FormValues {
   achievements: string;
 }
 
-interface QualificationDetails extends FormValues {
+interface QualificationDetails extends Omit<FormValues, 'speciality'> {
+  speciality: {
+    name: string;
+  };
   files: string[];
 }
 
@@ -152,8 +157,12 @@ export const QualificationForm: React.FC = () => {
 
         if (response.data.status) {
           toast.success("Qualifications submitted successfully!");
+          const selectedService = services.find(
+            (service) => service._id === values.speciality
+          );
           setSubmittedData({
             ...values,
+            speciality: { name: selectedService ? selectedService.name : values.speciality },
             files: selectedFile.map((file) => file.name),
           });
         }
@@ -230,8 +239,8 @@ export const QualificationForm: React.FC = () => {
                 <div>
                   <p className="text-gray-600 mb-2">
                     <span className="font-medium">Speciality:</span>{" "}
-                    {/* {submittedData.speciality?.name} */} 
-                    {submittedData.speciality}
+                    {submittedData.speciality?.name } 
+                    {/* {submittedData.speciality} */}
                   </p>
                   <p className="text-gray-600 mb-2">
                     <span className="font-medium">Hospital:</span>{" "}

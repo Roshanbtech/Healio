@@ -180,7 +180,7 @@ const AddScheduleModal: React.FC<IAddScheduleModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+    <div className="fixed inset-0 backdrop-blur-sm bg-opacity-30 flex items-center justify-center z-50">
       <div className="bg-white p-0 rounded-lg shadow-lg w-full max-w-2xl relative">
         {/* Header Section */}
         <div className="bg-red-600 p-4 rounded-t-lg">

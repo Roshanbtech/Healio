@@ -12,13 +12,14 @@ import AppointmentsList from "../components/doctorComponents/Appointments";
 import Wallet from "../components/doctorComponents/Wallet";
 import ErrorBoundary from "../components/common/ErrorBoundary";
 import NotFound from "../pages/doctorPages/NotFound";
-// import Prescription from "../components/doctorComponents/appointments/PrescriptionModal";
+import LandingPage from "../components/common/Landing";
 
 const DoctorRoutes = () => {
   return (
     <div className="mx-4 sm:mx-[10%]">
       <ErrorBoundary>
         <Routes>
+          <Route path="/" element={<LandingPage />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -32,7 +33,6 @@ const DoctorRoutes = () => {
           <Route path="/wallet" element={<Wallet />} />
           <Route path="/chats" element={<Chat />} />
           <Route path="*" element={<NotFound />} />
-          {/* <Route path="/prescription" element={<Prescription />} /> */}
         </Routes>
       </ErrorBoundary>
     </div>

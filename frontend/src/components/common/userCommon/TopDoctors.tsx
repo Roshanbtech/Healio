@@ -40,6 +40,17 @@ const TopDoctors: React.FC = () => {
     fetchDoctors();
   }, []);
 
+  const handleDoctorClick = (doctorId: string) => {
+    // Check if the user is authenticated (for example, by checking for a token)
+    const authToken = localStorage.getItem("authToken");
+    if (!authToken) {
+      navigate("/login");
+      return;
+    }
+    // Otherwise, navigate to doctor details page
+    navigate(`/doctorDetails/${doctorId}`);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -67,7 +78,8 @@ const TopDoctors: React.FC = () => {
         {doctors.slice(0, 10).map((doctor) => (
           <div
             key={doctor._id}
-            onClick={() => navigate(`/doctorDetails/${doctor._id}`)}
+            onClick={() => handleDoctorClick(doctor._id)}
+            // onClick={() => navigate(`/doctorDetails/${doctor._id}`)}
             className="rounded-xl overflow-hidden cursor-pointer transition-transform duration-300 transform hover:-translate-y-2 shadow-md hover:shadow-lg"
           >
             {/* Image Container with bg-green-100 */}

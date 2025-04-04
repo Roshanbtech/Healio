@@ -9,12 +9,14 @@ import Coupons from "../pages/adminPages/Coupon";
 import ErrorBoundary from "../components/common/ErrorBoundary";
 import NotFound from "../pages/adminPages/NotFound";
 import ReportManagement from "../components/adminComponents/Reports";
+import LandingPage from "../components/common/Landing";
 
 const AdminRoutes = () => {
   return (
     <div className="mx-4 sm:mx-[10%]">
       <ErrorBoundary>
         <Routes>
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<AdminLogin />} />
           <Route element={<ProtectedRoute role="admin" />}>
             <Route path="/dashboard" element={<AdminDashboard />} />

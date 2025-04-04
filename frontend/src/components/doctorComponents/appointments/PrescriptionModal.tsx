@@ -249,7 +249,7 @@ const PrescriptionForm: React.FC<PrescriptionFormProps> = ({ appointment, onClos
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 overflow-y-auto">
-      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
+      <div className="absolute inset-0 bg-black opacity-50 backdrop-blur-sm" onClick={onClose}></div>
       <div className="bg-white rounded-xl shadow-2xl z-50 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <div className="bg-red-600 p-4 sticky top-0 z-10">
           <h2 className="text-white text-2xl font-bold">Create Prescription</h2>
@@ -482,7 +482,7 @@ const PrescriptionForm: React.FC<PrescriptionFormProps> = ({ appointment, onClos
       </div>
       {showConfirmModal && (
         <div className="fixed inset-0 flex items-center justify-center z-[60]">
-          <div className="absolute inset-0 bg-black opacity-50" onClick={() => setShowConfirmModal(false)}></div>
+          <div className="absolute inset-0 bg-black opacity-50 backdrop-blur-sm" onClick={() => setShowConfirmModal(false)}></div>
           <div className="bg-white rounded-xl shadow-2xl z-50 w-full max-w-md p-6">
             <h3 className="text-xl font-bold text-gray-900 mb-4">Confirm Submission</h3>
             <p className="text-gray-600 mb-6">
