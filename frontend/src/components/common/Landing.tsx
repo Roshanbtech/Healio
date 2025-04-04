@@ -1,33 +1,38 @@
 import { assets } from "../../assets/assets";
 
+import { Link } from "react-router-dom";
+
 const Navbar = () => (
-    <div className="relative z-50 bg-white shadow-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-20">
-          <div className="flex-shrink-0 flex items-center">
-            <div className="flex items-center">
-              <img 
-                src={assets.logo} 
-                alt="HEALIO Logo" 
-                className="h-20 w-auto"
-              />
-            </div>
+  <div className="relative z-50 bg-white shadow-md">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="flex justify-between h-20">
+        <div className="flex-shrink-0 flex items-center">
+          <div className="flex items-center">
+            <img 
+              src={assets.logo} 
+              alt="HEALIO Logo" 
+              className="h-20 w-auto"
+            />
           </div>
-          <div className="flex items-center gap-4">
-            <a href="/login" className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium">
-              Log In
-            </a>
-            <a
-              href="/signUp"
-              className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full text-sm font-medium transition duration-300 ease-in-out transform hover:scale-105 btn-pulse"
-            >
-              Create Account
-            </a>
-          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <Link 
+            to="/login"
+            className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium"
+          >
+            Log In
+          </Link>
+          <Link
+            to="/signUp"
+            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full text-sm font-medium transition duration-300 ease-in-out transform hover:scale-105 btn-pulse"
+          >
+            Create Account
+          </Link>
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 
   const HeroSection = () => (
     <div className="relative overflow-hidden rounded-3xl mx-4 my-8 shadow-2xl" style={{ backgroundColor: "#fafafa" }}>
