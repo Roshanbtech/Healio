@@ -58,7 +58,7 @@ app.use(
 //middleware to allow cross-origin requests
 
 const corsOptions = {
-  origin: "*", // Frontend origin
+  origin: process.env.FRONTEND_URL, // Frontend origin
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], // Allowed HTTP methods
   allowedHeaders: ["Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"], // Allowed headers
   credentials: true, // Allow credentials (cookies, authorization headers, etc.)
