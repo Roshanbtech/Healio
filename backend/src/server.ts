@@ -11,12 +11,12 @@ import * as rfs from "rotating-file-stream";
 import { createServer } from "http";
 
 //custom modules
-import connectDB from "./src/config/db"; //database connection
-import {initSocket} from "./src/config/socketioConfig";// socket.io configuration
-import userRoutes from "./src/routes/userRoutes"; //user routes
-import doctorRoutes from "./src/routes/doctorRoutes"; //doctor routes
-import adminRoutes from "./src/routes/adminRoutes"; //admin routes
-import protectedRoutes from "./src/routes/protectedRoutes";
+import connectDB from "./config/db"; //database connection
+import {initSocket} from "./config/socketioConfig";// socket.io configuration
+import userRoutes from "./routes/userRoutes"; //user routes
+import doctorRoutes from "./routes/doctorRoutes"; //doctor routes
+import adminRoutes from "./routes/adminRoutes"; //admin routes
+import protectedRoutes from "./routes/protectedRoutes";
 
 // -----------------------CONFIG-----------------------
 //load environment variables
