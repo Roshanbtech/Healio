@@ -84,7 +84,7 @@ app.use((0, morgan_1.default)("combined", {
 }));
 //middleware to allow cross-origin requests
 const corsOptions = {
-    origin: process.env.FRONTEND_URL, // Frontend origin
+    origin: "*", // Frontend origin
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], // Allowed HTTP methods
     allowedHeaders: ["Origin", "Content-Type", "Accept", "Authorization"], // Allowed headers
     credentials: true, // Allow credentials (cookies, authorization headers, etc.)
