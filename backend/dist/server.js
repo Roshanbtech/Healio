@@ -86,7 +86,7 @@ app.use((0, morgan_1.default)("combined", {
 const corsOptions = {
     origin: "*", // Frontend origin
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], // Allowed HTTP methods
-    allowedHeaders: ["Origin", "Content-Type", "Accept", "Authorization"], // Allowed headers
+    allowedHeaders: ["Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"], // Allowed headers
     credentials: true, // Allow credentials (cookies, authorization headers, etc.)
     optionsSuccessStatus: 204, // For OPTIONS preflight requests
 };
