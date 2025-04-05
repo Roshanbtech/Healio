@@ -1,4 +1,3 @@
-import { l } from "vite/dist/node/types.d-aGj9QkWt";
 import HTTP_statusCode from "../../enums/httpStatusCode";
 import { IAuthService } from "../../interface/admin/Auth.service.interface";
 import { Request, Response } from "express";
