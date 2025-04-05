@@ -8,8 +8,6 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-dist
-dist-ssr
 *.local
 
 # Editor directories and files
@@ -24,4 +22,3 @@ dist-ssr
 *.sw?
 
 .env
-healio-270ae-firebase-adminsdk-fbsvc-888a9bf2b4.json

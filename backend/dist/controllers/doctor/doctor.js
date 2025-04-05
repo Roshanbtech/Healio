@@ -1,0 +1,412 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DoctorController = void 0;
+const httpStatusCode_1 = __importDefault(require("../../enums/httpStatusCode"));
+class DoctorController {
+    constructor(doctorServiceInstance) {
+        this.doctorService = doctorServiceInstance;
+    }
+    async getServices(req, res) {
+        try {
+            const services = await this.doctorService.getServices();
+            return res.status(httpStatusCode_1.default.OK).json({
+                status: true,
+                data: { services },
+                message: "Services fetched successfully",
+            });
+        }
+        catch (error) {
+            console.error("Error in serviceList:", error);
+            return res.status(httpStatusCode_1.default.InternalServerError).json({
+                status: false,
+                message: "Something went wrong, please try again later.",
+            });
+        }
+    }
+    async addQualification(req, res) {
+        const data = req.body;
+        console.log(data, "1");
+        const files = req.files;
+        try {
+            const result = await this.doctorService.addQualification(data, files);
+            console.log(result, "2");
+            return res.status(httpStatusCode_1.default.OK).json({
+                status: true,
+                data: { result },
+                message: "Qualification added successfully",
+            });
+        }
+        catch (error) {
+            console.error("Error in addQualification:", error);
+            return res.status(httpStatusCode_1.default.InternalServerError).json({
+                status: false,
+                message: "Something went wrong, please try again later.",
+            });
+        }
+    }
+    async getQualifications(req, res) {
+        try {
+            const { id } = req.params;
+            const qualifications = await this.doctorService.getQualifications(id);
+            return res.status(httpStatusCode_1.default.OK).json({
+                status: true,
+                data: { qualifications },
+                message: "Qualifications fetched successfully",
+            });
+        }
+        catch (error) {
+            console.error("Error in getQualifications:", error);
+            return res.status(httpStatusCode_1.default.InternalServerError).json({
+                status: false,
+                message: "Something went wrong, please try again later.",
+            });
+        }
+    }
+    async getDoctorProfile(req, res) {
+        try {
+            const { id } = req.params;
+            const profile = await this.doctorService.getDoctorProfile(id);
+            return res.status(httpStatusCode_1.default.OK).json({
+                status: true,
+                data: { profile },
+                message: "Profile fetched successfully",
+            });
+        }
+        catch (error) {
+            console.error("Error in getDoctorProfile:", error);
+            return res.status(httpStatusCode_1.default.InternalServerError).json({
+                status: false,
+                message: "Something went wrong, please try again later.",
+            });
+        }
+    }
+    async editDoctorProfile(req, res) {
+        try {
+            const { id } = req.params;
+            const data = req.body;
+            const file = req.file;
+            console.log("Controller - Data:", data, "ID:", id);
+            const result = await this.doctorService.editDoctorProfile(id, data, file);
+            return res.status(httpStatusCode_1.default.OK).json({
+                status: true,
+                data: { result },
+                message: "Profile updated successfully",
+            });
+        }
+        catch (error) {
+            console.error("Error in editDoctorProfile:", error);
+            return res.status(httpStatusCode_1.default.InternalServerError).json({
+                status: false,
+                message: "Something went wrong, please try again later.",
+            });
+        }
+    }
+    async changePassword(req, res) {
+        try {
+            const { id } = req.params;
+            const { oldPassword, newPassword } = req.body;
+            const result = await this.doctorService.changePassword(id, oldPassword, newPassword);
+            return res.status(httpStatusCode_1.default.OK).json({
+                status: true,
+                data: { result },
+                message: "Password updated successfully",
+            });
+        }
+        catch (error) {
+            console.error("Error in changePassword:", error);
+            return res.status(httpStatusCode_1.default.InternalServerError).json({
+                status: false,
+                message: "Something went wrong, please try again later.",
+            });
+        }
+    }
+    //Schedule management started here....
+    async addSchedule(req, res) {
+        try {
+            const scheduleData = req.body;
+            const result = await this.doctorService.addSchedule(scheduleData);
+            return res.status(httpStatusCode_1.default.OK).json({
+                status: true,
+                data: { result },
+                message: "Schedule added successfully",
+            });
+        }
+        catch (error) {
+            console.error("Error in addSchedule:", error);
+            return res.status(httpStatusCode_1.default.InternalServerError).json({
+                status: false,
+                message: "Something went wrong, please try again later.",
+            });
+        }
+    }
+    async getSchedule(req, res) {
+        try {
+            const { id } = req.params;
+            const schedule = await this.doctorService.getSchedule(id);
+            return res.status(httpStatusCode_1.default.OK).json({
+                status: true,
+                data: { schedule },
+                message: "Schedule fetched successfully",
+            });
+        }
+        catch (error) {
+            console.error("Error in getSchedule:", error);
+            return res.status(httpStatusCode_1.default.InternalServerError).json({
+                status: false,
+                message: "Something went wrong, please try again later.",
+            });
+        }
+    }
+    // Removed duplicate getUsers function.
+    async getUsers(req, res) {
+        try {
+            const users = await this.doctorService.getUsers();
+            return res.status(httpStatusCode_1.default.OK).json({
+                status: true,
+                data: { users },
+                message: "Users fetched successfully",
+            });
+        }
+        catch (error) {
+            console.error("Error in getUsers:", error);
+            return res.status(httpStatusCode_1.default.InternalServerError).json({
+                status: false,
+                message: "Something went wrong, please try again later.",
+            });
+        }
+    }
+    async getAppointmentUsers(req, res) {
+        try {
+            const { id } = req.params;
+            const users = await this.doctorService.getAppointmentUsers(id);
+            return res.status(httpStatusCode_1.default.OK).json({
+                status: true,
+                data: { users },
+                message: "Users fetched successfully",
+            });
+        }
+        catch (error) {
+            console.error("Error in getUsers:", error);
+            return res.status(httpStatusCode_1.default.InternalServerError).json({
+                status: false,
+                message: "Something went wrong, please try again later.",
+            });
+        }
+    }
+    async chatImageUploads(req, res) {
+        try {
+            const { id } = req.params;
+            const file = req.file;
+            if (!id || !file) {
+                return res.status(httpStatusCode_1.default.BadRequest).json({
+                    status: false,
+                    message: "Chat ID and image file are required",
+                });
+            }
+            const result = await this.doctorService.chatImageUploads(id, file);
+            return res.status(httpStatusCode_1.default.OK).json({
+                status: true,
+                result,
+            });
+        }
+        catch (error) {
+            console.log("error in uploading chat image", error);
+            return res.status(httpStatusCode_1.default.InternalServerError).json({
+                status: false,
+                message: "Something went wrong, please try again later.",
+            });
+        }
+    }
+    //to get all appointments of a particular doctor
+    async getAppointments(req, res) {
+        try {
+            const { id } = req.params;
+            const appointments = await this.doctorService.getAppointments(id);
+            return res.status(httpStatusCode_1.default.OK).json({
+                status: true,
+                data: { appointments },
+                message: "Appointments fetched successfully",
+            });
+        }
+        catch (error) {
+            console.log("error in getting appointments", error);
+            return res.status(httpStatusCode_1.default.InternalServerError).json({
+                status: false,
+                message: "Something went wrong, please try again later.",
+            });
+        }
+    }
+    async acceptAppointment(req, res) {
+        try {
+            const { id } = req.params;
+            const accepted = await this.doctorService.acceptAppointment(id);
+            if (!accepted) {
+                return res.status(httpStatusCode_1.default.NotFound).json({
+                    status: false,
+                    message: "Appointment not found",
+                });
+            }
+            return res.status(httpStatusCode_1.default.OK).json({
+                status: true,
+                data: { accepted },
+                message: "Appointment accepted successfully",
+            });
+        }
+        catch (error) {
+            console.log("error in accepting appointment", error);
+            return res.status(httpStatusCode_1.default.InternalServerError).json({
+                status: false,
+                message: "Something went wrong, please try again later.",
+            });
+        }
+    }
+    async completeAppointment(req, res) {
+        try {
+            const { id } = req.params;
+            const completed = await this.doctorService.completeAppointment(id);
+            if (!completed) {
+                return res.status(httpStatusCode_1.default.NotFound).json({
+                    status: false,
+                    message: "Appointment not found",
+                });
+            }
+            return res.status(httpStatusCode_1.default.OK).json({
+                status: true,
+                data: { completed },
+                message: "Appointment completed successfully",
+            });
+        }
+        catch (error) {
+            console.log("error in completing appointment", error);
+            return res.status(httpStatusCode_1.default.InternalServerError).json({
+                status: false,
+                message: "Something went wrong, please try again later.",
+            });
+        }
+    }
+    //rescheduling of an appointment by doctor ........... starts here.....................
+    async rescheduleAppointment(req, res) {
+        try {
+            const { id } = req.params;
+            const { date, time, reason } = req.body;
+            const rescheduled = await this.doctorService.rescheduleAppointment(id, date, time, reason);
+            if (!rescheduled) {
+                return res.status(httpStatusCode_1.default.NotFound).json({
+                    status: false,
+                    message: "Appointment not found",
+                });
+            }
+            return res.status(httpStatusCode_1.default.OK).json({
+                status: true,
+                data: { rescheduled },
+                message: "Appointment rescheduled successfully",
+            });
+        }
+        catch (error) {
+            console.log("error in rescheduling appointment", error);
+            return res.status(httpStatusCode_1.default.InternalServerError).json({
+                status: false,
+                message: "Something went wrong, please try again later.",
+            });
+        }
+    }
+    //rescheduling required available slots of doctor so fetch it first..........
+    async getDoctorAvailableSlots(req, res) {
+        try {
+            const { id } = req.params;
+            const slots = await this.doctorService.getDoctorAvailableSlots(id);
+            return res.status(httpStatusCode_1.default.OK).json({ status: true, slots });
+        }
+        catch (error) {
+            console.error("Error in getAvailableSlots:", error);
+            return res.status(httpStatusCode_1.default.InternalServerError).json({
+                status: false,
+                message: "Something went wrong, please try again later.",
+            });
+        }
+    }
+    async getDashboardHome(req, res) {
+        try {
+            const doctorId = req.params.id;
+            const data = await this.doctorService.getDashboardHome(doctorId);
+            return res.status(200).json({
+                status: true,
+                data,
+                message: "Dashboard data fetched successfully",
+            });
+        }
+        catch (error) {
+            return res.status(500).json({
+                status: false,
+                message: error.message,
+            });
+        }
+    }
+    async getDashboardStats(req, res) {
+        try {
+            const { id: doctorId } = req.params;
+            const data = await this.doctorService.fetchDashboardStats(doctorId);
+            if (!data) {
+                return res.status(httpStatusCode_1.default.NotFound).json({
+                    status: false,
+                    message: "Doctor not found",
+                });
+            }
+            // Now data contains both stats and doctorProfile
+            return res.status(httpStatusCode_1.default.OK).json({
+                status: true,
+                data, // data already has { stats, doctorProfile }
+                message: "Dashboard stats fetched successfully",
+            });
+        }
+        catch (error) {
+            console.log("Error in getting dashboard stats", error);
+            return res.status(httpStatusCode_1.default.InternalServerError).json({
+                status: false,
+                message: "Something went wrong, please try again later.",
+            });
+        }
+    }
+    // async getGrowthData(req: Request, res: Response): Promise<any> {
+    //   try{
+    //     const { id: doctorId } = req.params;
+    //     const growthData = await this.doctorService.fetchGrowthData(doctorId);
+    //     return res.status(HTTP_statusCode.OK).json({
+    //       status: true,
+    //       data: { growthData },
+    //       message: "Growth data fetched successfully",
+    //     })
+    //   }catch(error:any){
+    //     console.log("error in getting growth data", error);
+    //     return res.status(HTTP_statusCode.InternalServerError).json({
+    //       status: false,
+    //       message: "Something went wrong, please try again later.",
+    //     })
+    //   }
+    // }
+    async getGrowthData(req, res) {
+        try {
+            const { id: doctorId } = req.params;
+            // Default to "yearly" if timeRange is not provided
+            const timeRange = req.query.timeRange || "yearly";
+            const dateParam = req.query.date;
+            const growthData = await this.doctorService.fetchGrowthData(doctorId, timeRange, dateParam);
+            return res.status(200).json({
+                status: true,
+                data: { growthData },
+                message: "Growth data fetched successfully"
+            });
+        }
+        catch (error) {
+            console.error("Error in getGrowthData:", error);
+            return res.status(500).json({
+                status: false,
+                message: "Something went wrong, please try again later."
+            });
+        }
+    }
+}
+exports.DoctorController = DoctorController;
