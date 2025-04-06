@@ -246,59 +246,65 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
     }
     console.log(`Doctor: Starting peer connection. Initiator: ${initiator}`);
     setConnectionStatus("connecting");
-    const newPeer = new SimplePeer({
-      initiator,
-      trickle: false,
-      stream: localStreamRef.current,
-    });
 
-    newPeer.on("signal", (signalData) => {
-      console.log("Doctor: Peer generated signal data:", signalData);
-      socket?.emit("video-signal", {
-        chatId,
-        callerType: "doctor",
-        callerId: doctorId,
-        recipientType: "user",
-        recipientId: userId,
-        signal: signalData,
+    try {
+      const newPeer = new SimplePeer({
+        initiator,
+        trickle: false,
+        stream: localStreamRef.current,
       });
-    });
 
-    newPeer.on("stream", (remoteStreamData) => {
-      console.log("Doctor: Received remote stream from user.");
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = remoteStreamData;
-        remoteVideoRef.current.onloadedmetadata = () => {
-          console.log("Doctor: Remote video metadata loaded, attempting to play.");
-          remoteVideoRef.current?.play().catch(err => console.error("Doctor: Error playing remote video:", err));
-        };
+      newPeer.on("signal", (signalData) => {
+        console.log("Doctor: Peer generated signal data:", signalData);
+        socket?.emit("video-signal", {
+          chatId,
+          callerType: "doctor",
+          callerId: doctorId,
+          recipientType: "user",
+          recipientId: userId,
+          signal: signalData,
+        });
+      });
+
+      newPeer.on("stream", (remoteStreamData) => {
+        console.log("Doctor: Received remote stream from user.");
+        if (remoteVideoRef.current) {
+          remoteVideoRef.current.srcObject = remoteStreamData;
+          remoteVideoRef.current.onloadedmetadata = () => {
+            console.log("Doctor: Remote video metadata loaded, attempting to play.");
+            remoteVideoRef.current?.play().catch(err => console.error("Doctor: Error playing remote video:", err));
+          };
+        }
+        setConnectionStatus("connected");
+      });
+
+      newPeer.on("connect", () => {
+        console.log("Doctor: Peer connection established.");
+        setConnectionStatus("connected");
+      });
+
+      newPeer.on("error", (err) => {
+        console.error("Doctor: Peer encountered an error:", err);
+        setConnectionStatus("failed");
+        cleanupCall();
+      });
+
+      newPeer.on("close", () => {
+        console.log("Doctor: Peer connection closed.");
+        cleanupCall();
+      });
+
+      if (incomingSignal) {
+        console.log("Doctor: Applying incoming signal to peer:", incomingSignal);
+        newPeer.signal(incomingSignal);
       }
-      setConnectionStatus("connected");
-    });
 
-    newPeer.on("connect", () => {
-      console.log("Doctor: Peer connection established.");
-      setConnectionStatus("connected");
-    });
-
-    newPeer.on("error", (err) => {
-      console.error("Doctor: Peer encountered an error:", err);
+      peerRef.current = newPeer;
+      setCallActive(true);
+    } catch (error) {
+      console.error("Doctor: Error while creating peer:", error);
       setConnectionStatus("failed");
-      cleanupCall();
-    });
-
-    newPeer.on("close", () => {
-      console.log("Doctor: Peer connection closed.");
-      cleanupCall();
-    });
-
-    if (incomingSignal) {
-      console.log("Doctor: Applying incoming signal to peer:", incomingSignal);
-      newPeer.signal(incomingSignal);
     }
-
-    peerRef.current = newPeer;
-    setCallActive(true);
   };
 
   // Handle incoming signal events
@@ -559,6 +565,7 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
 };
 
 export default DoctorVideoCall;
+
 
 
 // "use client";
