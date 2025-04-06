@@ -1,5 +1,10 @@
 "use client";
 
+// Polyfill process for client environments
+if (typeof window !== "undefined" && !window.process) {
+  window.process = { nextTick: (fn: Function) => setTimeout(fn, 0) } as any;
+}
+
 import React, { useEffect, useRef, useState } from "react";
 import SimplePeer from "simple-peer";
 import { useSocket } from "../../context/SocketContext";
@@ -41,7 +46,9 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
-  const [connectionStatus, setConnectionStatus] = useState<"idle" | "connecting" | "connected" | "failed">("idle");
+  const [connectionStatus, setConnectionStatus] = useState<
+    "idle" | "connecting" | "connected" | "failed"
+  >("idle");
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -521,57 +528,25 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
           </div>
         </div>
 
-        {/* Call Controls */}
-        <div className="p-5 bg-gradient-to-r from-gray-50 to-gray-100 flex justify-center items-center space-x-6 border-t border-green-100 rounded-b-2xl">
-          <button
-            onClick={toggleMute}
-            className={`p-4 rounded-full transition-all duration-300 transform hover:scale-105 ${isMuted ? "bg-red-600 hover:bg-red-700" : "bg-gray-200 hover:bg-gray-300"}`}
-            style={{ boxShadow: isMuted ? "0 4px 10px rgba(220,38,38,0.3)" : "0 4px 10px rgba(0,0,0,0.1)" }}
-            aria-label={isMuted ? "Unmute" : "Mute"}
-          >
-            {isMuted ? <MicOff size={24} className="text-white" /> : <Mic size={24} className="text-gray-700" />}
+        {/* Controls */}
+        <div className="flex justify-center items-center p-4 bg-gray-100 space-x-6">
+          <button onClick={toggleMute} className="p-2 bg-white rounded-full shadow">
+            {isMuted ? <MicOff /> : <Mic />}
           </button>
-          {callActive ? (
-            <button
-              onClick={endCall}
-              className="p-5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg"
-              style={{ boxShadow: "0 4px 14px rgba(220,38,38,0.4)" }}
-              aria-label="End call"
-            >
-              <PhoneOff size={30} className="text-white" />
-            </button>
-          ) : (
-            <button
-              onClick={startCall}
-              className="p-5 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg bg-gradient-to-r from-green-100 to-green-200 hover:from-green-200 hover:to-green-300"
-              style={{ boxShadow: "0 4px 14px rgba(0,0,0,0.15)" }}
-              aria-label="Start call"
-            >
-              <PhoneCall size={30} className="text-gray-800" />
-            </button>
-          )}
-          <button
-            onClick={toggleVideo}
-            className={`p-4 rounded-full transition-all duration-300 transform hover:scale-105 ${isVideoOff ? "bg-red-600 hover:bg-red-700" : "bg-gray-200 hover:bg-gray-300"}`}
-            style={{ boxShadow: isVideoOff ? "0 4px 10px rgba(220,38,38,0.3)" : "0 4px 10px rgba(0,0,0,0.1)" }}
-            aria-label={isVideoOff ? "Turn on camera" : "Turn off camera"}
-          >
-            {isVideoOff ? <CameraOff size={24} className="text-white" /> : <Camera size={24} className="text-gray-700" />}
+          <button onClick={endCall} className="p-3 bg-red-600 text-white rounded-full shadow">
+            <PhoneOff size={20} />
+          </button>
+          <button onClick={toggleVideo} className="p-2 bg-white rounded-full shadow">
+            {isVideoOff ? <CameraOff /> : <Camera />}
           </button>
         </div>
-
-        <style>{`
-          ::-webkit-scrollbar { width: 8px; height: 8px; }
-          ::-webkit-scrollbar-track { background: rgba(240,255,244,0.3); border-radius: 10px; }
-          ::-webkit-scrollbar-thumb { background: rgba(220,38,38,0.7); border-radius: 10px; }
-          ::-webkit-scrollbar-thumb:hover { background: rgba(220,38,38,0.9); }
-        `}</style>
       </div>
     </div>
   );
 };
 
 export default DoctorVideoCall;
+
 
 
 
