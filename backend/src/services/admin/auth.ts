@@ -60,7 +60,7 @@ export class AuthService implements IAuthService {
       const accessToken = jwt.sign(
         { email: AdminData.email, role: "admin" },
         accessTokenSecret,
-        { expiresIn: "15m" }
+        { expiresIn: "1d" }
       );
 
       const refreshToken = jwt.sign(

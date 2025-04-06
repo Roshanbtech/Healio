@@ -3,6 +3,8 @@ import { IAuthService } from "../../interface/user/Auth.service.interface";
 import { Request, Response } from "express";
 import { HttpStatusCode } from "axios";
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+dotenv.config();
 
 export class AuthController {
   private authService: IAuthService;

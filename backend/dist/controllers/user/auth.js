@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const httpStatusCode_1 = __importDefault(require("../../enums/httpStatusCode"));
 const axios_1 = require("axios");
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 class AuthController {
     constructor(authServiceInstance) {
         this.authService = authServiceInstance;

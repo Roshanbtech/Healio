@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import HTTP_statusCode from "../../enums/httpStatusCode";
 import { IAuthService } from "../../interface/doctor/Auth.service.interface";
+import dotenv from "dotenv";
+dotenv.config();
 
 export class AuthController {
   private authService: IAuthService;

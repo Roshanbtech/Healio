@@ -29,7 +29,7 @@ class AuthService {
                 AdminData.password !== adminPassword) {
                 return { error: "Invalid email or password." };
             }
-            const accessToken = jsonwebtoken_1.default.sign({ email: AdminData.email, role: "admin" }, accessTokenSecret, { expiresIn: "15m" });
+            const accessToken = jsonwebtoken_1.default.sign({ email: AdminData.email, role: "admin" }, accessTokenSecret, { expiresIn: "1d" });
             const refreshToken = jsonwebtoken_1.default.sign({ email: AdminData.email, role: "admin" }, refreshTokenSecret, { expiresIn: "7d" });
             return { accessToken, refreshToken };
         }

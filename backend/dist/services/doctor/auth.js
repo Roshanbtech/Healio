@@ -170,7 +170,7 @@ class AuthService {
             if (!isPasswordValid) {
                 return { error: "Invalid password." };
             }
-            const accessToken = jsonwebtoken_1.default.sign({ email, role: "doctor", doctorId: doctor._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
+            const accessToken = jsonwebtoken_1.default.sign({ email, role: "doctor", doctorId: doctor._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1d" });
             const refreshToken = jsonwebtoken_1.default.sign({ email, role: "doctor" }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "30d" });
             return { accessToken, refreshToken, doctorId: doctor._id };
         }
@@ -194,7 +194,7 @@ class AuthService {
                 doctorData.image = picture;
             }
             const { doctor, isNewDoctor } = await this.AuthRepository.handleGoogleLogin(doctorData);
-            const accessToken = jsonwebtoken_1.default.sign({ email, role: "doctor" }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
+            const accessToken = jsonwebtoken_1.default.sign({ email, role: "doctor" }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1d" });
             const refreshToken = jsonwebtoken_1.default.sign({ email, role: "doctor" }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "30d" });
             return { doctor, isNewDoctor, accessToken, refreshToken };
         }

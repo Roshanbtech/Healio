@@ -227,7 +227,7 @@ export class AuthService implements IAuthService {
       const accessToken = jwt.sign(
         { email, role: "user" },
         process.env.ACCESS_TOKEN_SECRET!,
-        { expiresIn: "15m" }
+        { expiresIn: "1d" }
       );
 
       const refreshToken = jwt.sign(
@@ -281,7 +281,7 @@ export class AuthService implements IAuthService {
       const accessToken = jwt.sign(
         { email, role: "user" },
         process.env.ACCESS_TOKEN_SECRET!,
-        { expiresIn: "15m" }
+        { expiresIn: "1d" }
       );
 
       const refreshToken = jwt.sign(
