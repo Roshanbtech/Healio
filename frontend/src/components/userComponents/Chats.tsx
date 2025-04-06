@@ -17,8 +17,7 @@ import axiosInstance from "../../utils/axiosInterceptors";
 import { Sidebar } from "../common/userCommon/Sidebar";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-// import { BASE_URL } from "../../utils/configSetup";
-import UserVideoCall from "./Video"; // <-- Our new video call component
+import UserVideoCall from "./Video"; 
 import { useSocket } from "../../context/SocketContext";
 import { signedUrltoNormalUrl } from "../../utils/getUrl";
 
@@ -656,6 +655,7 @@ export default function Chat() {
                       accept="image/*"
                     />
                     <button
+                      disabled
                       onClick={() => fileInputRef.current?.click()}
                       className="p-3.5 hover:bg-gray-100 text-gray-500 hover:text-green-600 rounded-full transition-all duration-200 transform hover:scale-110"
                       title="Attach images"

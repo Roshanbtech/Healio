@@ -603,6 +603,7 @@ export default function DoctorChat() {
                       accept="image/*"
                     />
                     <button
+                      disabled
                       onClick={() => fileInputRef.current?.click()}
                       className="p-3.5 hover:bg-gray-100 text-gray-500 hover:text-green-600 rounded-full transition-all duration-200 transform hover:scale-110"
                       title="Attach images"
