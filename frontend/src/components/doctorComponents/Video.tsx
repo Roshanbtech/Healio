@@ -41,7 +41,9 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
-  const [connectionStatus, setConnectionStatus] = useState<"idle" | "connecting" | "connected" | "failed">("idle");
+  const [connectionStatus, setConnectionStatus] = useState<
+    "idle" | "connecting" | "connected" | "failed"
+  >("idle");
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -238,7 +240,7 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
     }
   };
 
-  // Create peer connection and handle its events
+  // Create peer connection and handle its events with ICE servers configured
   const startPeer = (initiator: boolean, incomingSignal?: SimplePeer.SignalData) => {
     if (!localStreamRef.current) {
       console.error("Doctor: Local stream not available. Cannot start peer.");
@@ -252,6 +254,7 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
         initiator,
         trickle: false,
         stream: localStreamRef.current,
+        config: { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] },
       });
 
       newPeer.on("signal", (signalData) => {
@@ -272,7 +275,9 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
           remoteVideoRef.current.srcObject = remoteStreamData;
           remoteVideoRef.current.onloadedmetadata = () => {
             console.log("Doctor: Remote video metadata loaded, attempting to play.");
-            remoteVideoRef.current?.play().catch(err => console.error("Doctor: Error playing remote video:", err));
+            remoteVideoRef.current?.play().catch(err =>
+              console.error("Doctor: Error playing remote video:", err)
+            );
           };
         }
         setConnectionStatus("connected");
@@ -347,7 +352,9 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
     if (!containerRef.current) return;
     if (!document.fullscreenElement) {
       console.log("Doctor: Requesting fullscreen.");
-      containerRef.current.requestFullscreen().catch(err => console.error("Doctor: Error enabling fullscreen:", err));
+      containerRef.current.requestFullscreen().catch(err =>
+        console.error("Doctor: Error enabling fullscreen:", err)
+      );
       setIsFullscreen(true);
     } else {
       console.log("Doctor: Exiting fullscreen.");
@@ -565,6 +572,7 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
 };
 
 export default DoctorVideoCall;
+
 
 
 
