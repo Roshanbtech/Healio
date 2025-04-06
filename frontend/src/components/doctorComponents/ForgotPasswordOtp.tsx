@@ -2,9 +2,9 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { assets } from "../../assets/assets";
-import { backendUrl } from "../../utils/backendUrl";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "../../utils/axiosInterceptors";
 
 interface ForgotPasswordOTPProps {
   email: string;
@@ -64,28 +64,20 @@ const ForgotPasswordOtp: React.FC<ForgotPasswordOTPProps> = ({ email }) => {
     inputRefs.current[focusIndex]?.focus();
   };
 
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const otpValue = otp.join("");
     if (otpValue.length === 4) {
       console.log("OTP submitted:", otpValue);
       try {
-        const response = await fetch(
-          `${backendUrl}/doctor/forgot-password/verifyOtp`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ email, otp: otpValue }),
-            credentials: "include",
-          }
+        const response = await axiosInstance.post(
+          "/doctor/forgot-password/verifyOtp",
+          { email, otp: otpValue },
+          { withCredentials: true }
         );
-        const data = await response.json();
+        const data = response.data;
         console.log(data, "data");
-        if (!response.ok) {
-          throw new Error(data.message || "OTP verification failed");
-        }
         if (data.status === true) {
           toast.success(data.message || "OTP verified successfully!");
           navigate("/doctor/reset-password", { state: { email } });
@@ -95,7 +87,9 @@ const ForgotPasswordOtp: React.FC<ForgotPasswordOTPProps> = ({ email }) => {
       } catch (error: any) {
         console.error("Error verifying OTP:", error);
         toast.error(
-          error.message || "An error occurred during OTP verification"
+          error.response?.data?.message ||
+            error.message ||
+            "An error occurred during OTP verification"
         );
       }
     } else {
@@ -109,23 +103,24 @@ const ForgotPasswordOtp: React.FC<ForgotPasswordOTPProps> = ({ email }) => {
       setCanResend(false);
       setOtp(["", "", "", ""]);
       try {
-        const response = await fetch(`${backendUrl}/doctor/resendOtp`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email }),
-          credentials: "include",
-        });
-        const data = await response.json();
-        if (response.ok) {
+        const response = await axiosInstance.post(
+          "/doctor/resendOtp",
+          { email },
+          { withCredentials: true }
+        );
+        const data = response.data;
+        if (data.status === true) {
           toast.success(data.message || "OTP resent successfully!");
         } else {
           toast.error(data.message || "Failed to resend OTP");
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error resending OTP:", error);
-        toast.error("An error occurred while resending OTP");
+        toast.error(
+          error.response?.data?.message ||
+            error.message ||
+            "An error occurred while resending OTP"
+        );
       }
     }
   };
