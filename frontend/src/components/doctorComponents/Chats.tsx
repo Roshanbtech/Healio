@@ -601,6 +601,7 @@ export default function DoctorChat() {
                       className="hidden"
                       multiple
                       accept="image/*"
+                      disabled
                     />
                     <button
                       disabled
