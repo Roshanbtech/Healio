@@ -37,19 +37,18 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
 }) => {
   const socket = useSocket();
   const [callActive, setCallActive] = useState(false);
-  const [peer, setPeer] = useState<SimplePeer.Instance | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
-  const [callTimerInterval, setCallTimerInterval] = useState<NodeJS.Timeout | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<"idle" | "connecting" | "connected" | "failed">("idle");
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const peerRef = useRef<SimplePeer.Instance | null>(null);
+  const callTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Helper to format call duration (mm:ss)
   const formatCallDuration = (seconds: number) => {
@@ -58,27 +57,27 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Start call timer when call is active
+  // Timer management using a ref
   useEffect(() => {
-    if (callActive && !callTimerInterval) {
+    if (callActive && !callTimerRef.current) {
       console.log("Doctor: Starting call timer.");
-      const interval = setInterval(() => {
-        setCallDuration(prev => prev + 1);
+      callTimerRef.current = setInterval(() => {
+        setCallDuration((prev) => prev + 1);
       }, 1000);
-      setCallTimerInterval(interval);
-    } else if (!callActive && callTimerInterval) {
+    } else if (!callActive && callTimerRef.current) {
       console.log("Doctor: Stopping call timer.");
-      clearInterval(callTimerInterval);
-      setCallTimerInterval(null);
+      clearInterval(callTimerRef.current);
+      callTimerRef.current = null;
       setCallDuration(0);
     }
     return () => {
-      if (callTimerInterval) {
+      if (callTimerRef.current) {
         console.log("Doctor: Clearing call timer on cleanup.");
-        clearInterval(callTimerInterval);
+        clearInterval(callTimerRef.current);
+        callTimerRef.current = null;
       }
     };
-  }, [callActive, callTimerInterval]);
+  }, [callActive]);
 
   // Register doctor on mount
   useEffect(() => {
@@ -115,68 +114,68 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
     };
   }, []);
 
-  // Listen for socket signaling events
+  // Socket event listeners for signaling and call control
   useEffect(() => {
     if (!socket) return;
-    
-    socket.on("video:accepted", (data) => {
+
+    const onVideoAccepted = (data: any) => {
       console.log("Doctor: Received 'video:accepted' event:", data);
       if (data.chatId === chatId && data.recipientId === userId) {
         console.log("Doctor: Call accepted by user.");
-        setIsConnecting(false);
         setConnectionStatus("connected");
-        if (!peer) {
+        if (!peerRef.current) {
           console.log("Doctor: No peer exists, starting peer as initiator.");
           startPeer(true);
-        } else {
-          console.log("Doctor: Peer already exists, not creating a new one.");
         }
       }
-    });
+    };
 
-    socket.on("video:rejected", (data) => {
+    const onVideoRejected = (data: any) => {
       console.log("Doctor: Received 'video:rejected' event:", data);
       if (data.chatId === chatId && data.recipientId === userId) {
         console.error("Doctor: Call rejected by user.");
-        setIsConnecting(false);
         setConnectionStatus("failed");
         cleanupCall();
       }
-    });
+    };
 
-    socket.on("video:ended", (data) => {
+    const onVideoEnded = (data: any) => {
       console.log("Doctor: Received 'video:ended' event:", data);
       if (data.chatId === chatId) {
         console.log("Doctor: Call ended by user.");
         cleanupCall();
       }
-    });
+    };
 
-    socket.on("video-signal", (data) => {
+    const onVideoSignal = (data: any) => {
       console.log("Doctor: Received 'video-signal' event:", data);
       if (data.chatId === chatId) {
         handleSignal(data.signal);
       }
-    });
+    };
+
+    socket.on("video:accepted", onVideoAccepted);
+    socket.on("video:rejected", onVideoRejected);
+    socket.on("video:ended", onVideoEnded);
+    socket.on("video-signal", onVideoSignal);
 
     return () => {
       console.log("Doctor: Removing socket listeners on unmount.");
-      socket.off("video:accepted");
-      socket.off("video:rejected");
-      socket.off("video:ended");
-      socket.off("video-signal");
+      socket.off("video:accepted", onVideoAccepted);
+      socket.off("video:rejected", onVideoRejected);
+      socket.off("video:ended", onVideoEnded);
+      socket.off("video-signal", onVideoSignal);
     };
-  }, [socket, chatId, userId, peer]);
+  }, [socket, chatId, userId]);
 
   // Start call by emitting video:call event
   const startCall = () => {
-    if (!socket || isConnecting) return;
+    if (!socket || connectionStatus === "connecting") return;
     if (!localStreamRef.current) {
       console.error("Doctor: Local stream not available. Cannot start call.");
       return;
     }
     console.log("Doctor: Initiating call to user...");
-    setIsConnecting(true);
     setConnectionStatus("connecting");
     socket.emit("video:call", {
       chatId,
@@ -209,13 +208,12 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
   const cleanupCall = () => {
     console.log("Doctor: Cleaning up call.");
     setCallActive(false);
-    setIsConnecting(false);
     setConnectionStatus("idle");
 
-    if (peer) {
+    if (peerRef.current) {
       console.log("Doctor: Destroying peer connection.");
-      peer.destroy();
-      setPeer(null);
+      peerRef.current.destroy();
+      peerRef.current = null;
     }
 
     if (remoteVideoRef.current) {
@@ -225,19 +223,17 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
 
     if (localStreamRef.current) {
       console.log("Doctor: Stopping local media tracks.");
-      localStreamRef.current.getTracks().forEach((track) => {
-        track.stop();
-      });
+      localStreamRef.current.getTracks().forEach((track) => track.stop());
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = null;
       }
       localStreamRef.current = null;
     }
 
-    if (callTimerInterval) {
+    if (callTimerRef.current) {
       console.log("Doctor: Clearing call timer.");
-      clearInterval(callTimerInterval);
-      setCallTimerInterval(null);
+      clearInterval(callTimerRef.current);
+      callTimerRef.current = null;
       setCallDuration(0);
     }
   };
@@ -249,6 +245,7 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
       return;
     }
     console.log(`Doctor: Starting peer connection. Initiator: ${initiator}`);
+    setConnectionStatus("connecting");
     const newPeer = new SimplePeer({
       initiator,
       trickle: false,
@@ -276,6 +273,7 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
           remoteVideoRef.current?.play().catch(err => console.error("Doctor: Error playing remote video:", err));
         };
       }
+      setConnectionStatus("connected");
     });
 
     newPeer.on("connect", () => {
@@ -299,17 +297,18 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
       newPeer.signal(incomingSignal);
     }
 
-    setPeer(newPeer);
+    peerRef.current = newPeer;
     setCallActive(true);
   };
 
   // Handle incoming signal events
   const handleSignal = (signal: SimplePeer.SignalData) => {
     console.log("Doctor: Handling incoming signal:", signal);
-    if (peer) {
-      peer.signal(signal);
+    if (peerRef.current) {
+      peerRef.current.signal(signal);
     } else {
-      console.error("Doctor: No peer instance exists to apply signal.");
+      console.log("Doctor: No peer instance exists. Starting peer as receiver.");
+      startPeer(false, signal);
     }
   };
 
@@ -459,33 +458,27 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
             ) : (
               <div className="w-full h-full flex items-center justify-center rounded-xl relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-800"></div>
-                {isConnecting ? (
-                  <div className="text-center z-10">
-                    <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-green-100 mb-6"></div>
-                    <p className="text-white text-lg font-light">Connecting to patient...</p>
-                    <p className="text-gray-400 text-sm mt-2">Establishing a secure connection</p>
-                  </div>
-                ) : (
-                  <div className="text-center px-4 z-10 w-full max-w-md">
-                    <div className="py-12 px-8">
-                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center mx-auto mb-8 shadow-lg">
-                        <Camera size={40} className="text-white" />
-                      </div>
-                      <h3 className="text-white text-2xl mb-3 font-semibold">Ready for Consultation</h3>
-                      <p className="text-gray-300 text-md mb-10">Your video and audio are ready. Start the call when you're ready to connect with the patient.</p>
-                      <button
-                        onClick={startCall}
-                        className="bg-gradient-to-r from-green-100 to-green-200 hover:from-green-200 hover:to-green-300 text-gray-800 px-10 py-4 rounded-full text-lg font-medium flex items-center mx-auto transition-all duration-300 ease-in-out shadow-lg"
-                        style={{
-                          boxShadow: "0 4px 14px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(240,255,244,0.1)",
-                        }}
-                      >
-                        <PhoneCall className="mr-3" size={22} />
-                        Call Patient
-                      </button>
+                <div className="text-center px-4 z-10 w-full max-w-md">
+                  <div className="py-12 px-8">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center mx-auto mb-8 shadow-lg">
+                      <Camera size={40} className="text-white" />
                     </div>
+                    <h3 className="text-white text-2xl mb-3 font-semibold">Ready for Consultation</h3>
+                    <p className="text-gray-300 text-md mb-10">
+                      Your video and audio are ready. Start the call when you're ready to connect with the patient.
+                    </p>
+                    <button
+                      onClick={startCall}
+                      className="bg-gradient-to-r from-green-100 to-green-200 hover:from-green-200 hover:to-green-300 text-gray-800 px-10 py-4 rounded-full text-lg font-medium flex items-center mx-auto transition-all duration-300 ease-in-out shadow-lg"
+                      style={{
+                        boxShadow: "0 4px 14px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(240,255,244,0.1)",
+                      }}
+                    >
+                      <PhoneCall className="mr-3" size={22} />
+                      Call Patient
+                    </button>
                   </div>
-                )}
+                </div>
               </div>
             )}
             {/* Local Video (Picture in Picture) */}
@@ -537,9 +530,8 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
           ) : (
             <button
               onClick={startCall}
-              disabled={isConnecting}
-              className={`p-5 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg ${isConnecting ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-green-100 to-green-200 hover:from-green-200 hover:to-green-300"}`}
-              style={{ boxShadow: isConnecting ? "0 4px 10px rgba(0,0,0,0.1)" : "0 4px 14px rgba(0,0,0,0.15)" }}
+              className="p-5 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg bg-gradient-to-r from-green-100 to-green-200 hover:from-green-200 hover:to-green-300"
+              style={{ boxShadow: "0 4px 14px rgba(0,0,0,0.15)" }}
               aria-label="Start call"
             >
               <PhoneCall size={30} className="text-gray-800" />
@@ -567,6 +559,7 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
 };
 
 export default DoctorVideoCall;
+
 
 // "use client";
 

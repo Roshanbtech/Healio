@@ -34,12 +34,10 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
 }) => {
   const socket = useSocket();
   const [callActive, setCallActive] = useState(false);
-  const [peer, setPeer] = useState<SimplePeer.Instance | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
-  const [callTimerInterval, setCallTimerInterval] = useState<NodeJS.Timeout | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<"idle" | "connecting" | "connected" | "failed">("idle");
   const [incomingCall, setIncomingCall] = useState<{ chatId: string; callerType: string; callerId: string } | null>(null);
 
@@ -47,37 +45,43 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const peerRef = useRef<SimplePeer.Instance | null>(null);
+  const callTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Format mm:ss
+  // Format call duration (mm:ss)
   const formatCallDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Timer
+  // Timer management using a ref
   useEffect(() => {
-    if (callActive && !callTimerInterval) {
-      const interval = setInterval(() => setCallDuration(c => c + 1), 1000);
-      setCallTimerInterval(interval);
-    } else if (!callActive && callTimerInterval) {
-      clearInterval(callTimerInterval);
-      setCallTimerInterval(null);
+    if (callActive && !callTimerRef.current) {
+      callTimerRef.current = setInterval(() => {
+        setCallDuration((prev) => prev + 1);
+      }, 1000);
+    } else if (!callActive && callTimerRef.current) {
+      clearInterval(callTimerRef.current);
+      callTimerRef.current = null;
       setCallDuration(0);
     }
     return () => {
-      if (callTimerInterval) clearInterval(callTimerInterval);
+      if (callTimerRef.current) {
+        clearInterval(callTimerRef.current);
+        callTimerRef.current = null;
+      }
     };
   }, [callActive]);
 
-  // Register user
+  // Register user on mount
   useEffect(() => {
     if (socket && userId) {
       socket.emit("register", { type: "user", id: userId });
     }
   }, [socket, userId]);
 
-  // Init media
+  // Initialize media
   useEffect(() => {
     (async () => {
       try {
@@ -86,23 +90,24 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
         localStreamRef.current = stream;
         if (localVideoRef.current) localVideoRef.current.srcObject = stream;
         setConnectionStatus("idle");
-      } catch {
+      } catch (err) {
+        console.error("User: Error accessing media", err);
         setConnectionStatus("failed");
       }
     })();
     return () => {
-      // cleanup on unmount
-      localStreamRef.current?.getTracks().forEach(t => t.stop());
+      localStreamRef.current?.getTracks().forEach((t) => t.stop());
       cleanupCall();
     };
   }, []);
 
-  // Peer setup
+  // Peer setup function
   const startPeer = (initiator: boolean, incomingSignal?: SimplePeer.SignalData) => {
     if (!localStreamRef.current) return;
     setConnectionStatus("connecting");
     const p = new SimplePeer({ initiator, trickle: false, stream: localStreamRef.current });
-    p.on("signal", signal => {
+
+    p.on("signal", (signal) => {
       socket?.emit("video-signal", {
         chatId,
         callerType: "user",
@@ -112,19 +117,28 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
         signal,
       });
     });
-    p.on("stream", remoteStream => {
+
+    p.on("stream", (remoteStream) => {
       if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = remoteStream;
-        remoteVideoRef.current.onloadedmetadata = () => remoteVideoRef.current?.play().catch(() => {});
+        remoteVideoRef.current.onloadedmetadata = () =>
+          remoteVideoRef.current?.play().catch((err) => console.error("User: Error playing remote video", err));
       }
       setConnectionStatus("connected");
     });
+
     p.on("connect", () => setConnectionStatus("connected"));
-    p.on("error", () => { setConnectionStatus("failed"); cleanupCall(); });
+    p.on("error", (err) => {
+      console.error("User: Peer error", err);
+      setConnectionStatus("failed");
+      cleanupCall();
+    });
     p.on("close", cleanupCall);
 
-    if (incomingSignal) p.signal(incomingSignal);
-    setPeer(p);
+    if (incomingSignal) {
+      p.signal(incomingSignal);
+    }
+    peerRef.current = p;
     setCallActive(true);
   };
 
@@ -132,53 +146,67 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
   useEffect(() => {
     if (!socket) return;
 
-    // Incoming call
-    socket.on("video:incoming", data => {
-      if (data.chatId === chatId) setIncomingCall(data);
-    });
+    const onIncomingCall = (data: any) => {
+      if (data.chatId === chatId) {
+        setIncomingCall(data);
+      }
+    };
 
-    // Doctor accepted → start peer as non‑initiator
-    socket.on("video:accepted", data => {
+    const onDoctorAccepted = (data: any) => {
       if (data.chatId === chatId && data.recipientId === userId) {
         setIncomingCall(null);
         setCallActive(true);
         startPeer(false);
       }
-    });
+    };
 
-    // Handle SDP
-    socket.on("video-signal", data => {
+    const onVideoSignal = (data: any) => {
       if (data.chatId !== chatId) return;
-      if (peer) {
-        peer.signal(data.signal);
+      if (peerRef.current) {
+        peerRef.current.signal(data.signal);
       } else {
         startPeer(false, data.signal);
       }
-    });
+    };
 
-    // Call ended/rejected
-    socket.on("video:ended", data => data.chatId === chatId && endCall());
-    socket.on("video:rejected", data => data.chatId === chatId && cleanupCall());
+    const onVideoEnded = (data: any) => {
+      if (data.chatId === chatId) endCall();
+    };
+
+    const onVideoRejected = (data: any) => {
+      if (data.chatId === chatId) cleanupCall();
+    };
+
+    socket.on("video:incoming", onIncomingCall);
+    socket.on("video:accepted", onDoctorAccepted);
+    socket.on("video-signal", onVideoSignal);
+    socket.on("video:ended", onVideoEnded);
+    socket.on("video:rejected", onVideoRejected);
 
     return () => {
-      socket.off("video:incoming");
-      socket.off("video:accepted");
-      socket.off("video-signal");
-      socket.off("video:ended");
-      socket.off("video:rejected");
+      socket.off("video:incoming", onIncomingCall);
+      socket.off("video:accepted", onDoctorAccepted);
+      socket.off("video-signal", onVideoSignal);
+      socket.off("video:ended", onVideoEnded);
+      socket.off("video:rejected", onVideoRejected);
     };
-  }, [socket, chatId, peer]);
+  }, [socket, chatId, userId]);
 
-  // End & cleanup
+  // End & cleanup functions
   const cleanupCall = () => {
     setCallActive(false);
     setConnectionStatus("idle");
-    peer?.destroy();
-    setPeer(null);
+
+    if (peerRef.current) {
+      peerRef.current.destroy();
+      peerRef.current = null;
+    }
+
     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
-    if (callTimerInterval) {
-      clearInterval(callTimerInterval);
-      setCallTimerInterval(null);
+
+    if (callTimerRef.current) {
+      clearInterval(callTimerRef.current);
+      callTimerRef.current = null;
       setCallDuration(0);
     }
   };
@@ -197,30 +225,33 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
     onClose();
   };
 
-  // Accept / reject UI
+  // Accept / reject incoming call
   const acceptCall = () => {
+    if (!incomingCall) return;
     socket?.emit("video:accept", {
       chatId,
-      callerType: incomingCall!.callerType,
-      callerId: incomingCall!.callerId,
+      callerType: incomingCall.callerType,
+      callerId: incomingCall.callerId,
       recipientType: "user",
       recipientId: userId,
     });
     setIncomingCall(null);
     setCallActive(true);
   };
+
   const rejectCall = () => {
+    if (!incomingCall) return;
     socket?.emit("video:reject", {
       chatId,
-      callerType: incomingCall!.callerType,
-      callerId: incomingCall!.callerId,
+      callerType: incomingCall.callerType,
+      callerId: incomingCall.callerId,
       recipientType: "user",
       recipientId: userId,
     });
     setIncomingCall(null);
   };
 
-  // Mute / video toggles
+  // Toggle mute and video
   const toggleMute = () => {
     const track = localStreamRef.current?.getAudioTracks()[0];
     if (track) {
@@ -228,6 +259,7 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
       setIsMuted(!track.enabled);
     }
   };
+
   const toggleVideo = () => {
     const track = localStreamRef.current?.getVideoTracks()[0];
     if (track) {
@@ -236,7 +268,7 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
     }
   };
 
-  // Fullscreen
+  // Fullscreen toggle
   const toggleFullscreen = () => {
     if (!containerRef.current) return;
     if (!document.fullscreenElement) {
@@ -247,13 +279,13 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
       setIsFullscreen(false);
     }
   };
+
   useEffect(() => {
-    const onFs = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener("fullscreenchange", onFs);
-    return () => document.removeEventListener("fullscreenchange", onFs);
+    const onFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
   }, []);
 
-  // Connection indicator
   const ConnectionIndicator = () => {
     if (connectionStatus === "connecting") return <span className="text-yellow-500">Connecting…</span>;
     if (connectionStatus === "connected") return <span className="text-green-600">Connected</span>;
@@ -268,18 +300,19 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
           <div className="bg-white p-6 rounded shadow-lg">
             <p className="mb-4">Incoming video call from Dr. {doctorName}</p>
             <div className="flex space-x-4">
-              <button onClick={acceptCall} className="bg-green-600 text-white px-4 py-2 rounded">Accept</button>
-              <button onClick={rejectCall} className="bg-red-600 text-white px-4 py-2 rounded">Reject</button>
+              <button onClick={acceptCall} className="bg-green-600 text-white px-4 py-2 rounded">
+                Accept
+              </button>
+              <button onClick={rejectCall} className="bg-red-600 text-white px-4 py-2 rounded">
+                Reject
+              </button>
             </div>
           </div>
         </div>
       )}
 
       <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm">
-        <div
-          ref={containerRef}
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden"
-        >
+        <div ref={containerRef} className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden">
           {/* Header */}
           <div className="flex justify-between items-center p-4 bg-red-600 text-white">
             <div className="flex items-center space-x-3">
@@ -288,41 +321,47 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
                 <h2 className="text-lg font-bold">Healio Video Consultation</h2>
                 <div className="flex items-center space-x-2">
                   <ConnectionIndicator />
-                  {callActive && <Clock size={14} />} 
-                  {callActive && <span>{formatCallDuration(callDuration)}</span>}
+                  {callActive && (
+                    <>
+                      <Clock size={14} />
+                      <span>{formatCallDuration(callDuration)}</span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
             <div className="flex space-x-2">
               <button onClick={toggleFullscreen}>
-                {isFullscreen ? <Minimize2 color="white"/> : <Maximize2 color="white"/>}
+                {isFullscreen ? <Minimize2 color="white" /> : <Maximize2 color="white" />}
               </button>
-              <button onClick={endCall}><X color="white"/></button>
+              <button onClick={endCall}>
+                <X color="white" />
+              </button>
             </div>
           </div>
 
-          {/* Video area */}
+          {/* Video Area */}
           <div className="flex-1 flex bg-gray-900 p-4 space-x-4">
             <div className="flex-1 relative">
               {callActive ? (
-                <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover rounded"/>
+                <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover rounded" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-white">
-                  Waiting for doctor...
-                </div>
+                <div className="w-full h-full flex items-center justify-center text-white">Waiting for doctor...</div>
               )}
-              <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">{doctorName}</div>
+              <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
+                {doctorName}
+              </div>
             </div>
             <div className="w-1/4 h-1/4 relative">
-              <video ref={localVideoRef} muted autoPlay playsInline className="w-full h-full object-cover rounded"/>
+              <video ref={localVideoRef} muted autoPlay playsInline className="w-full h-full object-cover rounded" />
               {isVideoOff && (
                 <div className="absolute inset-0 bg-black flex items-center justify-center text-red-500">
-                  <CameraOff size={24}/>
+                  <CameraOff size={24} />
                 </div>
               )}
               {isMuted && (
                 <div className="absolute top-1 right-1 bg-red-600 p-1 rounded-full">
-                  <MicOff size={12} color="white"/>
+                  <MicOff size={12} color="white" />
                 </div>
               )}
             </div>
@@ -334,7 +373,7 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
               {isMuted ? <MicOff /> : <Mic />}
             </button>
             <button onClick={endCall} className="p-3 bg-red-600 text-white rounded-full shadow">
-              <PhoneOff size={20}/>
+              <PhoneOff size={20} />
             </button>
             <button onClick={toggleVideo} className="p-2 bg-white rounded-full shadow">
               {isVideoOff ? <CameraOff /> : <Camera />}
