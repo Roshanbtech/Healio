@@ -101,45 +101,55 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
     };
   }, []);
 
-  // Peer setup function
+  // Peer setup function with ICE configuration
   const startPeer = (initiator: boolean, incomingSignal?: SimplePeer.SignalData) => {
     if (!localStreamRef.current) return;
     setConnectionStatus("connecting");
-    const p = new SimplePeer({ initiator, trickle: false, stream: localStreamRef.current });
-
-    p.on("signal", (signal) => {
-      socket?.emit("video-signal", {
-        chatId,
-        callerType: "user",
-        callerId: userId,
-        recipientType: "doctor",
-        recipientId: doctorId,
-        signal,
+    try {
+      const p = new SimplePeer({
+        initiator,
+        trickle: false,
+        stream: localStreamRef.current,
+        config: { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] },
       });
-    });
 
-    p.on("stream", (remoteStream) => {
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = remoteStream;
-        remoteVideoRef.current.onloadedmetadata = () =>
-          remoteVideoRef.current?.play().catch((err) => console.error("User: Error playing remote video", err));
+      p.on("signal", (signal) => {
+        socket?.emit("video-signal", {
+          chatId,
+          callerType: "user",
+          callerId: userId,
+          recipientType: "doctor",
+          recipientId: doctorId,
+          signal,
+        });
+      });
+
+      p.on("stream", (remoteStream) => {
+        if (remoteVideoRef.current) {
+          remoteVideoRef.current.srcObject = remoteStream;
+          remoteVideoRef.current.onloadedmetadata = () =>
+            remoteVideoRef.current?.play().catch((err) => console.error("User: Error playing remote video", err));
+        }
+        setConnectionStatus("connected");
+      });
+
+      p.on("connect", () => setConnectionStatus("connected"));
+      p.on("error", (err) => {
+        console.error("User: Peer error", err);
+        setConnectionStatus("failed");
+        cleanupCall();
+      });
+      p.on("close", cleanupCall);
+
+      if (incomingSignal) {
+        p.signal(incomingSignal);
       }
-      setConnectionStatus("connected");
-    });
-
-    p.on("connect", () => setConnectionStatus("connected"));
-    p.on("error", (err) => {
-      console.error("User: Peer error", err);
+      peerRef.current = p;
+      setCallActive(true);
+    } catch (error) {
+      console.error("User: Error while creating peer:", error);
       setConnectionStatus("failed");
-      cleanupCall();
-    });
-    p.on("close", cleanupCall);
-
-    if (incomingSignal) {
-      p.signal(incomingSignal);
     }
-    peerRef.current = p;
-    setCallActive(true);
   };
 
   // Socket listeners
@@ -346,7 +356,9 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
               {callActive ? (
                 <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover rounded" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-white">Waiting for doctor...</div>
+                <div className="w-full h-full flex items-center justify-center text-white">
+                  Waiting for doctor...
+                </div>
               )}
               <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
                 {doctorName}
@@ -386,6 +398,7 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
 };
 
 export default UserVideoCall;
+
 
 
 
