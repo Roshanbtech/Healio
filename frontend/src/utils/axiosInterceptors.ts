@@ -36,6 +36,33 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+let isRefreshing = false;
+interface QueueItem {
+  resolve: (value?: string | null) => void;
+  reject: (error?: any) => void;
+}
+
+let failedQueue: QueueItem[] = [];
+
+interface ProcessQueueArgs {
+  error: Error | null;
+  token: string | null;
+}
+
+const processQueue = (
+  error: ProcessQueueArgs["error"],
+  token: ProcessQueueArgs["token"] = null
+): void => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -43,7 +70,18 @@ axiosInstance.interceptors.response.use(
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       console.log("accessToken expired trying to refresh.....");
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return axiosInstance(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
       originalRequest._retry = true;
+      isRefreshing = true;
 
       try {
         const { data } = await axiosInstance.post(
@@ -61,11 +99,16 @@ axiosInstance.interceptors.response.use(
         localStorage.setItem("userRole", decodedToken.role);
 
         originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+        processQueue(null, data.accessToken);
         return axiosInstance(originalRequest);
-      } catch (refreshError) {
+      } catch (refreshError:any) {
+        processQueue(refreshError, null);
         toast.error("Session expired. Please login again.");
         localStorage.clear();
         window.location.reload();
+        return Promise.reject(refreshError);
+      }finally {
+        isRefreshing = false;
       }
     } else if (
       error.response?.status === 403 &&
