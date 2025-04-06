@@ -37,7 +37,7 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
 }) => {
   const socket = useSocket();
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-  const [, setRemoteStream] = useState<MediaStream | null>(null);
+  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [callActive, setCallActive] = useState(false);
   const [peer, setPeer] = useState<SimplePeer.Instance | null>(null);
   const [isMuted, setIsMuted] = useState(false);
@@ -111,8 +111,8 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
   useEffect(() => {
     if (!socket) return;
 
-    socket.on("video:call", (data) => {
-      if (data.chatId === chatId && data.recipientId === userId) {
+    socket.on("video:incoming", (data) => {
+      if (data.chatId === chatId && data.callerId === doctorId) {
         console.log("User: Incoming call from doctor:", data);
         setIncomingCall(true);
       }
@@ -134,11 +134,11 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
     });
 
     return () => {
-      socket.off("video:call");
+      socket.off("video:incoming");
       socket.off("video:ended");
       socket.off("video-signal");
     };
-  }, [socket, chatId, userId]);
+  }, [socket, chatId, userId, doctorId]);
 
   const stopMediaTracks = (stream: MediaStream | null) => {
     if (!stream) return;
@@ -170,7 +170,7 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
       return;
     }
     console.log("User: Accepting call from doctor.");
-    socket.emit("video:accepted", {
+    socket.emit("video:accept", {
       chatId,
       callerType: "user",
       callerId: userId,
@@ -245,11 +245,8 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
       newPeer.on("stream", (remoteStreamData) => {
         console.log("User: Received remote stream from doctor.");
         setRemoteStream(remoteStreamData);
-        if (remoteVideoRef.current) {
-          remoteVideoRef.current.srcObject = remoteStreamData;
-          remoteVideoRef.current.play().catch((err) => console.error("User: Error playing remote video:", err));
-        }
         setConnectionStatus("connected");
+        setCallActive(true); // Set callActive to true only when the remote stream is received
       });
 
       newPeer.on("connect", () => {
@@ -274,7 +271,6 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
       }
 
       setPeer(newPeer);
-      setCallActive(true);
     } catch (err) {
       console.error("User: Error creating SimplePeer:", err);
       setConnectionStatus("failed");
@@ -290,6 +286,13 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
       startPeer(false, signal);
     }
   };
+
+  useEffect(() => {
+    if (remoteStream && remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = remoteStream;
+      remoteVideoRef.current.play().catch((err) => console.error("User: Error playing remote video:", err));
+    }
+  }, [remoteStream]);
 
   const toggleMute = () => {
     if (localStreamRef.current) {
@@ -408,22 +411,28 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
           >
             {/* Remote Video (Doctor) */}
             {callActive ? (
-              <>
-                <video
-                  ref={remoteVideoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full h-full object-cover rounded-xl bg-gray-800"
-                />
-                <div className="absolute top-4 left-4 bg-black bg-opacity-60 px-3 py-1 rounded-lg text-white text-sm font-medium flex items-center">
-                  <User size={14} className="mr-2" />
-                  {doctorName}
+              remoteStream ? (
+                <>
+                  <video
+                    ref={remoteVideoRef}
+                    autoPlay
+                    playsInline
+                    className="w-full h-full object-cover rounded-xl bg-gray-800"
+                  />
+                  <div className="absolute top-4 left-4 bg-black bg-opacity-60 px-3 py-1 rounded-lg text-white text-sm font-medium flex items-center">
+                    <User size={14} className="mr-2" />
+                    {doctorName}
+                  </div>
+                  <div className="absolute top-4 right-4 bg-green-600 bg-opacity-80 px-2 py-1 rounded-lg text-white text-xs font-medium flex items-center">
+                    <Shield size={12} className="mr-1" />
+                    Secure Connection
+                  </div>
+                </>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-800 rounded-xl">
+                  <p className="text-white">Connecting to {doctorName}...</p>
                 </div>
-                <div className="absolute top-4 right-4 bg-green-600 bg-opacity-80 px-2 py-1 rounded-lg text-white text-xs font-medium flex items-center">
-                  <Shield size={12} className="mr-1" />
-                  Secure Connection
-                </div>
-              </>
+              )
             ) : incomingCall ? (
               <div className="w-full h-full flex items-center justify-center bg-gray-800 rounded-xl">
                 <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-800"></div>
@@ -535,6 +544,7 @@ const UserVideoCall: React.FC<UserVideoCallProps> = ({
 };
 
 export default UserVideoCall;
+
 // "use client";
 
 // import React, { useEffect, useRef, useState } from "react";
