@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +8,8 @@ import axiosInstance from "../../utils/axiosInterceptors";
 
 const ResetPassword: React.FC = () => {
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const formik = useFormik({
     initialValues: {
@@ -64,9 +66,10 @@ const ResetPassword: React.FC = () => {
                 Reset Password
               </h1>
               <form onSubmit={formik.handleSubmit} className="space-y-4">
-                <div>
+                {/* New Password Field */}
+                <div className="relative">
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     name="newPassword"
                     placeholder="New Password"
                     value={formik.values.newPassword}
@@ -75,6 +78,18 @@ const ResetPassword: React.FC = () => {
                     className="w-full px-4 py-3.5 rounded-lg bg-[#e8f8e8] border-transparent focus:border-green-500 focus:bg-white focus:ring-0 transition-colors"
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-3 flex items-center"
+                  >
+                    {showPassword ? (
+                      // Replace with your preferred icon
+                      <span>🙈</span>
+                    ) : (
+                      <span>👁️</span>
+                    )}
+                  </button>
                   {formik.touched.newPassword && formik.errors.newPassword && (
                     <p className="text-red-500 text-sm mt-1">
                       {formik.errors.newPassword}
@@ -82,9 +97,10 @@ const ResetPassword: React.FC = () => {
                   )}
                 </div>
 
-                <div>
+                {/* Confirm Password Field */}
+                <div className="relative">
                   <input
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     name="confirmPassword"
                     placeholder="Confirm Password"
                     value={formik.values.confirmPassword}
@@ -93,6 +109,20 @@ const ResetPassword: React.FC = () => {
                     className="w-full px-4 py-3.5 rounded-lg bg-[#e8f8e8] border-transparent focus:border-green-500 focus:bg-white focus:ring-0 transition-colors"
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowConfirmPassword(!showConfirmPassword)
+                    }
+                    className="absolute inset-y-0 right-3 flex items-center"
+                  >
+                    {showConfirmPassword ? (
+                      // Replace with your preferred icon
+                      <span>🙈</span>
+                    ) : (
+                      <span>👁️</span>
+                    )}
+                  </button>
                   {formik.touched.confirmPassword &&
                     formik.errors.confirmPassword && (
                       <p className="text-red-500 text-sm mt-1">
@@ -108,15 +138,6 @@ const ResetPassword: React.FC = () => {
                 >
                   {formik.isSubmitting ? "Submitting..." : "Submit"}
                 </button>
-
-                {/* <div className="text-center mt-6">
-                  <Link
-                    to="/forgot-password"
-                    className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-                  >
-                    Back to Forgot Password
-                  </Link>
-                </div> */}
               </form>
             </div>
           </div>
