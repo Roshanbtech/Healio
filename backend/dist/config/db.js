@@ -8,12 +8,16 @@ const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const connectDB = async () => {
     try {
-        // console.log(process.env.MONGO_URL);
         await mongoose_1.default.connect(process.env.MONGO_URL);
         console.log("Hurray! Database connected");
     }
     catch (error) {
-        console.log("Database betrayed us", error.message);
+        if (error instanceof Error) {
+            console.error("Database betrayed us", error.message);
+        }
+        else {
+            console.error("Database betrayed us: Unknown error");
+        }
     }
 };
 exports.default = connectDB;

@@ -29,10 +29,14 @@ class GenericRepository {
     //   return this.model.findOneAndUpdate({ appointmentId: id }, data, { new: true }).exec();
     // }
     async updateOne(id, data) {
-        if ('doctorId' in data && typeof data.doctorId === 'object' && data.doctorId?._id) {
+        if ("doctorId" in data &&
+            typeof data.doctorId === "object" &&
+            data.doctorId?._id) {
             data.doctorId = data.doctorId._id;
         }
-        if ('patientId' in data && typeof data.patientId === 'object' && data.patientId?._id) {
+        if ("patientId" in data &&
+            typeof data.patientId === "object" &&
+            data.patientId?._id) {
             data.patientId = data.patientId._id;
         }
         return this.model
@@ -54,14 +58,14 @@ class GenericRepository {
     }
     async findOneWithPopulate(filter, populateFields) {
         let query = this.model.findOne(filter);
-        populateFields.forEach(field => {
+        populateFields.forEach((field) => {
             query = query.populate(field);
         });
         return query.exec();
     }
     async updateOneWithPopulate(filter, data, populateFields) {
         let query = this.model.findOneAndUpdate(filter, data, { new: true });
-        populateFields.forEach(field => {
+        populateFields.forEach((field) => {
             query = query.populate(field);
         });
         return query.exec();

@@ -1,43 +1,77 @@
 import { PaginationOptions } from "../../helper/pagination";
 import { IAppointment } from "../../model/appointmentModel";
 import { PaginatedResult } from "../../services/admin/auth";
-import { IAppointmentAnalytics, IDashboardStats, ITopDoctor, ITopUser } from "../adminInterface/dashboard"
+import {
+  AdminLoginInput,
+  AdminLoginSuccess,
+  AdminLoginError,
+  AdminLogoutSuccess,
+  AdminLogoutError,
+} from "../adminInterface/adminAuth";
+import { UserListResponse, UserToggleStatus } from "../adminInterface/userlist";
+import {
+  ApproveRejectResponse,
+  DoctorListResponse,
+  DoctorToggleStatus,
+} from "../adminInterface/doctorlist";
+import {
+  IAppointmentAnalytics,
+  IDashboardStats,
+  ITopDoctor,
+  ITopUser,
+} from "../adminInterface/dashboard";
+import {
+  ServiceListResponse,
+  ServiceSuccessResponse,
+  ServiceToggleStatus,
+} from "../adminInterface/serviceInterface";
+import {
+  Coupon,
+  CouponListResponse,
+  CouponSuccessResponse,
+  CouponToggleStatus,
+} from "../adminInterface/couponlist";
 
 export interface IAuthService {
-  login(AdminData: {
-    email: string;
-    password: string;
-  }): Promise<
-    { accessToken: string; refreshToken: string } | { error: string }
-  >;
-  logout(refreshToken: string): Promise<any>;
-  getUser(options:PaginationOptions): Promise<any>;
-  getDoctor(options:PaginationOptions): Promise<any>;
-  toggleUser(id: string): Promise<any>;
-  toggleDoctor(id: string): Promise<any>;
-  getService(options:PaginationOptions): Promise<any>;
-  addService(name: string, isActive: boolean): Promise<any>;
-  editService(id: string, name: string, isActive: boolean): Promise<any>;
-  toggleService(id: string): Promise<any>;
-  getCertificates(id: string): Promise<any>;
-  approveDoctor(id: string): Promise<any>;
-  rejectDoctor(id: string, reason: string): Promise<any>;
-  createCoupon(couponData: any): Promise<any>;
-  getCoupons(options:PaginationOptions): Promise<any>;
-  toggleCoupon(id: string): Promise<any>;
-  editCoupon(id: string, couponData: any): Promise<any>;
+  login(
+    adminData: AdminLoginInput
+  ): Promise<AdminLoginSuccess | AdminLoginError>;
+  logout(refreshToken: string): Promise<AdminLogoutSuccess | AdminLogoutError>;
+  getUser(
+    options: PaginationOptions
+  ): Promise<Omit<UserListResponse, "status">>;
+  getDoctor(
+    options: PaginationOptions
+  ): Promise<Omit<DoctorListResponse, "status">>;
+  toggleUser(id: string): Promise<UserToggleStatus | null>;
+  toggleDoctor(id: string): Promise<DoctorToggleStatus | null>;
+  getService(
+    options: PaginationOptions
+  ): Promise<Omit<ServiceListResponse, "status">>;
+  addService(name: string, isActive: boolean): Promise<ServiceSuccessResponse>;
+  editService(
+    id: string,
+    name: string,
+    isActive: boolean
+  ): Promise<ServiceSuccessResponse>;
+  toggleService(id: string): Promise<ServiceToggleStatus | null>;
+  getCertificates(id: string): Promise<string[]>;
+  approveDoctor(id: string): Promise<ApproveRejectResponse>;
+  rejectDoctor(id: string, reason: string): Promise<ApproveRejectResponse>;
+  createCoupon(couponData: Coupon): Promise<CouponSuccessResponse>;
+  getCoupons(
+    options: PaginationOptions
+  ): Promise<Omit<CouponListResponse, "status">>;
+  toggleCoupon(id: string): Promise<CouponToggleStatus | null>;
+  editCoupon(id: string, couponData: Coupon): Promise<CouponSuccessResponse>;
   getDashboardStats(): Promise<IDashboardStats>;
   getTopDoctors(): Promise<ITopDoctor[]>;
   getTopUsers(): Promise<ITopUser[]>;
   getAppointmentAnalytics(timeFrame: string): Promise<IAppointmentAnalytics[]>;
-getReports(
+  getReports(
     startDate: Date,
     endDate: Date,
     status: string,
     options: PaginationOptions
-  ): Promise<PaginatedResult<IAppointment>>}
-
-export type AdminType = {
-  email: string;
-  password: string;
-};
+  ): Promise<PaginatedResult<IAppointment>>;
+}

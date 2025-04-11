@@ -10,6 +10,7 @@ const rrule_1 = require("rrule");
 const date_fns_1 = require("date-fns");
 const emailConfig_1 = __importDefault(require("../../config/emailConfig"));
 const getUrl_1 = require("../../helper/getUrl");
+const mongoose_1 = require("mongoose");
 class DoctorService {
     constructor(DoctorRepository) {
         this.doctorData = null;
@@ -22,19 +23,18 @@ class DoctorService {
             return services;
         }
         catch (error) {
-            throw new Error(error.message);
+            const errorMessage = error instanceof Error
+                ? error.message
+                : "Unknown error in service layer";
+            throw new Error(errorMessage);
         }
     }
     async addQualification(data, files) {
         const { hospital, degree, speciality, experience, country, achievements, doctorId, } = data;
-        console.log("1", data);
-        console.log("2");
-        // File Upload Handling
         let uploadedCertificates = [];
         if (files && files.length > 0) {
             uploadedCertificates = await this.fileUploadService.uploadCertificates(doctorId, files);
         }
-        console.log("3");
         const qualificationData = {
             hospital,
             degree,
@@ -44,10 +44,7 @@ class DoctorService {
             achievements,
             certificate: uploadedCertificates,
         };
-        console.log("4");
-        // Pass to repository for update
         const result = await this.DoctorRepository.addQualification(qualificationData, doctorId);
-        console.log("5");
         return result;
     }
     async getQualifications(id) {
@@ -56,19 +53,25 @@ class DoctorService {
             return qualification;
         }
         catch (error) {
-            throw new Error(error.message);
+            const errorMessage = error instanceof Error
+                ? error.message
+                : "Unknown error in getQualifications (service)";
+            throw new Error(errorMessage);
         }
     }
     async getDoctorProfile(id) {
         try {
             const doctor = await this.DoctorRepository.getDoctorProfile(id);
-            if (doctor.image) {
+            if (doctor?.image) {
                 doctor.image = await (0, getUrl_1.getUrl)(doctor.image);
             }
             return doctor;
         }
         catch (error) {
-            throw new Error(error.message);
+            const errorMessage = error instanceof Error
+                ? error.message
+                : "Unknown error in getDoctorProfile (service)";
+            throw new Error(errorMessage);
         }
     }
     async editDoctorProfile(id, data, file) {
@@ -80,13 +83,16 @@ class DoctorService {
             }
             const updatedData = { ...data, image };
             const updatedDoctor = await this.DoctorRepository.editDoctorProfile(id, updatedData);
-            if (updatedDoctor.image) {
+            if (updatedDoctor?.image) {
                 updatedDoctor.image = await (0, getUrl_1.getUrl)(updatedDoctor.image);
             }
             return updatedDoctor;
         }
         catch (error) {
-            throw new Error(error.message);
+            const errorMessage = error instanceof Error
+                ? error.message
+                : "Unknown error in editDoctorProfile";
+            throw new Error(errorMessage);
         }
     }
     async changePassword(id, oldPassword, newPassword) {
@@ -95,45 +101,75 @@ class DoctorService {
             return result;
         }
         catch (error) {
-            throw new Error(error.message);
+            const errorMessage = error instanceof Error
+                ? error.message
+                : "Unknown error in changePassword";
+            throw new Error(errorMessage);
         }
     }
     async addSchedule(scheduleData) {
         try {
-            if (scheduleData.isRecurring) {
-                const extra = scheduleData;
-                if (!scheduleData.recurrenceRule) {
-                    if (!extra.recurrenceDays ||
-                        extra.recurrenceDays.length === 0 ||
-                        !extra.recurrenceUntil) {
-                        throw new Error("Missing recurrence details: recurrenceDays and recurrenceUntil are required for recurring schedules.");
+            if (scheduleData.isRecurring && !scheduleData.recurrenceRule) {
+                if (!scheduleData.recurrenceDays ||
+                    scheduleData.recurrenceDays.length === 0 ||
+                    !scheduleData.recurrenceUntil) {
+                    throw new Error("Missing recurrence details: recurrenceDays and recurrenceUntil are required for recurring schedules.");
+                }
+                const weekdays = scheduleData.recurrenceDays.map((day) => {
+                    const weekday = rrule_1.RRule[day];
+                    if (!(weekday instanceof rrule_1.Weekday)) {
+                        throw new Error(`Invalid recurrence day: ${day}`);
                     }
-                    const weekdays = extra.recurrenceDays.map((day) => rrule_1.RRule[day]);
-                    const dtstart = new Date(scheduleData.startTime);
-                    const until = new Date(extra.recurrenceUntil);
-                    const rule = new rrule_1.RRule({
-                        freq: rrule_1.RRule.WEEKLY,
-                        byweekday: weekdays,
-                        dtstart,
-                        until,
-                    });
-                    scheduleData.recurrenceRule = rule.toString();
+                    return weekday;
+                });
+                const dtstart = new Date(scheduleData.startTime);
+                const until = new Date(scheduleData.recurrenceUntil);
+                const rule = new rrule_1.RRule({
+                    freq: rrule_1.RRule.WEEKLY,
+                    byweekday: weekdays,
+                    dtstart,
+                    until,
+                });
+                scheduleData.recurrenceRule = rule.toString();
+            }
+            if (scheduleData.isRecurring) {
+                if (!scheduleData.doctor) {
+                    throw new Error("Doctor ID is required.");
+                }
+                const doctorId = scheduleData.doctor instanceof mongoose_1.Types.ObjectId
+                    ? scheduleData.doctor.toString()
+                    : scheduleData.doctor;
+                const existingRecurring = await this.DoctorRepository.findRecurringScheduleByDoctor(doctorId);
+                if (existingRecurring) {
+                    throw new Error("A recurring schedule already exists for this doctor. Cannot add another recurring schedule.");
                 }
             }
-            const result = await this.DoctorRepository.addSchedule(scheduleData);
-            return result;
+            const createdSchedule = await this.DoctorRepository.addSchedule(scheduleData);
+            return createdSchedule;
         }
         catch (error) {
-            throw new Error(error.message);
+            const message = error instanceof Error ? error.message : "Failed to add schedule.";
+            throw new Error(message);
         }
     }
     async getSchedule(id) {
         try {
-            const result = await this.DoctorRepository.getSchedule(id);
-            return result;
+            const schedules = await this.DoctorRepository.getSchedule(id);
+            if (!schedules || schedules.length === 0) {
+                return {
+                    status: false,
+                    message: "No active schedules found",
+                };
+            }
+            return {
+                status: true,
+                message: "Schedule fetched successfully",
+                data: schedules,
+            };
         }
         catch (error) {
-            throw new Error(error.message);
+            const errorMessage = error instanceof Error ? error.message : "Something went wrong in service";
+            throw new Error(errorMessage);
         }
     }
     async getUsers() {
@@ -142,7 +178,8 @@ class DoctorService {
             return result;
         }
         catch (error) {
-            throw new Error(error.message);
+            const errorMessage = error instanceof Error ? error.message : "Unknown error in getUsers";
+            throw new Error(errorMessage);
         }
     }
     async getAppointmentUsers(id) {
@@ -151,7 +188,10 @@ class DoctorService {
             return result;
         }
         catch (error) {
-            throw new Error(error.message);
+            const errorMessage = error instanceof Error
+                ? error.message
+                : "Unknown error in getAppointmentUsers";
+            throw new Error(errorMessage);
         }
     }
     async chatImageUploads(id, file) {
@@ -174,7 +214,10 @@ class DoctorService {
             };
         }
         catch (error) {
-            throw new Error(`Failed to upload chat image: ${error.message}`);
+            const errorMessage = error instanceof Error
+                ? error.message
+                : "Unknown error in chatImageUploads";
+            throw new Error(errorMessage);
         }
     }
     //get appointments related to a particular doctor
@@ -184,7 +227,10 @@ class DoctorService {
             return appointments;
         }
         catch (error) {
-            throw new Error(`Failed to get appointments: ${error.message}`);
+            const errorMessage = error instanceof Error
+                ? error.message
+                : "Unknown error in getAppointments";
+            throw new Error(errorMessage);
         }
     }
     //doctor accept appointments....
@@ -194,7 +240,10 @@ class DoctorService {
             return accepted;
         }
         catch (error) {
-            throw new Error(`Failed to accept appointment: ${error.message}`);
+            if (error instanceof Error) {
+                throw new Error(`Failed to accept appointment: ${error.message}`);
+            }
+            throw new Error(`Failed to accept appointment: ${error}`);
         }
     }
     async completeAppointment(id) {
@@ -203,7 +252,10 @@ class DoctorService {
             return completed;
         }
         catch (error) {
-            throw new Error(`Failed to complete appointment: ${error.message}`);
+            if (error instanceof Error) {
+                throw new Error(`Failed to complete appointment: ${error.message}`);
+            }
+            throw new Error(`Failed to complete appointment: ${error}`);
         }
     }
     async rescheduleAppointment(id, date, time, reason) {
@@ -213,7 +265,7 @@ class DoctorService {
             return rescheduled;
         }
         catch (error) {
-            throw new Error(`Failed to reschedule appointment: ${error.message}`);
+            throw new Error(`Failed to reschedule appointment: ${error}`);
         }
     }
     async getDoctorAvailableSlots(id) {
@@ -270,7 +322,10 @@ class DoctorService {
             return slots;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(`Failed to get available slots: ${error.message}`);
+            }
+            throw new Error("An unexpected error occurred while getting available slots.");
         }
     }
     async fetchDashboardStats(doctorId) {
@@ -278,7 +333,10 @@ class DoctorService {
             return await this.DoctorRepository.getDashboardStats(doctorId);
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(`Failed to fetch dashboard stats: ${error.message}`);
+            }
+            throw new Error("An unexpected error occurred while fetching dashboard stats.");
         }
     }
     async fetchGrowthData(doctorId, timeRange, dateParam) {
@@ -287,7 +345,10 @@ class DoctorService {
             return growthData;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(`Failed to fetch growth data: ${error.message}`);
+            }
+            throw new Error("An unexpected error occurred while fetching growth data.");
         }
     }
     async getDashboardHome(doctorId) {
@@ -296,7 +357,10 @@ class DoctorService {
             return data;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(`Failed to fetch dashboard home data: ${error.message}`);
+            }
+            throw new Error("An unexpected error occurred while fetching dashboard home data.");
         }
     }
 }

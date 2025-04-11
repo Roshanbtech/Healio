@@ -25,7 +25,12 @@ class PrescriptionService {
             return prescription;
         }
         catch (error) {
-            throw new Error(error);
+            if (error instanceof Error) {
+                throw new Error(`Failed to add prescription: ${error.message}`);
+            }
+            else {
+                throw new Error("An unexpected error occurred while adding prescription.");
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-import doctorModel from "../../model/doctorModel";
+import doctorModel, { IDoctor } from "../../model/doctorModel";
 import { Document, ObjectId } from "mongoose";
 import {
   doctorType,
@@ -9,8 +9,6 @@ import { IAuthRepository } from "../../interface/doctor/Auth.repository.interfac
 export class AuthRepository implements IAuthRepository {
   async existDoctor(email: string): Promise<{ existEmail: boolean }> {
     try {
-      console.log(".....");
-
       let existEmail = true;
 
       const emailExist = await doctorModel.findOne({ email: email });
@@ -24,30 +22,33 @@ export class AuthRepository implements IAuthRepository {
       throw new Error("Error checking if doctor exists");
     }
   }
-  async createDoctor(doctorData: doctorType): Promise<Document> {
+  async createDoctor(doctorData: doctorType): Promise<IDoctor> {
     try {
-      console.log("doctor data", doctorData);
-
       doctorData.isVerified = true;
       const newDoctor = new doctorModel(doctorData);
-      return await newDoctor.save();
-    } catch (error: any) {
-      console.log("Error in creating new doctor", error);
-      throw new Error(`Error creating user : ${error.message}`);
+      return (await newDoctor.save()) as IDoctor;
+    } catch (error: unknown) {
+       if(error instanceof Error){
+         throw new Error (`Error creating doctor: ${error.message}`);
+       } 
+       throw new Error("Error creating doctor");
     }
   }
 
-  async updatePassword(email: string, hashedPassword: string): Promise<any> {
+  async updatePassword(email: string, hashedPassword: string): Promise<{ acknowledged: boolean; modifiedCount: number }> {
     try {
-      console.log("1", email, hashedPassword);
       return await doctorModel.updateOne(
         { email },
         { $set: { password: hashedPassword } }
       );
-      console.log("2");
-    } catch (error: any) {
-      console.error("Error updating password:", error);
-      throw new Error("Error updating password");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error updating password:", error.message);
+        throw new Error("Error updating password");
+      } else {
+        console.error("Unexpected error updating password:", error);
+        throw new Error("Unknown error while updating password");
+      }
     }
   }
 
@@ -71,8 +72,8 @@ export class AuthRepository implements IAuthRepository {
         isDoctor: doctorData.isDoctor,
         docStatus: doctorData.docStatus,
       };
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      throw new Error("Error checking doctor");
     }
   }
 
@@ -103,15 +104,20 @@ export class AuthRepository implements IAuthRepository {
     }
   }
 
-  async logout(refreshToken: string): Promise<any> {
-      try {
-        console.log(refreshToken, "refresh token");
-        return await doctorModel.updateOne(
-          { refreshToken },
-          { $set: { refreshToken: "" } }
-        );
-      } catch (error: any) {
-        throw new Error(error.message);
+  async logout(refreshToken: string): Promise<boolean> {
+    try {
+      const result = await doctorModel.updateOne(
+        { refreshToken },
+        { $set: { refreshToken: "" } }
+      );
+
+      return result.modifiedCount > 0;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error("Repository logout error: " + error.message);
       }
+      throw new Error("Unexpected repository error");
     }
+  }
+  
 }

@@ -44,9 +44,10 @@ const DoctorList: React.FC = () => {
         setDoctors(response.data.doctorList.data);
         setPagination(response.data.doctorList.pagination);
       }
-    } catch (error) {
-      console.error("Error fetching doctors:", error);
-      toast.error("Failed to fetch doctors");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error(error.message || "Failed to fetch doctors");
+      }
     }
     setLoading(false);
   };
@@ -65,17 +66,18 @@ const DoctorList: React.FC = () => {
   const handleToggleDoctor = async (id: string) => {
     try {
       const response = await axiosInstance.patch(`/admin/doctors/${id}/toggle`);
-      if (response.data?.status && response.data.blockUser?.message) {
+      if (response.data.blockDoctor?.message) {
         setDoctors((prevDoctors) =>
           prevDoctors.map((doctor) =>
             doctor._id === id ? { ...doctor, isBlocked: !doctor.isBlocked } : doctor
           )
         );
-        toast.success(response.data.blockUser.message);
+        toast.success(response.data.blockDoctor.message);
       }
-    } catch (error) {
-      console.error("Error toggling doctor status:", error);
-      toast.error("Failed to toggle doctor status");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error(error.message || "Failed to toggle doctor status");
+      }
     }
   };
 
@@ -88,9 +90,11 @@ const DoctorList: React.FC = () => {
       } else {
         setSelectedFile([]);
       }
-    } catch (error: any) {
-      console.error(error);
-      setSelectedFile([]);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+        setSelectedFile([]);
+      }
     }
   };
 
@@ -124,9 +128,10 @@ const DoctorList: React.FC = () => {
       } else {
         toast.error(response.data.message || "Failed to approve doctor");
       }
-    } catch (error: any) {
-      console.error("Error approving doctor:", error);
-      toast.error("Failed to approve doctor");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error("Failed to approve doctor");
+      }
     }
     closeModal();
     fetchDoctors(); // Update table by re-fetching data
@@ -148,9 +153,10 @@ const DoctorList: React.FC = () => {
       } else {
         toast.error(response.data.message || "Failed to reject doctor");
       }
-    } catch (error: any) {
-      console.error("Error rejecting doctor:", error);
-      toast.error("Failed to reject doctor");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error("Failed to reject doctor");
+      }
     }
     closeModal();
     fetchDoctors(); 

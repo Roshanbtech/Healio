@@ -64,12 +64,15 @@ const PrescriptionSchema = new Schema<IPrescription>(
       default: "",
     },
     signature: {
-      type: String
+      type: String,
     },
   },
   { timestamps: true }
 );
 
-const PrescriptionModel = model<IPrescription>("Prescription", PrescriptionSchema);
+const PrescriptionModel = model<IPrescription>(
+  "Prescription",
+  PrescriptionSchema
+);
 
 export default PrescriptionModel;

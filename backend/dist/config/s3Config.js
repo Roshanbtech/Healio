@@ -32,6 +32,9 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AwsConfig = void 0;
 const client_s3_1 = require("@aws-sdk/client-s3");
@@ -39,6 +42,8 @@ const lib_storage_1 = require("@aws-sdk/lib-storage");
 const s3_request_presigner_1 = require("@aws-sdk/s3-request-presigner");
 const crypto = __importStar(require("crypto"));
 const stream_1 = require("stream");
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 class AwsConfig {
     constructor() {
         this.bucketName = process.env.S3_BUCKET_NAME;
@@ -62,13 +67,16 @@ class AwsConfig {
                 Key: key,
             };
             const getCommand = new client_s3_1.GetObjectCommand(options);
-            const url = await (0, s3_request_presigner_1.getSignedUrl)(this.s3client, getCommand, {
-                expiresIn: 1 * 60
-            });
+            const url = await (0, s3_request_presigner_1.getSignedUrl)(this.s3client, getCommand, { expiresIn: 60 });
             return url;
         }
         catch (error) {
-            console.error("Error generating signed URL:", error);
+            if (error instanceof Error) {
+                console.error("Error generating signed URL:", error.message);
+            }
+            else {
+                console.error("Error generating signed URL:", error);
+            }
             throw error;
         }
     }
@@ -93,7 +101,12 @@ class AwsConfig {
             return fileName;
         }
         catch (error) {
-            console.error("Error uploading file to S3:", error.message);
+            if (error instanceof Error) {
+                console.error("Error uploading file to S3:", error.message);
+            }
+            else {
+                console.error("Error uploading file to S3:", error);
+            }
             throw new Error("File upload failed");
         }
     }

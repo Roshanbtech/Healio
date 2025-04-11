@@ -36,9 +36,14 @@ export class PrescriptionService implements IPrescriptionService {
       );
 
       return prescription;
-    } catch (error: any) {
-      throw new Error(error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(`Failed to add prescription: ${error.message}`);
+      } else {
+        throw new Error("An unexpected error occurred while adding prescription.");
+      }
     }
+    
   }
 }
 

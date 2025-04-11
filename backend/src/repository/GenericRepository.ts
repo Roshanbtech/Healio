@@ -38,20 +38,27 @@ export class GenericRepository<T extends Document> {
   // }
 
   async updateOne(id: string, data: Partial<T>): Promise<T | null> {
-    if ('doctorId' in data && typeof (data as any).doctorId === 'object' && (data as any).doctorId?._id) {
+    if (
+      "doctorId" in data &&
+      typeof (data as any).doctorId === "object" &&
+      (data as any).doctorId?._id
+    ) {
       (data as any).doctorId = (data as any).doctorId._id;
     }
-    if ('patientId' in data && typeof (data as any).patientId === 'object' && (data as any).patientId?._id) {
+    if (
+      "patientId" in data &&
+      typeof (data as any).patientId === "object" &&
+      (data as any).patientId?._id
+    ) {
       (data as any).patientId = (data as any).patientId._id;
     }
-    
+
     return this.model
       .findOneAndUpdate({ appointmentId: id }, data, { new: true })
       .populate("patientId", "name email")
       .populate("doctorId", "name email")
       .exec();
   }
-  
 
   async delete(id: string): Promise<boolean> {
     const result = await this.model.findByIdAndDelete(id).exec();
@@ -59,7 +66,10 @@ export class GenericRepository<T extends Document> {
   }
 
   // New method that supports update operators (like $push)
-  async updateWithOperators(id: string, data: UpdateQuery<T>): Promise<T | null> {
+  async updateWithOperators(
+    id: string,
+    data: UpdateQuery<T>
+  ): Promise<T | null> {
     return this.model.findOneAndUpdate({ _id: id }, data, { new: true }).exec();
   }
 
@@ -67,24 +77,28 @@ export class GenericRepository<T extends Document> {
     return this.model.countDocuments(filter).exec();
   }
 
-  async findOneWithPopulate(filter: FilterQuery<T>, populateFields: string[]): Promise<T | null> {
+  async findOneWithPopulate(
+    filter: FilterQuery<T>,
+    populateFields: string[]
+  ): Promise<T | null> {
     let query = this.model.findOne(filter);
-    populateFields.forEach(field => {
+    populateFields.forEach((field) => {
       query = query.populate(field);
     });
     return query.exec();
   }
-  
-  async updateOneWithPopulate(filter: FilterQuery<T>, data: Partial<T>, populateFields: string[]): Promise<T | null> {
+
+  async updateOneWithPopulate(
+    filter: FilterQuery<T>,
+    data: Partial<T>,
+    populateFields: string[]
+  ): Promise<T | null> {
     let query = this.model.findOneAndUpdate(filter, data, { new: true });
-    populateFields.forEach(field => {
+    populateFields.forEach((field) => {
       query = query.populate(field);
     });
     return query.exec();
   }
-  
 }
-
-
 
 //TODO: I have to implement this reusable setup for all specific repositories and models

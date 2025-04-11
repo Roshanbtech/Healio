@@ -1,5 +1,5 @@
 "use client";
-
+import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import axiosInstance from "../../utils/axiosInterceptors";
@@ -44,9 +44,10 @@ const Coupon: React.FC = () => {
         setCoupons(res.data);
         setPagination(res.pagination);
       }
-    } catch (error) {
-      console.error("Error fetching coupons:", error);
-      toast.error("Failed to fetch coupons");
+    } catch (error: unknown) {
+      if(error instanceof Error) {
+        toast.error(error.message || "Failed to fetch coupons");
+      }
     }
   };
 
@@ -65,7 +66,7 @@ const Coupon: React.FC = () => {
   const handleToggleCoupon = async (couponId: string) => {
     try {
       const response = await axiosInstance.patch(`/admin/coupons/${couponId}/toggle`);
-      if (response.data?.status) {
+      if (response.data?.coupon?.status) {
         setCoupons((prev) =>
           prev.map((coupon) =>
             coupon._id === couponId ? { ...coupon, isActive: !coupon.isActive } : coupon
@@ -75,9 +76,10 @@ const Coupon: React.FC = () => {
       } else {
         toast.error(response.data?.message || "Failed to update coupon");
       }
-    } catch (error) {
-      console.error("Error updating coupon:", error);
-      toast.error("Failed to update coupon");
+    } catch (error: unknown) {
+      if(error instanceof Error) {
+        toast.error(error.message || "Failed to update coupon");
+      }
     }
   };
 
@@ -109,13 +111,19 @@ const Coupon: React.FC = () => {
         setCurrentPage(1);
         fetchCoupons();
       } else {
-        toast.error(response.data?.result?.message || "Failed to add coupon");
+        toast.error(response.data?.message || "Failed to add coupon");
       }
-    } catch (error) {
-      console.error("Error adding coupon:", error);
-      toast.error("Failed to add coupon");
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message || error.message || "Failed to add coupon");
+      } else if (error instanceof Error) {
+        toast.error(error.message || "Failed to add coupon");
+      } else {
+        toast.error("An unknown error occurred. Please try again.");
+      }
     }
   };
+  
 
   const validateSelectedCoupon = (coupon: Coupon): string | null => {
     if (!coupon.name.trim()) return "Coupon name is required.";
@@ -152,11 +160,17 @@ const Coupon: React.FC = () => {
       } else {
         toast.error(response.data?.message || "Failed to update coupon");
       }
-    } catch (error) {
-      console.error("Error updating coupon:", error);
-      toast.error("Failed to update coupon");
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message || error.message || "Failed to update coupon");
+      } else if (error instanceof Error) {
+        toast.error(error.message || "Failed to update coupon");
+      } else {
+        toast.error("An unknown error occurred. Please try again.");
+      }
     }
   };
+  
 
   return (
     <div className="flex min-h-screen">

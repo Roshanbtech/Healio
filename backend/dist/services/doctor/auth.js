@@ -16,10 +16,8 @@ class AuthService {
     }
     async signup(doctorData) {
         try {
-            console.log(" Signup process started...");
             const { email, otp } = doctorData;
             const storedOtp = await (0, redisClient_1.getOtpByEmail)(email);
-            console.log(`Retrieved OTP for ${email}:`, storedOtp);
             if (!storedOtp) {
                 return {
                     status: false,
@@ -44,8 +42,10 @@ class AuthService {
             return { status: true, message: "Doctor verified successfully" };
         }
         catch (error) {
-            console.log(" Error in creating new Doctor", error);
-            return { status: false, message: "Error while creating doctor" };
+            if (error instanceof Error) {
+                throw new Error(`Error creating doctor: ${error.message}`);
+            }
+            throw new Error("Error creating doctor");
         }
     }
     async sendOtp(email) {
@@ -133,21 +133,27 @@ class AuthService {
         return { status: true, message: "OTP verified successfully" };
     }
     async resetPassword(email, password) {
-        const doctorExist = await this.AuthRepository.existDoctor(email);
-        console.log("User exist:", doctorExist);
-        if (!doctorExist.existEmail) {
-            throw new Error("Email not found");
+        try {
+            const doctorExist = await this.AuthRepository.existDoctor(email);
+            if (!doctorExist.existEmail) {
+                throw new Error("Email not found");
+            }
+            const saltRounds = 10;
+            const hashedPassword = await bcrypt_1.default.hash(password, saltRounds);
+            const response = await this.AuthRepository.updatePassword(email, hashedPassword);
+            if (!response || response.modifiedCount === 0) {
+                throw new Error("Password not updated");
+            }
+            return { status: true, message: "Password updated successfully" };
         }
-        console.log("Password:", password, email);
-        const saltRounds = 10;
-        const hashedPassword = await bcrypt_1.default.hash(password, saltRounds);
-        console.log("Hashed password:", hashedPassword, password);
-        const response = await this.AuthRepository.updatePassword(email, hashedPassword);
-        console.log("Response:", response);
-        if (!response || response.modifiedCount === 0) {
-            throw new Error("Password not updated");
+        catch (error) {
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            else {
+                throw new Error("Unexpected error occurred while resetting password");
+            }
         }
-        return { status: true, message: "Password updated successfully" };
     }
     async login(doctorData) {
         try {
@@ -205,12 +211,17 @@ class AuthService {
     }
     async logout(refreshToken) {
         try {
-            console.log("Logout process started...");
-            return await this.AuthRepository.logout(refreshToken);
+            const isLoggedOut = await this.AuthRepository.logout(refreshToken);
+            if (!isLoggedOut) {
+                return { status: false, message: "Logout failed or token not found" };
+            }
+            return { status: true, message: "Logout successful" };
         }
         catch (error) {
-            console.error("Logout error:", error);
-            return { error: "Internal server error." };
+            if (error instanceof Error) {
+                throw new Error("Service logout error: " + error.message);
+            }
+            throw new Error("Unexpected service error");
         }
     }
 }

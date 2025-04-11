@@ -13,24 +13,21 @@ class AuthController {
     }
     async loginAdmin(req, res) {
         try {
-            console.log("Processing admin login request...");
             const { email, password } = req.body;
-            // Validate request body
             if (!email || !password) {
-                return res.status(httpStatusCode_1.default.BadRequest).json({
+                res.status(httpStatusCode_1.default.BadRequest).json({
                     status: false,
                     message: "Email and password are required.",
                 });
+                return;
             }
-            // Authenticate the admin
             const loginResponse = await this.authService.login({ email, password });
-            // Check for login errors
             if ("error" in loginResponse) {
-                console.warn("Admin login failed:", loginResponse.error);
-                return res.status(httpStatusCode_1.default.Unauthorized).json({
+                res.status(httpStatusCode_1.default.Unauthorized).json({
                     status: false,
                     message: loginResponse.error,
                 });
+                return;
             }
             const { accessToken, refreshToken } = loginResponse;
             res.cookie("refreshToken", refreshToken, {
@@ -40,40 +37,51 @@ class AuthController {
                 path: "/auth/refresh",
                 expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
             });
-            // Set authorization header with access token
             res.setHeader("Authorization", `Bearer ${accessToken}`);
-            console.log("Admin logged in successfully.");
-            return res.status(httpStatusCode_1.default.OK).json({
+            res.status(httpStatusCode_1.default.OK).json({
                 status: true,
                 message: "Admin logged in successfully.",
                 accessToken,
             });
         }
         catch (error) {
-            console.error("Error in loginAdmin:", error);
-            return res.status(httpStatusCode_1.default.InternalServerError).json({
+            res.status(httpStatusCode_1.default.InternalServerError).json({
                 status: false,
-                message: "Something went wrong, please try again later.",
+                message: error instanceof Error
+                    ? error.message
+                    : "Something went wrong, please try again later.",
             });
         }
     }
     async logoutAdmin(req, res) {
         try {
             const refreshToken = req.cookies.refreshToken;
-            await this.authService.logout(refreshToken);
+            const result = await this.authService.logout(refreshToken);
+            if ("error" in result) {
+                res.status(httpStatusCode_1.default.BadRequest).json({
+                    status: false,
+                    message: result.error,
+                });
+                return;
+            }
             res.clearCookie("refreshToken", {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === "production",
                 sameSite: "strict",
                 path: "/",
             });
-            res.status(httpStatusCode_1.default.OK).json({ status: true, message: "Logout" });
+            res.status(httpStatusCode_1.default.OK).json({
+                status: true,
+                message: result.message,
+            });
         }
         catch (error) {
-            console.error(error);
-            res
-                .status(httpStatusCode_1.default.InternalServerError)
-                .json({ message: "Something went wrong, please try again later" });
+            res.status(httpStatusCode_1.default.InternalServerError).json({
+                status: false,
+                message: error instanceof Error
+                    ? error.message
+                    : "Something went wrong, please try again later.",
+            });
         }
     }
     async getUserList(req, res) {
@@ -89,13 +97,15 @@ class AuthController {
                 speciality,
                 searchFields: ["name", "email"],
             });
-            return res.status(httpStatusCode_1.default.OK).json({ status: true, ...userList });
+            res.status(httpStatusCode_1.default.OK).json({ status: true, ...userList });
         }
         catch (error) {
-            console.error("Error in getUserList:", error);
-            return res.status(httpStatusCode_1.default.InternalServerError).json({
+            const errMsg = error instanceof Error
+                ? error.message
+                : "Something went wrong, please try again later.";
+            res.status(httpStatusCode_1.default.InternalServerError).json({
                 status: false,
-                message: "Something went wrong, please try again later.",
+                message: errMsg,
             });
         }
     }
@@ -110,43 +120,58 @@ class AuthController {
                 searchFields: ["name", "email"],
             };
             const doctorList = await this.authService.getDoctor(options);
-            return res.status(httpStatusCode_1.default.OK).json({ status: true, doctorList });
+            res.status(httpStatusCode_1.default.OK).json({ status: true, doctorList });
         }
         catch (error) {
-            console.error("Error in getDoctorList:", error);
-            return res.status(httpStatusCode_1.default.InternalServerError).json({
+            const errMsg = error instanceof Error
+                ? error.message
+                : "Something went wrong, please try again later.";
+            res.status(httpStatusCode_1.default.InternalServerError).json({
                 status: false,
-                message: "Something went wrong, please try again later.",
+                message: errMsg,
             });
         }
     }
     async toggleUser(req, res) {
         try {
             const { id } = req.params;
-            console.log(id);
             const blockUser = await this.authService.toggleUser(id);
-            return res.status(httpStatusCode_1.default.OK).json({ status: true, blockUser });
+            if (!blockUser) {
+                res.status(httpStatusCode_1.default.BadRequest).json({
+                    status: false,
+                    message: "User not found.",
+                });
+                return;
+            }
+            res.status(httpStatusCode_1.default.OK).json({ blockUser });
         }
         catch (error) {
-            console.error("Error in blockUser:", error);
-            return res.status(httpStatusCode_1.default.InternalServerError).json({
+            const errMsg = error instanceof Error
+                ? error.message
+                : "Something went wrong, please try again later.";
+            res.status(httpStatusCode_1.default.InternalServerError).json({
                 status: false,
-                message: "Something went wrong, please try again later.",
+                message: errMsg,
             });
         }
     }
     async toggleDoctor(req, res) {
         try {
             const { id } = req.params;
-            console.log(id);
-            const blockUser = await this.authService.toggleDoctor(id);
-            return res.status(httpStatusCode_1.default.OK).json({ status: true, blockUser });
+            const blockDoctor = await this.authService.toggleDoctor(id);
+            if (!blockDoctor)
+                res
+                    .status(httpStatusCode_1.default.BadRequest)
+                    .json({ status: false, message: "Doctor not found." });
+            res.status(httpStatusCode_1.default.OK).json({ blockDoctor });
         }
         catch (error) {
-            console.error("Error in blockDoctor:", error);
-            return res.status(httpStatusCode_1.default.InternalServerError).json({
+            const errMsg = error instanceof Error
+                ? error.message
+                : "Something went wrong, please try again later.";
+            res.status(httpStatusCode_1.default.InternalServerError).json({
                 status: false,
-                message: "Something went wrong, please try again later.",
+                message: errMsg,
             });
         }
     }
@@ -156,26 +181,28 @@ class AuthController {
                 page: parseInt(req.query.page, 10) || 1,
                 limit: parseInt(req.query.limit, 10) || 10,
                 search: req.query.search,
-                speciality: req.query.category
+                speciality: req.query.category,
             };
             const serviceList = await this.authService.getService(options);
-            if (!serviceList || serviceList.length === 0) {
-                return res.status(httpStatusCode_1.default.NotFound).json({
+            if (!serviceList || !serviceList.data || serviceList.data.length === 0) {
+                res.status(httpStatusCode_1.default.NotFound).json({
                     status: false,
                     message: "No services found.",
                 });
             }
-            return res.status(httpStatusCode_1.default.OK).json({
+            res.status(httpStatusCode_1.default.OK).json({
                 status: true,
                 data: { serviceList },
                 message: null,
             });
         }
         catch (error) {
-            console.error("Error in serviceList:", error);
-            return res.status(httpStatusCode_1.default.InternalServerError).json({
+            const errMsg = error instanceof Error
+                ? error.message
+                : "Something went wrong, please try again later.";
+            res.status(httpStatusCode_1.default.InternalServerError).json({
                 status: false,
-                message: "Something went wrong, please try again later.",
+                message: errMsg,
             });
         }
     }
@@ -183,13 +210,19 @@ class AuthController {
         try {
             const { name } = req.body;
             const service = await this.authService.addService(name, true);
-            return res.status(200).json({ status: true, service });
+            res.status(httpStatusCode_1.default.OK).json({
+                status: true,
+                message: "Service added successfully",
+                service,
+            });
         }
         catch (error) {
-            console.error("Error in AuthController.addService:", error);
-            return res.status(500).json({
+            const errMsg = error instanceof Error
+                ? error.message
+                : "Something went wrong, please try again later.";
+            res.status(httpStatusCode_1.default.InternalServerError).json({
                 status: false,
-                message: error.message || "Something went wrong, please try again later.",
+                message: errMsg,
             });
         }
     }
@@ -197,25 +230,16 @@ class AuthController {
         try {
             const { id } = req.params;
             const { name } = req.body;
-            // Input validation
-            if (!id || !name) {
-                return res.status(httpStatusCode_1.default.BadRequest).json({
-                    status: false,
-                    message: "Service ID and name are required.",
-                });
-            }
             const service = await this.authService.editService(id, name, true);
-            return res.status(httpStatusCode_1.default.OK).json({
-                status: true,
-                message: "Service updated successfully.",
-                service,
-            });
+            res.status(httpStatusCode_1.default.OK).json(service);
         }
         catch (error) {
-            console.error("Error in editService:", error);
-            return res.status(httpStatusCode_1.default.InternalServerError).json({
+            const errMsg = error instanceof Error
+                ? error.message
+                : "Something went wrong, please try again later.";
+            res.status(httpStatusCode_1.default.InternalServerError).json({
                 status: false,
-                message: "Something went wrong, please try again later.",
+                message: errMsg,
             });
         }
     }
@@ -223,13 +247,20 @@ class AuthController {
         try {
             const { id } = req.params;
             const service = await this.authService.toggleService(id);
-            return res.status(httpStatusCode_1.default.OK).json({ status: true, service });
+            if (!service) {
+                res
+                    .status(httpStatusCode_1.default.BadRequest)
+                    .json({ status: false, message: "Service not found." });
+            }
+            res.status(httpStatusCode_1.default.OK).json({ service });
         }
         catch (error) {
-            console.error("Error in toggleService:", error);
-            return res.status(httpStatusCode_1.default.InternalServerError).json({
+            const errMsg = error instanceof Error
+                ? error.message
+                : "Something went wrong, please try again later.";
+            res.status(httpStatusCode_1.default.InternalServerError).json({
                 status: false,
-                message: "Something went wrong, please try again later.",
+                message: errMsg,
             });
         }
     }
@@ -237,15 +268,20 @@ class AuthController {
         try {
             const { id } = req.params;
             const certificates = await this.authService.getCertificates(id);
-            return res
-                .status(httpStatusCode_1.default.OK)
-                .json({ status: true, certificates });
+            res.status(httpStatusCode_1.default.OK).json({
+                status: true,
+                certificates,
+                message: "Certificates fetched successfully",
+            });
         }
         catch (error) {
-            console.error("Error in getCertificates:", error);
-            return res.status(httpStatusCode_1.default.InternalServerError).json({
+            const errMsg = error instanceof Error
+                ? error.message
+                : "Something went wrong, please try again later.";
+            res.status(httpStatusCode_1.default.InternalServerError).json({
                 status: false,
-                message: "Something went wrong, please try again later.",
+                certificates: [],
+                message: errMsg,
             });
         }
     }
@@ -253,13 +289,13 @@ class AuthController {
         try {
             const { id } = req.params;
             const doctor = await this.authService.approveDoctor(id);
-            return res.status(httpStatusCode_1.default.OK).json({ status: true, doctor });
+            res.status(httpStatusCode_1.default.OK).json({ status: true, doctor });
         }
         catch (error) {
-            console.error("Error in approveDoctor:", error);
-            return res.status(httpStatusCode_1.default.InternalServerError).json({
+            const errMsg = error instanceof Error ? error.message : "Error approving doctor.";
+            res.status(httpStatusCode_1.default.InternalServerError).json({
                 status: false,
-                message: "Something went wrong, please try again later.",
+                message: errMsg,
             });
         }
     }
@@ -268,36 +304,37 @@ class AuthController {
             const { id } = req.params;
             const { reason } = req.body;
             const doctor = await this.authService.rejectDoctor(id, reason);
-            return res.status(httpStatusCode_1.default.OK).json({ status: true, doctor });
+            res.status(httpStatusCode_1.default.OK).json({ status: true, doctor });
         }
         catch (error) {
-            console.error("Error in rejectDoctor:", error);
-            return res.status(httpStatusCode_1.default.InternalServerError).json({
+            const errMsg = error instanceof Error ? error.message : "Error rejecting doctor.";
+            res.status(httpStatusCode_1.default.InternalServerError).json({
                 status: false,
-                message: "Something went wrong, please try again later.",
+                message: errMsg,
             });
         }
     }
     async createCoupon(req, res) {
         try {
             const { name, code, discount, expirationDate } = req.body;
-            const expireDate = new Date(expirationDate);
             const couponData = {
                 name,
                 code,
                 discount,
                 startDate: new Date(),
-                expirationDate: expireDate,
+                expirationDate: new Date(expirationDate),
                 isActive: true,
             };
             const result = await this.authService.createCoupon(couponData);
-            return res.status(httpStatusCode_1.default.OK).json({ status: true, result });
+            res.status(httpStatusCode_1.default.OK).json(result);
         }
         catch (error) {
-            console.error("Error in createCoupon:", error);
-            return res.status(httpStatusCode_1.default.InternalServerError).json({
+            const errMsg = error instanceof Error
+                ? error.message
+                : "Something went wrong, please try again later.";
+            res.status(httpStatusCode_1.default.InternalServerError).json({
                 status: false,
-                message: "Something went wrong, please try again later.",
+                message: errMsg,
             });
         }
     }
@@ -308,16 +345,18 @@ class AuthController {
                 limit: parseInt(req.query.limit) || 10,
                 search: req.query.search,
                 speciality: req.query.speciality,
-                searchFields: ["name", "code"]
+                searchFields: ["name", "code"],
             };
             const coupons = await this.authService.getCoupons(options);
-            return res.status(httpStatusCode_1.default.OK).json({ status: true, coupons });
+            res.status(httpStatusCode_1.default.OK).json({ status: true, coupons });
         }
         catch (error) {
-            console.error("Error in getCoupons:", error);
-            return res.status(httpStatusCode_1.default.InternalServerError).json({
+            const errMsg = error instanceof Error
+                ? error.message
+                : "Something went wrong, please try again later.";
+            res.status(httpStatusCode_1.default.InternalServerError).json({
                 status: false,
-                message: "Something went wrong, please try again later.",
+                message: errMsg,
             });
         }
     }
@@ -325,13 +364,21 @@ class AuthController {
         try {
             const { id } = req.params;
             const coupon = await this.authService.toggleCoupon(id);
-            return res.status(httpStatusCode_1.default.OK).json({ status: true, coupon });
+            if (!coupon) {
+                res.status(httpStatusCode_1.default.BadRequest).json({
+                    status: false,
+                    message: "Coupon not found.",
+                });
+            }
+            res.status(httpStatusCode_1.default.OK).json({ coupon });
         }
         catch (error) {
-            console.error("Error in blockingCoupon:", error);
-            return res.status(httpStatusCode_1.default.InternalServerError).json({
+            const errMsg = error instanceof Error
+                ? error.message
+                : "Something went wrong, please try again later.";
+            res.status(httpStatusCode_1.default.InternalServerError).json({
                 status: false,
-                message: "Something went wrong, please try again later.",
+                message: errMsg,
             });
         }
     }
@@ -339,57 +386,93 @@ class AuthController {
         try {
             const { id } = req.params;
             const { name, code, discount, expirationDate } = req.body;
-            const expireDate = new Date(expirationDate);
+            if (!id || !name || !code) {
+                res.status(httpStatusCode_1.default.BadRequest).json({
+                    status: false,
+                    message: "Service ID, name and code are required.",
+                });
+                return;
+            }
             const couponData = {
                 name,
                 code,
                 discount,
                 startDate: new Date(),
-                expirationDate: expireDate,
+                expirationDate: new Date(expirationDate),
                 isActive: true,
             };
             const result = await this.authService.editCoupon(id, couponData);
-            return res.status(httpStatusCode_1.default.OK).json({ status: true, result });
+            res.status(httpStatusCode_1.default.OK).json(result);
         }
         catch (error) {
-            console.error("Error in editCoupon:", error);
+            const errMsg = error instanceof Error
+                ? error.message
+                : "Something went wrong, please try again later.";
+            res.status(httpStatusCode_1.default.InternalServerError).json({
+                status: false,
+                message: errMsg,
+            });
         }
     }
     async getDashboardStats(req, res) {
         try {
             const stats = await this.authService.getDashboardStats();
-            return res.status(httpStatusCode_1.default.OK).json({ status: true, data: stats });
+            res.status(httpStatusCode_1.default.OK).json({ status: true, data: stats });
         }
         catch (error) {
-            return res.status(httpStatusCode_1.default.InternalServerError).json({ status: false, message: error.message });
+            const errMsg = error instanceof Error
+                ? error.message
+                : "Something went wrong, please try again later.";
+            res.status(httpStatusCode_1.default.InternalServerError).json({
+                status: false,
+                message: errMsg,
+            });
         }
     }
     async getTopDoctors(req, res) {
         try {
             const topDoctors = await this.authService.getTopDoctors();
-            return res.status(httpStatusCode_1.default.OK).json({ status: true, data: topDoctors });
+            res.status(httpStatusCode_1.default.OK).json({ status: true, data: topDoctors });
         }
         catch (error) {
-            return res.status(httpStatusCode_1.default.InternalServerError).json({ status: false, message: error.message });
+            const errMsg = error instanceof Error
+                ? error.message
+                : "Something went wrong, please try again later.";
+            res.status(httpStatusCode_1.default.InternalServerError).json({
+                status: false,
+                message: errMsg,
+            });
         }
     }
     async getTopUsers(req, res) {
         try {
             const topUsers = await this.authService.getTopUsers();
-            return res.status(httpStatusCode_1.default.OK).json({ status: true, data: topUsers });
+            res.status(httpStatusCode_1.default.OK).json({ status: true, data: topUsers });
         }
         catch (error) {
-            return res.status(httpStatusCode_1.default.InternalServerError).json({ status: false, message: error.message });
+            const errMsg = error instanceof Error
+                ? error.message
+                : "Something went wrong, please try again later.";
+            res.status(httpStatusCode_1.default.InternalServerError).json({
+                status: false,
+                message: errMsg,
+            });
         }
     }
     async getAppointmentAnalytics(req, res) {
         try {
             const timeFrame = req.query.timeFrame;
             const analytics = await this.authService.getAppointmentAnalytics(timeFrame);
-            return res.status(httpStatusCode_1.default.OK).json({ status: true, data: analytics });
+            res.status(httpStatusCode_1.default.OK).json({ status: true, data: analytics });
         }
         catch (error) {
-            return res.status(httpStatusCode_1.default.InternalServerError).json({ status: false, message: error.message });
+            const errMsg = error instanceof Error
+                ? error.message
+                : "Something went wrong, please try again later.";
+            res.status(httpStatusCode_1.default.InternalServerError).json({
+                status: false,
+                message: errMsg,
+            });
         }
     }
     async getReports(req, res) {
@@ -402,13 +485,13 @@ class AuthController {
             const start = new Date(startDate);
             const end = new Date(endDate);
             if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-                return res.status(httpStatusCode_1.default.BadRequest).json({
+                res.status(httpStatusCode_1.default.BadRequest).json({
                     status: false,
                     message: "Invalid date format provided.",
                 });
             }
             if (start > end) {
-                return res.status(httpStatusCode_1.default.BadRequest).json({
+                res.status(httpStatusCode_1.default.BadRequest).json({
                     status: false,
                     message: "Start date cannot be greater than end date.",
                 });
@@ -418,12 +501,15 @@ class AuthController {
                 limit: pageLimit,
                 search: searchQuery,
             });
-            return res.status(httpStatusCode_1.default.OK).json({ status: true, data: reports });
+            res.status(httpStatusCode_1.default.OK).json({ status: true, data: reports });
         }
         catch (error) {
-            return res.status(httpStatusCode_1.default.InternalServerError).json({
+            const errMsg = error instanceof Error
+                ? error.message
+                : "Something went wrong, please try again later.";
+            res.status(httpStatusCode_1.default.InternalServerError).json({
                 status: false,
-                message: error.message,
+                message: errMsg,
             });
         }
     }

@@ -1,47 +1,58 @@
-import { UserProfile, userType } from "../userInterface/interface";
-import { DoctorResult, doctorType } from "../doctorInterface/Interface";
+import { UserListResponse } from "../adminInterface/userlist";
 import { PaginationOptions } from "../../helper/pagination";
-import { IDashboardStats, ITopDoctor, ITopUser, IAppointmentAnalytics } from "../adminInterface/dashboard";
+import {
+  IDashboardStats,
+  ITopDoctor,
+  ITopUser,
+  IAppointmentAnalytics,
+} from "../adminInterface/dashboard";
 import { IAppointment } from "../../model/appointmentModel";
-
-export interface Service {
-  serviceId: string;
-  name: string;
-  isActive: boolean;
-}
-
-export interface Coupon {
-  _id: string;
-  name: string;
-  code: string;
-  discount: number;
-  expirationDate: string;
-  isActive: boolean;
-}
+import { Iuser } from "../../model/userModel";
+import { DoctorListResponse } from "../adminInterface/doctorlist";
+import {
+  Service,
+  ServiceListResponse,
+} from "../adminInterface/serviceInterface";
+import { IDoctor } from "../../model/doctorModel";
+import { Coupon, CouponListResponse } from "../adminInterface/couponlist";
+import { ICoupon } from "../../model/couponModel";
 
 export interface IAuthRepository {
-  logout(refreshToken: string): Promise<any>;
-  getAllUsers(options:PaginationOptions): Promise<UserProfile[]>;
-  getAllDoctors(options:PaginationOptions): Promise<DoctorResult[]>;
-  toggleUser(id: string): Promise<any>;
-  toggleDoctor(id: string): Promise<any>;
-  getAllServices(options:PaginationOptions): Promise<Service[]>;
-  addService(name: string, isActive: boolean): Promise<any>;
-  createCoupon(couponData: any): Promise<any>;
-  editService(id: string,name: string, isActive: boolean): Promise<any>;
-  toggleService(id: string): Promise<any>;
-  findServiceByName(name: string): Promise<any>;
-  getCertificates(id: string): Promise<any>;
-  approveDoctor(id: string): Promise<any>;
-  rejectDoctor(id: string, reason: string): Promise<any>;
-  getAllCoupons(options:PaginationOptions): Promise<Coupon[]>;
-  toggleCoupon(id: string): Promise<any>;
-  editCoupon(id: string, couponData: any): Promise<any>;
-  existCoupon(code:string): Promise<any>;
+  getAllUsers(
+    options: PaginationOptions
+  ): Promise<Omit<UserListResponse, "status">>;
+  getAllDoctors(
+    options: PaginationOptions
+  ): Promise<Omit<DoctorListResponse, "status">>;
+  toggleUser(id: string): Promise<Iuser | null>;
+  toggleDoctor(id: string): Promise<IDoctor | null>;
+  getAllServices(
+    options: PaginationOptions
+  ): Promise<Omit<ServiceListResponse, "status">>;
+  addService(name: string, isActive: boolean): Promise<Service | null>;
+  createCoupon(couponData: Coupon): Promise<ICoupon | null>;
+  editService(
+    id: string,
+    name: string,
+    isActive: boolean
+  ): Promise<Service | null>;
+  toggleService(id: string): Promise<Service | null>;
+  findServiceByName(name: string): Promise<Service | null>;
+  getCertificates(id: string): Promise<string[] | null>;
+  approveDoctor(id: string): Promise<IDoctor | null>;
+  rejectDoctor(id: string, reason: string): Promise<IDoctor | null>;
+  getAllCoupons(
+    options: PaginationOptions
+  ): Promise<Omit<CouponListResponse, "status">>;
+  toggleCoupon(id: string): Promise<ICoupon | null>;
+  editCoupon(id: string, couponData: Coupon): Promise<ICoupon | null>;
+  existCoupon(code: string): Promise<boolean>;
   fetchDashboardStats(): Promise<IDashboardStats>;
   fetchTopDoctors(): Promise<ITopDoctor[]>;
   fetchTopUsers(): Promise<ITopUser[]>;
-  fetchAppointmentAnalytics(timeFrame: string): Promise<IAppointmentAnalytics[]>;
+  fetchAppointmentAnalytics(
+    timeFrame: string
+  ): Promise<IAppointmentAnalytics[]>;
   fetchReports(
     startDate: Date,
     endDate: Date,
@@ -55,4 +66,5 @@ export interface IAuthRepository {
       limit: number;
       totalPages: number;
     };
-  }>}
+  }>;
+}

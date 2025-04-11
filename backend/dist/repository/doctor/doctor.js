@@ -24,16 +24,20 @@ class DoctorRepository {
             return services;
         }
         catch (error) {
-            throw new Error(error.message);
+            const errorMessage = error instanceof Error ? error.message : "Unknown error in repository";
+            throw new Error(errorMessage);
         }
     }
     async addQualification(data, doctorId) {
         try {
-            const updatedDoctor = await doctorModel_1.default.findByIdAndUpdate(doctorId, { $set: data }, { new: true });
+            const updatedDoctor = await doctorModel_1.default
+                .findByIdAndUpdate(doctorId, { $set: data }, { new: true })
+                .select("-password -wallet -__v -averageRating -reviewCount");
             return updatedDoctor;
         }
         catch (error) {
-            throw new Error(error.message);
+            const errorMessage = error instanceof Error ? error.message : "Unknown error while updating doctor";
+            throw new Error(errorMessage);
         }
     }
     async getQualifications(id) {
@@ -41,34 +45,41 @@ class DoctorRepository {
             const doctor = await doctorModel_1.default
                 .findOne({ _id: id, docStatus: "approved" })
                 .populate({ path: "speciality", model: "Service", select: "name" })
+                .select("-password -wallet -__v -averageRating -reviewCount")
                 .lean();
             if (!doctor)
                 return null;
             return doctor;
         }
         catch (error) {
-            throw new Error(error.message);
+            const errorMessage = error instanceof Error ? error.message : "Unknown error in getQualifications";
+            throw new Error(errorMessage);
         }
     }
     async getDoctorProfile(id) {
         try {
             const doctor = await doctorModel_1.default
                 .findById(id)
+                .select("-password -__v")
                 .populate({ path: "speciality", model: "Service", select: "name" })
                 .lean();
             return doctor;
         }
         catch (error) {
-            throw new Error(error.message);
+            const message = error instanceof Error ? error.message : "Unknown error in repository";
+            throw new Error(message);
         }
     }
     async editDoctorProfile(id, data) {
         try {
-            const updatedDoctor = await doctorModel_1.default.findByIdAndUpdate(id, { $set: data }, { new: true });
+            const updatedDoctor = await doctorModel_1.default.findByIdAndUpdate(id, { $set: data }, { new: true })
+                .select("-password -wallet -__v ")
+                .lean();
             return updatedDoctor;
         }
         catch (error) {
-            throw new Error(error.message);
+            const message = error instanceof Error ? error.message : "Unknown error in repository";
+            throw new Error(message);
         }
     }
     async changePassword(id, oldPassword, newPassword) {
@@ -87,27 +98,38 @@ class DoctorRepository {
             return { status: true, message: "Password changed successfully" };
         }
         catch (error) {
-            throw new Error(error.message);
+            const message = error instanceof Error ? error.message : "Unknown error in repository";
+            throw new Error(message);
         }
     }
     async addSchedule(scheduleData) {
         try {
-            const schedule = await slotModel_1.default.create(scheduleData);
-            return {
-                status: true,
-                message: "Schedule added successfully",
-                data: schedule,
-            };
+            const scheduleDoc = await slotModel_1.default.create(scheduleData);
+            return scheduleDoc;
         }
         catch (error) {
-            throw new Error(error.message);
+            const message = error instanceof Error ? error.message : "Failed to create schedule";
+            throw new Error(message);
+        }
+    }
+    async findRecurringScheduleByDoctor(doctorId) {
+        try {
+            const recurring = await slotModel_1.default.findOne({
+                doctor: doctorId,
+                isRecurring: true,
+            });
+            return recurring;
+        }
+        catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to check existing recurring schedule";
+            throw new Error(message);
         }
     }
     async getSchedule(id) {
         try {
             const doctor = await doctorModel_1.default.findById(id);
             if (!doctor) {
-                return { status: false, message: "Doctor not found" };
+                throw new Error("Doctor not found");
             }
             const schedules = await slotModel_1.default
                 .find({ doctor: id })
@@ -117,7 +139,8 @@ class DoctorRepository {
             return activeSchedules;
         }
         catch (error) {
-            throw new Error(error.message);
+            const errorMessage = error instanceof Error ? error.message : "Repository error in getSchedule";
+            throw new Error(errorMessage);
         }
     }
     async getUsers() {

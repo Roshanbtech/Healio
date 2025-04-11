@@ -1,5 +1,5 @@
 "use client";
-
+import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import axiosInstance from "../../utils/axiosInterceptors";
@@ -42,19 +42,16 @@ const Service: React.FC = () => {
         setPagination(res.pagination);
       }
     } catch (error) {
-      console.error("Error fetching services:", error);
       toast.error("Failed to fetch services");
     }
   };
 
-  // Reset page to 1 when search term changes
   useEffect(() => {
     if (currentPage !== 1) {
       setCurrentPage(1);
     }
   }, [debouncedSearchTerm]);
 
-  // Refetch services on page or search term change
   useEffect(() => {
     fetchServices();
   }, [currentPage, debouncedSearchTerm]);
@@ -62,29 +59,44 @@ const Service: React.FC = () => {
   const handleToggleService = async (id: string) => {
     try {
       const response = await axiosInstance.patch(`/admin/services/${id}/toggle`);
-      if (response.data?.status) {
+  
+      if (response.data?.service?.status) {
         setServices((prev) =>
           prev.map((service) =>
             service._id === id ? { ...service, isActive: !service.isActive } : service
           )
         );
-        toast.success(response.data.service.message);
+        toast.success(response.data.service.message || "Service status updated successfully.");
+      } else {
+        toast.error(response.data?.service?.message || "Failed to toggle service status.");
       }
-    } catch (error) {
+    } catch (error: unknown) {
+      let errorMessage = "An unexpected error occurred while toggling service status.";
+  
+      if (axios.isAxiosError(error)) {
+        errorMessage =
+          (error.response?.data as { message?: string })?.message || error.message;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+  
+      toast.error(errorMessage);
       console.error("Error toggling service status:", error);
-      toast.error("Failed to toggle service status");
     }
   };
+  
 
   const handleAddService = async () => {
     if (!newService.name.trim()) {
       setErrorMessage("Service name cannot be empty.");
       return;
     }
+  
     if (newService.name.length > 20) {
       setErrorMessage("Service name cannot exceed 20 characters.");
       return;
     }
+  
     try {
       const response = await axiosInstance.post("/admin/services", newService);
       if (response.data?.status) {
@@ -92,12 +104,21 @@ const Service: React.FC = () => {
         toast.success("Service added successfully");
         setIsAddModalOpen(false);
         setNewService({ name: "" });
+        setErrorMessage(""); 
+      } else {
+        toast.error(response.data?.message || "Failed to add service");
       }
-    } catch (error) {
-      console.error("Error adding service:", error);
-      toast.error("Failed to add service");
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Something went wrong. Please try again.");
+      }
     }
   };
+  
 
   const handleEditClick = (service: Service) => {
     setSelectedService(service);
@@ -109,10 +130,12 @@ const Service: React.FC = () => {
       setEditErrorMessage("Service name is required.");
       return;
     }
+  
     try {
       const response = await axiosInstance.patch(`/admin/services/${selectedService._id}`, {
         name: selectedService.name,
       });
+  
       if (response.data?.status) {
         setServices((prev) =>
           prev.map((service) =>
@@ -122,12 +145,24 @@ const Service: React.FC = () => {
         toast.success("Service updated successfully");
         setIsEditModalOpen(false);
         setSelectedService(null);
+        setEditErrorMessage(""); 
+      } else {
+        toast.error(response.data?.message || "Failed to update service");
       }
-    } catch (error) {
+    } catch (error: unknown) {
+      let errorMessage = "Something went wrong. Please try again.";
+  
+      if (axios.isAxiosError(error)) {
+        errorMessage = error.response?.data?.message || error.message;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+  
+      toast.error(errorMessage);
       console.error("Error updating service:", error);
-      toast.error("Failed to update service");
     }
   };
+  
 
   return (
     <div className="flex min-h-screen">

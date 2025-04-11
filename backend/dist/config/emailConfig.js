@@ -18,15 +18,20 @@ const sendMail = async (email, subject, text, html) => {
         const mailOptions = {
             from: process.env.EMAIL,
             to: email,
-            subject: subject,
-            text: text,
+            subject,
+            text,
         };
         if (html && !text.trim().startsWith("<html>")) {
             mailOptions.html = html;
         }
         transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
-                console.error(error);
+                if (error instanceof Error) {
+                    console.error(error.message);
+                }
+                else {
+                    console.error("Unknown error while sending email");
+                }
                 resolve(false);
             }
             else {

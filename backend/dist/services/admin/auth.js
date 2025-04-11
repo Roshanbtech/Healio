@@ -6,70 +6,75 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = require("dotenv");
+const emailConfig_1 = __importDefault(require("../../config/emailConfig"));
 (0, dotenv_1.config)();
 class AuthService {
     constructor(AuthRepository) {
         this.AuthRepository = AuthRepository;
     }
-    async login(AdminData) {
+    async login(adminData) {
         try {
             const adminEmail = process.env.ADMIN_EMAIL;
             const adminPassword = process.env.ADMIN_PASSWORD;
             const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET;
             const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
-            console.log(adminEmail, adminPassword, "env");
             if (!adminEmail ||
                 !adminPassword ||
                 !accessTokenSecret ||
                 !refreshTokenSecret) {
                 throw new Error("Server configuration missing.");
             }
-            console.log(AdminData.password, "body");
-            if (AdminData.email !== adminEmail ||
-                AdminData.password !== adminPassword) {
+            if (adminData.email !== adminEmail ||
+                adminData.password !== adminPassword) {
                 return { error: "Invalid email or password." };
             }
-            const accessToken = jsonwebtoken_1.default.sign({ email: AdminData.email, role: "admin" }, accessTokenSecret, { expiresIn: "1d" });
-            const refreshToken = jsonwebtoken_1.default.sign({ email: AdminData.email, role: "admin" }, refreshTokenSecret, { expiresIn: "7d" });
+            const accessToken = jsonwebtoken_1.default.sign({ email: adminData.email, role: "admin" }, accessTokenSecret, { expiresIn: "1d" });
+            const refreshToken = jsonwebtoken_1.default.sign({ email: adminData.email, role: "admin" }, refreshTokenSecret, { expiresIn: "7d" });
             return { accessToken, refreshToken };
         }
         catch (error) {
-            console.error("Error during admin login:", error);
-            return { error: "Internal server error. Please try again later." };
+            return {
+                error: error instanceof Error
+                    ? error.message
+                    : "Internal server error. Please try again later.",
+            };
         }
     }
     async logout(refreshToken) {
         try {
-            console.log("Logout process started...");
-            return await this.AuthRepository.logout(refreshToken);
+            return {
+                status: true,
+                message: "Logout successful.",
+            };
         }
         catch (error) {
-            console.error("Logout error:", error);
-            return { error: "Internal server error." };
+            return {
+                error: error instanceof Error ? error.message : "Something went wrong.",
+            };
         }
     }
     async getUser(options) {
         try {
             const users = await this.AuthRepository.getAllUsers(options);
-            if (!users) {
-                return null;
-            }
-            return users;
+            return users ?? null;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("Unknown error occurred while fetching users");
         }
     }
     async getDoctor(options) {
         try {
             const doctors = await this.AuthRepository.getAllDoctors(options);
-            if (!doctors) {
-                return null;
-            }
-            return doctors;
+            return doctors ?? null;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("Unknown error occurred while fetching doctors");
         }
     }
     async toggleUser(id) {
@@ -84,7 +89,10 @@ class AuthService {
             return { status: true, message };
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("Unknown error occurred while toggling user");
         }
     }
     async toggleDoctor(id) {
@@ -99,7 +107,10 @@ class AuthService {
             return { status: true, message };
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("Unknown error occurred while toggling doctor");
         }
     }
     async addService(name, isActive) {
@@ -121,12 +132,24 @@ class AuthService {
             return { status: true, message: "Service added successfully", service };
         }
         catch (error) {
-            console.error("Error in AuthService.addService:", error);
-            throw new Error(error.message || "An error occurred while adding the service.");
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("Unknown error occurred while adding service");
         }
     }
     async editService(id, name, isActive) {
         try {
+            if (!name || name.trim() === "") {
+                throw new Error("Service name cannot be empty.");
+            }
+            if (name.length > 20) {
+                throw new Error("Service name cannot exceed 20 characters.");
+            }
+            const existingService = await this.AuthRepository.findServiceByName(name);
+            if (existingService) {
+                throw new Error("Service name already exists.");
+            }
             const service = await this.AuthRepository.editService(id, name, isActive);
             if (!service) {
                 throw new Error("Service not updated");
@@ -134,7 +157,10 @@ class AuthService {
             return { status: true, message: "Service updated successfully", service };
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("Unknown error occurred while updating service");
         }
     }
     async toggleService(id) {
@@ -149,7 +175,10 @@ class AuthService {
             return { status: true, message };
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("Unknown error occurred while toggling service");
         }
     }
     async toggleCoupon(id) {
@@ -164,93 +193,136 @@ class AuthService {
             return { status: true, message };
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("Unknown error occurred while toggling coupon");
         }
     }
     async getService(options) {
         try {
             const services = await this.AuthRepository.getAllServices(options);
-            if (!services) {
-                return null;
-            }
-            return services;
+            return services ?? null;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("Unknown error occurred while fetching services");
         }
     }
     async getCertificates(id) {
         try {
             const certificates = await this.AuthRepository.getCertificates(id);
-            return certificates;
+            return certificates ?? [];
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            return [];
         }
     }
     async approveDoctor(id) {
         try {
             const doctor = await this.AuthRepository.approveDoctor(id);
-            if (!doctor) {
-                throw new Error("Doctor not approved");
-            }
+            if (!doctor)
+                throw new Error("Doctor not found for approval.");
+            const emailContent = `Hello Dr. ${doctor.name},
+
+Congratulations! Your account has been approved as a doctor in the Healio team.
+
+Thank you,
+Team Healio`;
+            await (0, emailConfig_1.default)(doctor.email, "Account Approved", emailContent);
             return { status: true, message: "Doctor approved successfully", doctor };
         }
         catch (error) {
-            throw new Error(error.message);
+            const errMsg = error instanceof Error
+                ? error.message
+                : "Unexpected error during approval.";
+            throw new Error(errMsg);
         }
     }
     async rejectDoctor(id, reason) {
         try {
             const doctor = await this.AuthRepository.rejectDoctor(id, reason);
-            if (!doctor) {
-                throw new Error("Doctor not rejected");
-            }
+            if (!doctor)
+                throw new Error("Doctor not found for rejection.");
+            const emailContent = `Hello Dr. ${doctor.name},
+
+We regret to inform you that your account has been rejected as a doctor in the Healio team.
+Because, ${reason}.
+
+Thank you,
+Team Healio`;
+            await (0, emailConfig_1.default)(doctor.email, "Account Rejected", emailContent);
             return { status: true, message: "Doctor rejected successfully", doctor };
         }
         catch (error) {
-            throw new Error(error.message);
+            const errMsg = error instanceof Error
+                ? error.message
+                : "Unexpected error during rejection.";
+            throw new Error(errMsg);
         }
     }
     async createCoupon(couponData) {
         try {
             const { code } = couponData;
-            let existingCode = await this.AuthRepository.existCoupon(code);
+            const existingCode = await this.AuthRepository.existCoupon(code);
             if (existingCode) {
-                throw new Error("Coupon code already exists");
+                throw new Error("Coupon code already exists.");
             }
             const coupon = await this.AuthRepository.createCoupon(couponData);
             if (!coupon) {
-                return { status: false, message: "Coupon not created" };
+                throw new Error("Coupon not created.");
             }
-            return { status: true, message: "Coupon created successfully", coupon };
+            return {
+                status: true,
+                message: "Coupon created successfully",
+                coupon,
+            };
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("Unknown error occurred while creating coupon.");
         }
     }
     async editCoupon(id, couponData) {
         try {
+            const existingCoupon = await this.AuthRepository.existCoupon(couponData.code);
+            if (existingCoupon) {
+                throw new Error("Coupon code already exists.");
+            }
             const coupon = await this.AuthRepository.editCoupon(id, couponData);
             if (!coupon) {
-                throw new Error("Coupon not updated");
+                throw new Error("Coupon not updated.");
             }
-            return { status: true, message: "Coupon updated successfully", coupon };
+            return {
+                status: true,
+                message: "Coupon updated successfully",
+                coupon,
+            };
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("Unknown error occurred while updating coupon.");
         }
     }
     async getCoupons(options) {
         try {
             const coupons = await this.AuthRepository.getAllCoupons(options);
-            if (!coupons) {
-                return null;
-            }
-            return coupons;
+            return coupons ?? null;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("Unknown error occurred while fetching coupons");
         }
     }
     async getDashboardStats() {
@@ -259,7 +331,10 @@ class AuthService {
             return stats;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("Unknown error occurred while fetching dashboard stats");
         }
     }
     async getTopDoctors() {
@@ -268,7 +343,10 @@ class AuthService {
             return topDoctors;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("Unknown error occurred while fetching top doctors");
         }
     }
     async getTopUsers() {
@@ -277,7 +355,10 @@ class AuthService {
             return topUsers;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("Unknown error occurred while fetching top users");
         }
     }
     async getAppointmentAnalytics(timeFrame) {
@@ -286,7 +367,10 @@ class AuthService {
             return analytics;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("Unknown error occurred while fetching appointment analytics");
         }
     }
     async getReports(startDate, endDate, status, options) {
@@ -294,7 +378,10 @@ class AuthService {
             return await this.AuthRepository.fetchReports(startDate, endDate, status, options);
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("Unknown error occurred while fetching reports");
         }
     }
 }

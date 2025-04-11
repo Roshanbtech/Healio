@@ -1,31 +1,32 @@
-import { Document } from "mongoose";
-import { DoctorResult, doctorType, Schedule } from "../doctorInterface/Interface";
+import { DoctorQualificationInput, DoctorResult, doctorType, Schedule } from "../doctorInterface/Interface";
 import { Service } from "../doctorInterface/Interface";
 import { UserProfile } from "../userInterface/interface";
 import { IAppointment } from "../../model/appointmentModel";
 import { IDoctor } from "../../model/doctorModel";
 import { Iuser } from "../../model/userModel";
 import { DashboardHomeData, DashboardStatsData, DashboardStatsResponse, DoctorProfile, GrowthChartData } from "../doctorInterface/dashboardInterface";
+import { ISchedule } from "../../model/slotModel";
 
 export interface IAuthRepository {
   existDoctor(email: string): Promise<{ existEmail: boolean }>;
-  createDoctor(doctorData: doctorType): Promise<Document>;
+  createDoctor(doctorData: doctorType): Promise<IDoctor>;
   doctorCheck(email: string): Promise<DoctorResult | null>;
-  handleGoogleLogin(doctorData: any): Promise<{ doctor: any; isNewDoctor: boolean }>
-  updatePassword(email: string, hashedPassword: string): Promise<any>
-  logout(refreshToken: string): Promise<any>
+  handleGoogleLogin(doctorData: any): Promise<{ doctor: any; isNewDoctor: boolean }>;
+  updatePassword(email: string, hashedPassword: string): Promise<{ acknowledged: boolean; modifiedCount: number }>; 
+  logout(refreshToken: string): Promise<boolean>;
 }
 
 
 export interface IDoctorRepository{
   getServices(): Promise<Service[]>
-  addQualification(data: any, id: string): Promise<any>
-  getQualifications(id: string): Promise<any>
-  getDoctorProfile(id: string): Promise<any>
-  editDoctorProfile(id: string, data: any): Promise<any> 
-  changePassword(id: string,oldPassword:string, newPassword: string): Promise<any>
-  addSchedule(scheduleData: Schedule): Promise<any>
-  getSchedule(id: string): Promise<any>
+  addQualification(data: DoctorQualificationInput, doctorId: string): Promise<IDoctor | null>;
+  getQualifications(id: string): Promise<IDoctor | null>;
+  getDoctorProfile(id: string): Promise<Partial<IDoctor>|null>;
+  editDoctorProfile(id: string, data:Partial<IDoctor>): Promise<Partial<IDoctor>| null> 
+  changePassword(id: string,oldPassword:string, newPassword: string): Promise<{ status: boolean; message: string }>;
+  addSchedule(scheduleData: Partial<ISchedule>): Promise<ISchedule>;
+  findRecurringScheduleByDoctor(doctor: string): Promise<ISchedule | null>
+  getSchedule(id: string): Promise<ISchedule[]>
   getUsers(): Promise<any>
   getAppointmentUsers(id: string): Promise<Iuser[]>
   uploadChatImage(chatId: string, file: Express.Multer.File): Promise<any>

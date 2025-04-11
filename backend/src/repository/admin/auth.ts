@@ -1,149 +1,199 @@
-import userModel from "../../model/userModel";
-import doctorModel from "../../model/doctorModel";
+import userModel, { Iuser } from "../../model/userModel";
+import doctorModel, { IDoctor } from "../../model/doctorModel";
 import serviceModel from "../../model/serviceModel";
-import couponModel from "../../model/couponModel";
+import couponModel, { ICoupon } from "../../model/couponModel";
 import { paginate, PaginationOptions } from "../../helper/pagination";
 import { IAuthRepository } from "../../interface/admin/Auth.repository.interface";
-import sendMail from "../../config/emailConfig";
+import { UserListResponse } from "../../interface/adminInterface/userlist";
 import AppointmentModel, { IAppointment } from "../../model/appointmentModel";
-import { IDashboardStats, ITopDoctor, ITopUser, IAppointmentAnalytics } from "../../interface/adminInterface/dashboard";
+import {
+  IDashboardStats,
+  ITopDoctor,
+  ITopUser,
+  IAppointmentAnalytics,
+} from "../../interface/adminInterface/dashboard";
 import { getUrl } from "../../helper/getUrl";
+import { DoctorListResponse } from "../../interface/adminInterface/doctorlist";
+import {
+  ServiceListResponse,
+  Service,
+} from "../../interface/adminInterface/serviceInterface";
+import {
+  Coupon,
+  CouponListResponse,
+} from "../../interface/adminInterface/couponlist";
 
 export class AuthRepository implements IAuthRepository {
-  async logout(refreshToken: string): Promise<any> {
-    try {
-      console.log(refreshToken, "refresh token");
-      return await userModel.updateOne(
-        { refreshToken },
-        { $set: { refreshToken: "" } }
-      );
-      console.log("Logout successful");
-    } catch (error: any) {
-      throw new Error(error.message);
-    }
-  }
-  
-  async getAllUsers(options: PaginationOptions): Promise<any> {
+  async getAllUsers(
+    options: PaginationOptions
+  ): Promise<Omit<UserListResponse, "status">> {
     try {
       const projection = "-password -__v -wallet -userId -createdAt -updatedAt";
       const updatedOptions = { ...options, select: projection };
       const users = await paginate(userModel, updatedOptions, {});
-      for(const user of users.data){
-        if(user.image){
+      for (const user of users.data) {
+        if (user.image) {
           user.image = await getUrl(user.image);
         }
       }
       return users;
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("An unknown error occurred while fetching users.");
     }
   }
 
-  async getAllDoctors(options: PaginationOptions): Promise<any> {
+  async getAllDoctors(
+    options: PaginationOptions
+  ): Promise<Omit<DoctorListResponse, "status">> {
     try {
       const paginationOptions: PaginationOptions = {
         ...options,
-        select: "-password -__v -createdAt -updatedAt -wallet -averageRating -reviewCount",
+        select:
+          "-password -__v -createdAt -updatedAt -wallet -averageRating -reviewCount",
         populate: { path: "speciality", model: "Service", select: "name" },
       };
-  
+
       const doctors = await paginate(doctorModel, paginationOptions, {});
-      for(const doctor of doctors.data){
-        if(doctor.image){
+      for (const doctor of doctors.data) {
+        if (doctor.image) {
           doctor.image = await getUrl(doctor.image);
         }
       }
       return doctors;
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("An unknown error occurred while fetching doctors.");
     }
   }
 
-  async toggleUser(id: string): Promise<any> {
+  async toggleUser(id: string): Promise<Iuser | null> {
     try {
       const user = await userModel.findById(id);
       if (!user) return null;
 
       user.isBlocked = !user.isBlocked;
       await user.save();
-
       return user;
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("An unknown error occurred while toggling the user.");
     }
   }
 
-  async toggleDoctor(id: string): Promise<any> {
+  async toggleDoctor(id: string): Promise<IDoctor | null> {
     try {
       const doctor = await doctorModel.findById(id);
       if (!doctor) return null;
 
       doctor.isBlocked = !doctor.isBlocked;
       await doctor.save();
-
       return doctor;
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("An unknown error occurred while toggling the doctor.");
     }
   }
 
-  async addService(name: string, isActive: boolean): Promise<any> {
-    const service = new serviceModel({ name, isActive });
-    return await service.save();
+  async addService(name: string, isActive: boolean): Promise<Service | null> {
+    try {
+      const service = new serviceModel({ name, isActive });
+      return await service.save();
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("An unknown error occurred while adding the service.");
+    }
   }
 
-  async createCoupon(couponData: any): Promise<any> {
+  async createCoupon(couponData: Coupon): Promise<ICoupon | null> {
     try {
       const coupon = new couponModel(couponData);
       return await coupon.save();
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("An unknown error occurred while creating the coupon.");
     }
   }
 
-  async getAllCoupons(options: PaginationOptions): Promise<any> {
+  async getAllCoupons(
+    options: PaginationOptions
+  ): Promise<Omit<CouponListResponse, "status">> {
     try {
       const coupons = await paginate(couponModel, options, {});
       return coupons;
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("Unknown error occurred while fetching coupons");
     }
   }
 
-  async existCoupon(code: string): Promise<any> {
+  async existCoupon(code: string): Promise<boolean> {
     try {
-      return await couponModel.findOne({ code });
-    } catch (error: any) {
-      throw new Error(error.message);
+      const existing = await couponModel.findOne({ code });
+      return !!existing;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("Unknown error checking coupon existence.");
     }
   }
 
-  async editService(id: string, name: string, isActive: boolean): Promise<any> {
-    const service = await serviceModel.findById(id);
-    if (!service) return null;
-
-    service.name = name;
-    service.isActive = isActive;
-    return await service.save();
+  async editService(
+    id: string,
+    name: string,
+    isActive: boolean
+  ): Promise<Service | null> {
+    try {
+      const service = await serviceModel.findById(id);
+      if (!service) return null;
+      service.name = name;
+      service.isActive = isActive;
+      return await service.save();
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("An unknown error occurred while editing the service.");
+    }
   }
 
-  async editCoupon(id: string, couponData: any): Promise<any> {
+  async editCoupon(id: string, couponData: Coupon): Promise<ICoupon | null> {
     try {
       const coupon = await couponModel.findById(id);
       if (!coupon) return null;
+
       coupon.name = couponData.name;
       coupon.code = couponData.code;
       coupon.discount = couponData.discount;
       coupon.startDate = couponData.startDate;
       coupon.expirationDate = couponData.expirationDate;
       coupon.isActive = couponData.isActive;
+
       return await coupon.save();
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("Unknown error occurred while editing the coupon.");
     }
   }
 
-  async toggleService(id: string): Promise<any> {
+  async toggleService(id: string): Promise<Service | null> {
     try {
       const service = await serviceModel.findById(id);
       if (!service) return null;
@@ -152,183 +202,212 @@ export class AuthRepository implements IAuthRepository {
       await service.save();
 
       return service;
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("An unknown error occurred while toggling the service.");
     }
   }
 
-  async toggleCoupon(id: string): Promise<any> {
+  async toggleCoupon(id: string): Promise<ICoupon | null> {
     try {
       const coupon = await couponModel.findById(id);
       if (!coupon) return null;
       coupon.isActive = !coupon.isActive;
       await coupon.save();
       return coupon;
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("An unknown error occurred while toggling the coupon.");
     }
   }
 
-  async getAllServices(options: PaginationOptions): Promise<any> {
+  async getAllServices(
+    options: PaginationOptions
+  ): Promise<Omit<ServiceListResponse, "status">> {
     try {
       const services = await paginate(serviceModel, options, {});
       return services;
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("An unknown error occurred while fetching services.");
     }
   }
 
-  async findServiceByName(name: string): Promise<any> {
+  async findServiceByName(name: string): Promise<Service | null> {
     try {
       const service = await serviceModel.findOne({ name });
       return service;
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("An unknown error occurred while finding the service.");
     }
   }
 
-  async getCertificates(id: string): Promise<any> {
+  async getCertificates(id: string): Promise<string[] | null> {
     try {
-      const doctor = await doctorModel.findById(id);
-      if (!doctor) return null;
-      return doctor.certificate;
-    } catch (error: any) {
-      throw new Error(error.message);
+      const doctor = await doctorModel.findById(id).select("certificate");
+      return doctor?.certificate ?? null;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("An unknown error occurred while fetching certificates.");
     }
   }
 
-  async approveDoctor(id: string): Promise<any> {
+  async approveDoctor(id: string): Promise<IDoctor | null> {
     try {
       const doctor = await doctorModel.findById(id);
       if (!doctor) return null;
-      const emailContent = `Hello Dr. ${doctor.name},
-
-Congratulations! Your account has been approved as a doctor in the Healio team.
-
-Thank you,
-Team Healio`;
-      await sendMail(doctor.email, "Account Approved", emailContent);
-      return await doctorModel.findByIdAndUpdate(
+      const approvedDoctor = await doctorModel.findByIdAndUpdate(
         id,
         { docStatus: "approved", isDoctor: true, rejectionReason: "" },
         { new: true }
       );
-    } catch (error: any) {
-      throw new Error(error.message);
+      return approvedDoctor ?? null;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("An unknown error occurred while approving the doctor.");
     }
   }
 
-  async rejectDoctor(id: string, reason: string): Promise<any> {
+  async rejectDoctor(id: string, reason: string): Promise<IDoctor | null> {
     try {
       const doctor = await doctorModel.findById(id);
       if (!doctor) return null;
-      const emailContent = `Hello Dr. ${doctor.name},
-  
-  We regret to inform you that your account has been rejected as a doctor in the Healio team.
-  Because, ${reason}.
-  
-  Thank you,
-  Team Healio`;
-      await sendMail(doctor.email, "Account Rejected", emailContent);
-      return await doctorModel.findByIdAndUpdate(
+      const rejectedDoctor = await doctorModel.findByIdAndUpdate(
         id,
         { docStatus: "rejected", isDoctor: false, rejectionReason: reason },
         { new: true }
       );
-    } catch (error: any) {
-      throw new Error(error.message);
+      return rejectedDoctor ?? null;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("An unknown error occurred while rejecting the doctor.");
     }
   }
 
   async fetchDashboardStats(): Promise<IDashboardStats> {
     try {
       const totalCustomers = await userModel.countDocuments({});
-      const totalDoctors = await doctorModel.countDocuments({$or: [{ isDoctor: true }, { docStatus: "approved" }] });
-      const completedBookings = await AppointmentModel.countDocuments({ status: "completed" });
+      const totalDoctors = await doctorModel.countDocuments({
+        $or: [{ isDoctor: true }, { docStatus: "approved" }],
+      });
+      const completedBookings = await AppointmentModel.countDocuments({
+        status: "completed",
+      });
       const revenueResult = await AppointmentModel.aggregate([
         { $match: { status: "completed", fees: { $exists: true } } },
-        { $group: { _id: null, totalRevenue: { $sum: "$fees" } } }
+        { $group: { _id: null, totalRevenue: { $sum: "$fees" } } },
       ]);
       const totalRevenue = revenueResult[0]?.totalRevenue || 0;
       return { totalCustomers, totalDoctors, completedBookings, totalRevenue };
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error(
+        "An unknown error occurred while fetching dashboard stats."
+      );
     }
   }
-  
+
   async fetchTopDoctors(): Promise<ITopDoctor[]> {
     try {
       const topDoctors = await AppointmentModel.aggregate([
         { $match: { status: "completed" } },
-        { 
+        {
           $group: {
             _id: "$doctorId",
             appointmentsCount: { $sum: 1 },
-            totalEarnings: { $sum: "$fees" }
-          }
+            totalEarnings: { $sum: "$fees" },
+          },
         },
-        { 
+        {
           $lookup: {
             from: "doctors",
             localField: "_id",
             foreignField: "_id",
-            as: "doctorDetails"
-          }
+            as: "doctorDetails",
+          },
         },
         { $unwind: "$doctorDetails" },
-        { 
+        {
           $addFields: {
-            "doctorDetails.averageRating": { $ifNull: [ "$doctorDetails.averageRating", 0 ] }
-          }
+            "doctorDetails.averageRating": {
+              $ifNull: ["$doctorDetails.averageRating", 0],
+            },
+          },
         },
-        { 
-          $sort: { 
+        {
+          $sort: {
             appointmentsCount: -1,
-            "doctorDetails.averageRating": -1 
-          }
+            "doctorDetails.averageRating": -1,
+          },
         },
-        { $limit: 5 }
+        { $limit: 5 },
       ]);
-  
+
       for (const doctor of topDoctors) {
         if (doctor.doctorDetails.image) {
           doctor.doctorDetails.image = await getUrl(doctor.doctorDetails.image);
         }
       }
       return topDoctors;
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("An unknown error occurred while fetching top doctors.");
     }
   }
-  
+
   async fetchTopUsers(): Promise<ITopUser[]> {
     try {
       const topUsers = await AppointmentModel.aggregate([
-        { $group: {
+        {
+          $group: {
             _id: "$patientId",
             bookingsCount: { $sum: 1 },
             totalSpent: { $sum: "$fees" },
-            lastVisit: { $max: "$date" }
-        }},
-        { $lookup: {
+            lastVisit: { $max: "$date" },
+          },
+        },
+        {
+          $lookup: {
             from: "users",
             localField: "_id",
             foreignField: "_id",
-            as: "userDetails"
-        }},
+            as: "userDetails",
+          },
+        },
         { $unwind: "$userDetails" },
-        { 
+        {
           $addFields: {
-            "userDetails.averageRating": { $ifNull: [ "$userDetails.averageRating", 0 ] }
-          }
+            "userDetails.averageRating": {
+              $ifNull: ["$userDetails.averageRating", 0],
+            },
+          },
         },
-        { 
-          $sort: { 
+        {
+          $sort: {
             appointmentsCount: -1,
-            "userDetails.averageRating": -1 
-          }
+            "userDetails.averageRating": -1,
+          },
         },
-        { $limit: 5 }
+        { $limit: 5 },
       ]);
       for (const user of topUsers) {
         if (user.userDetails.image) {
@@ -336,65 +415,79 @@ Team Healio`;
         }
       }
       return topUsers;
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("An unknown error occurred while fetching top users.");
     }
   }
-  
 
-  async fetchAppointmentAnalytics(timeFrame: string): Promise<IAppointmentAnalytics[]> {
+  async fetchAppointmentAnalytics(
+    timeFrame: string
+  ): Promise<IAppointmentAnalytics[]> {
     try {
       if (timeFrame === "weekly") {
         const analytics = await AppointmentModel.aggregate([
           {
             $group: {
               _id: { dayOfWeek: { $dayOfWeek: "$date" } },
-              completed: { $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] } },
-              canceled: { $sum: { $cond: [{ $eq: ["$status", "cancelled"] }, 1, 0] } }
-            }
+              completed: {
+                $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] },
+              },
+              canceled: {
+                $sum: { $cond: [{ $eq: ["$status", "cancelled"] }, 1, 0] },
+              },
+            },
           },
           {
             $project: {
               _id: 0,
               dayOfWeek: "$_id.dayOfWeek",
               completed: 1,
-              canceled: 1
-            }
+              canceled: 1,
+            },
           },
-          { $sort: { dayOfWeek: 1 } }
+          { $sort: { dayOfWeek: 1 } },
         ]);
         const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-        const transformedAnalytics = analytics.map(item => ({
-          _id: weekDays[item.dayOfWeek - 1], 
+        const transformedAnalytics = analytics.map((item) => ({
+          _id: weekDays[item.dayOfWeek - 1],
           completed: item.completed,
-          canceled: item.canceled
+          canceled: item.canceled,
         }));
         return transformedAnalytics;
       } else {
-        const groupFormat = {
-          daily: "%Y-%m-%d",
-          monthly: "%Y-%m",
-          yearly: "%Y"
-        }[timeFrame] || "%Y-%m-%d";
-    
+        const groupFormat =
+          {
+            daily: "%Y-%m-%d",
+            monthly: "%Y-%m",
+            yearly: "%Y",
+          }[timeFrame] || "%Y-%m-%d";
+
         const analytics = await AppointmentModel.aggregate([
           {
             $group: {
               _id: { $dateToString: { format: groupFormat, date: "$date" } },
               completed: {
-                $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] }
+                $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] },
               },
               canceled: {
-                $sum: { $cond: [{ $eq: ["$status", "cancelled"] }, 1, 0] }
-              }
-            }
+                $sum: { $cond: [{ $eq: ["$status", "cancelled"] }, 1, 0] },
+              },
+            },
           },
-          { $sort: { _id: 1 } }
+          { $sort: { _id: 1 } },
         ]);
         return analytics;
       }
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error(
+        "An unknown error occurred while fetching appointment analytics."
+      );
     }
   }
 
@@ -415,28 +508,36 @@ Team Healio`;
     try {
       const query: Record<string, any> = {
         createdAt: { $gte: startDate, $lte: endDate },
-        status: { $in: ["completed", "cancelled"] }
+        status: { $in: ["completed", "cancelled"] },
       };
-  
+
       if (status) {
         query.status = status;
       }
-  
-      // Add the select field in the options
-      const paginatedResult = await paginate(AppointmentModel, {
-        ...options,
-        select: 'appointmentId date time status fees paymentMethod paymentStatus couponCode couponDiscount isApplied createdAt updatedAt',
-        populate: [
-          { path: "doctorId", select: "name email phone docStatus fees averageRating" },
-          { path: "patientId", select: "name email phone address" }
-        ]
-      }, query);
-  
+
+      const paginatedResult = await paginate(
+        AppointmentModel,
+        {
+          ...options,
+          select:
+            "appointmentId date time status fees paymentMethod paymentStatus couponCode couponDiscount isApplied createdAt updatedAt",
+          populate: [
+            {
+              path: "doctorId",
+              select: "name email phone docStatus fees averageRating",
+            },
+            { path: "patientId", select: "name email phone address" },
+          ],
+        },
+        query
+      );
+
       return paginatedResult;
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("An unknown error occurred while fetching reports.");
     }
   }
-  
-  
 }

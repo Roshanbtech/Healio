@@ -9,20 +9,9 @@ const doctorModel_1 = __importDefault(require("../../model/doctorModel"));
 const serviceModel_1 = __importDefault(require("../../model/serviceModel"));
 const couponModel_1 = __importDefault(require("../../model/couponModel"));
 const pagination_1 = require("../../helper/pagination");
-const emailConfig_1 = __importDefault(require("../../config/emailConfig"));
 const appointmentModel_1 = __importDefault(require("../../model/appointmentModel"));
 const getUrl_1 = require("../../helper/getUrl");
 class AuthRepository {
-    async logout(refreshToken) {
-        try {
-            console.log(refreshToken, "refresh token");
-            return await userModel_1.default.updateOne({ refreshToken }, { $set: { refreshToken: "" } });
-            console.log("Logout successful");
-        }
-        catch (error) {
-            throw new Error(error.message);
-        }
-    }
     async getAllUsers(options) {
         try {
             const projection = "-password -__v -wallet -userId -createdAt -updatedAt";
@@ -36,7 +25,10 @@ class AuthRepository {
             return users;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("An unknown error occurred while fetching users.");
         }
     }
     async getAllDoctors(options) {
@@ -55,7 +47,10 @@ class AuthRepository {
             return doctors;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("An unknown error occurred while fetching doctors.");
         }
     }
     async toggleUser(id) {
@@ -68,7 +63,10 @@ class AuthRepository {
             return user;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("An unknown error occurred while toggling the user.");
         }
     }
     async toggleDoctor(id) {
@@ -81,12 +79,23 @@ class AuthRepository {
             return doctor;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("An unknown error occurred while toggling the doctor.");
         }
     }
     async addService(name, isActive) {
-        const service = new serviceModel_1.default({ name, isActive });
-        return await service.save();
+        try {
+            const service = new serviceModel_1.default({ name, isActive });
+            return await service.save();
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("An unknown error occurred while adding the service.");
+        }
     }
     async createCoupon(couponData) {
         try {
@@ -94,7 +103,10 @@ class AuthRepository {
             return await coupon.save();
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("An unknown error occurred while creating the coupon.");
         }
     }
     async getAllCoupons(options) {
@@ -103,24 +115,39 @@ class AuthRepository {
             return coupons;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("Unknown error occurred while fetching coupons");
         }
     }
     async existCoupon(code) {
         try {
-            return await couponModel_1.default.findOne({ code });
+            const existing = await couponModel_1.default.findOne({ code });
+            return !!existing;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("Unknown error checking coupon existence.");
         }
     }
     async editService(id, name, isActive) {
-        const service = await serviceModel_1.default.findById(id);
-        if (!service)
-            return null;
-        service.name = name;
-        service.isActive = isActive;
-        return await service.save();
+        try {
+            const service = await serviceModel_1.default.findById(id);
+            if (!service)
+                return null;
+            service.name = name;
+            service.isActive = isActive;
+            return await service.save();
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("An unknown error occurred while editing the service.");
+        }
     }
     async editCoupon(id, couponData) {
         try {
@@ -136,7 +163,10 @@ class AuthRepository {
             return await coupon.save();
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("Unknown error occurred while editing the coupon.");
         }
     }
     async toggleService(id) {
@@ -149,7 +179,10 @@ class AuthRepository {
             return service;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("An unknown error occurred while toggling the service.");
         }
     }
     async toggleCoupon(id) {
@@ -162,7 +195,10 @@ class AuthRepository {
             return coupon;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("An unknown error occurred while toggling the coupon.");
         }
     }
     async getAllServices(options) {
@@ -171,7 +207,10 @@ class AuthRepository {
             return services;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("An unknown error occurred while fetching services.");
         }
     }
     async findServiceByName(name) {
@@ -180,18 +219,22 @@ class AuthRepository {
             return service;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("An unknown error occurred while finding the service.");
         }
     }
     async getCertificates(id) {
         try {
-            const doctor = await doctorModel_1.default.findById(id);
-            if (!doctor)
-                return null;
-            return doctor.certificate;
+            const doctor = await doctorModel_1.default.findById(id).select("certificate");
+            return doctor?.certificate ?? null;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("An unknown error occurred while fetching certificates.");
         }
     }
     async approveDoctor(id) {
@@ -199,17 +242,14 @@ class AuthRepository {
             const doctor = await doctorModel_1.default.findById(id);
             if (!doctor)
                 return null;
-            const emailContent = `Hello Dr. ${doctor.name},
-
-Congratulations! Your account has been approved as a doctor in the Healio team.
-
-Thank you,
-Team Healio`;
-            await (0, emailConfig_1.default)(doctor.email, "Account Approved", emailContent);
-            return await doctorModel_1.default.findByIdAndUpdate(id, { docStatus: "approved", isDoctor: true, rejectionReason: "" }, { new: true });
+            const approvedDoctor = await doctorModel_1.default.findByIdAndUpdate(id, { docStatus: "approved", isDoctor: true, rejectionReason: "" }, { new: true });
+            return approvedDoctor ?? null;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("An unknown error occurred while approving the doctor.");
         }
     }
     async rejectDoctor(id, reason) {
@@ -217,34 +257,37 @@ Team Healio`;
             const doctor = await doctorModel_1.default.findById(id);
             if (!doctor)
                 return null;
-            const emailContent = `Hello Dr. ${doctor.name},
-  
-  We regret to inform you that your account has been rejected as a doctor in the Healio team.
-  Because, ${reason}.
-  
-  Thank you,
-  Team Healio`;
-            await (0, emailConfig_1.default)(doctor.email, "Account Rejected", emailContent);
-            return await doctorModel_1.default.findByIdAndUpdate(id, { docStatus: "rejected", isDoctor: false, rejectionReason: reason }, { new: true });
+            const rejectedDoctor = await doctorModel_1.default.findByIdAndUpdate(id, { docStatus: "rejected", isDoctor: false, rejectionReason: reason }, { new: true });
+            return rejectedDoctor ?? null;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("An unknown error occurred while rejecting the doctor.");
         }
     }
     async fetchDashboardStats() {
         try {
             const totalCustomers = await userModel_1.default.countDocuments({});
-            const totalDoctors = await doctorModel_1.default.countDocuments({ $or: [{ isDoctor: true }, { docStatus: "approved" }] });
-            const completedBookings = await appointmentModel_1.default.countDocuments({ status: "completed" });
+            const totalDoctors = await doctorModel_1.default.countDocuments({
+                $or: [{ isDoctor: true }, { docStatus: "approved" }],
+            });
+            const completedBookings = await appointmentModel_1.default.countDocuments({
+                status: "completed",
+            });
             const revenueResult = await appointmentModel_1.default.aggregate([
                 { $match: { status: "completed", fees: { $exists: true } } },
-                { $group: { _id: null, totalRevenue: { $sum: "$fees" } } }
+                { $group: { _id: null, totalRevenue: { $sum: "$fees" } } },
             ]);
             const totalRevenue = revenueResult[0]?.totalRevenue || 0;
             return { totalCustomers, totalDoctors, completedBookings, totalRevenue };
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("An unknown error occurred while fetching dashboard stats.");
         }
     }
     async fetchTopDoctors() {
@@ -255,30 +298,32 @@ Team Healio`;
                     $group: {
                         _id: "$doctorId",
                         appointmentsCount: { $sum: 1 },
-                        totalEarnings: { $sum: "$fees" }
-                    }
+                        totalEarnings: { $sum: "$fees" },
+                    },
                 },
                 {
                     $lookup: {
                         from: "doctors",
                         localField: "_id",
                         foreignField: "_id",
-                        as: "doctorDetails"
-                    }
+                        as: "doctorDetails",
+                    },
                 },
                 { $unwind: "$doctorDetails" },
                 {
                     $addFields: {
-                        "doctorDetails.averageRating": { $ifNull: ["$doctorDetails.averageRating", 0] }
-                    }
+                        "doctorDetails.averageRating": {
+                            $ifNull: ["$doctorDetails.averageRating", 0],
+                        },
+                    },
                 },
                 {
                     $sort: {
                         appointmentsCount: -1,
-                        "doctorDetails.averageRating": -1
-                    }
+                        "doctorDetails.averageRating": -1,
+                    },
                 },
-                { $limit: 5 }
+                { $limit: 5 },
             ]);
             for (const doctor of topDoctors) {
                 if (doctor.doctorDetails.image) {
@@ -288,37 +333,46 @@ Team Healio`;
             return topDoctors;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("An unknown error occurred while fetching top doctors.");
         }
     }
     async fetchTopUsers() {
         try {
             const topUsers = await appointmentModel_1.default.aggregate([
-                { $group: {
+                {
+                    $group: {
                         _id: "$patientId",
                         bookingsCount: { $sum: 1 },
                         totalSpent: { $sum: "$fees" },
-                        lastVisit: { $max: "$date" }
-                    } },
-                { $lookup: {
+                        lastVisit: { $max: "$date" },
+                    },
+                },
+                {
+                    $lookup: {
                         from: "users",
                         localField: "_id",
                         foreignField: "_id",
-                        as: "userDetails"
-                    } },
+                        as: "userDetails",
+                    },
+                },
                 { $unwind: "$userDetails" },
                 {
                     $addFields: {
-                        "userDetails.averageRating": { $ifNull: ["$userDetails.averageRating", 0] }
-                    }
+                        "userDetails.averageRating": {
+                            $ifNull: ["$userDetails.averageRating", 0],
+                        },
+                    },
                 },
                 {
                     $sort: {
                         appointmentsCount: -1,
-                        "userDetails.averageRating": -1
-                    }
+                        "userDetails.averageRating": -1,
+                    },
                 },
-                { $limit: 5 }
+                { $limit: 5 },
             ]);
             for (const user of topUsers) {
                 if (user.userDetails.image) {
@@ -328,7 +382,10 @@ Team Healio`;
             return topUsers;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("An unknown error occurred while fetching top users.");
         }
     }
     async fetchAppointmentAnalytics(timeFrame) {
@@ -338,25 +395,29 @@ Team Healio`;
                     {
                         $group: {
                             _id: { dayOfWeek: { $dayOfWeek: "$date" } },
-                            completed: { $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] } },
-                            canceled: { $sum: { $cond: [{ $eq: ["$status", "cancelled"] }, 1, 0] } }
-                        }
+                            completed: {
+                                $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] },
+                            },
+                            canceled: {
+                                $sum: { $cond: [{ $eq: ["$status", "cancelled"] }, 1, 0] },
+                            },
+                        },
                     },
                     {
                         $project: {
                             _id: 0,
                             dayOfWeek: "$_id.dayOfWeek",
                             completed: 1,
-                            canceled: 1
-                        }
+                            canceled: 1,
+                        },
                     },
-                    { $sort: { dayOfWeek: 1 } }
+                    { $sort: { dayOfWeek: 1 } },
                 ]);
                 const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-                const transformedAnalytics = analytics.map(item => ({
+                const transformedAnalytics = analytics.map((item) => ({
                     _id: weekDays[item.dayOfWeek - 1],
                     completed: item.completed,
-                    canceled: item.canceled
+                    canceled: item.canceled,
                 }));
                 return transformedAnalytics;
             }
@@ -364,51 +425,59 @@ Team Healio`;
                 const groupFormat = {
                     daily: "%Y-%m-%d",
                     monthly: "%Y-%m",
-                    yearly: "%Y"
+                    yearly: "%Y",
                 }[timeFrame] || "%Y-%m-%d";
                 const analytics = await appointmentModel_1.default.aggregate([
                     {
                         $group: {
                             _id: { $dateToString: { format: groupFormat, date: "$date" } },
                             completed: {
-                                $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] }
+                                $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] },
                             },
                             canceled: {
-                                $sum: { $cond: [{ $eq: ["$status", "cancelled"] }, 1, 0] }
-                            }
-                        }
+                                $sum: { $cond: [{ $eq: ["$status", "cancelled"] }, 1, 0] },
+                            },
+                        },
                     },
-                    { $sort: { _id: 1 } }
+                    { $sort: { _id: 1 } },
                 ]);
                 return analytics;
             }
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("An unknown error occurred while fetching appointment analytics.");
         }
     }
     async fetchReports(startDate, endDate, status, options) {
         try {
             const query = {
                 createdAt: { $gte: startDate, $lte: endDate },
-                status: { $in: ["completed", "cancelled"] }
+                status: { $in: ["completed", "cancelled"] },
             };
             if (status) {
                 query.status = status;
             }
-            // Add the select field in the options
             const paginatedResult = await (0, pagination_1.paginate)(appointmentModel_1.default, {
                 ...options,
-                select: 'appointmentId date time status fees paymentMethod paymentStatus couponCode couponDiscount isApplied createdAt updatedAt',
+                select: "appointmentId date time status fees paymentMethod paymentStatus couponCode couponDiscount isApplied createdAt updatedAt",
                 populate: [
-                    { path: "doctorId", select: "name email phone docStatus fees averageRating" },
-                    { path: "patientId", select: "name email phone address" }
-                ]
+                    {
+                        path: "doctorId",
+                        select: "name email phone docStatus fees averageRating",
+                    },
+                    { path: "patientId", select: "name email phone address" },
+                ],
             }, query);
             return paginatedResult;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            }
+            throw new Error("An unknown error occurred while fetching reports.");
         }
     }
 }

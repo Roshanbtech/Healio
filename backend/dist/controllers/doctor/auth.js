@@ -13,9 +13,7 @@ class AuthController {
     }
     async createDoctor(req, res) {
         try {
-            console.log("create doctor auth");
             const data = req.body;
-            console.log(data, "docdata");
             const response = await this.authService.signup(data);
             if ("error" in response) {
                 res.status(httpStatusCode_1.default.Unauthorized).json({
@@ -27,25 +25,26 @@ class AuthController {
             res.status(httpStatusCode_1.default.OK).json({ status: true, response });
         }
         catch (error) {
-            if (error.message === "Email already in use") {
-                res
-                    .status(httpStatusCode_1.default.Conflict)
-                    .json({ message: "Email already in use" });
-            }
-            else if (error.message === "Phone already in use") {
-                res
-                    .status(httpStatusCode_1.default.Conflict)
-                    .json({ message: "Phone number already in use" });
-            }
-            else if (error.message === "Otp not send") {
-                res
-                    .status(httpStatusCode_1.default.InternalServerError)
-                    .json({ message: "OTP not sent" });
+            if (error instanceof Error) {
+                if (error.message === "Email already in use") {
+                    res.status(httpStatusCode_1.default.Conflict).json({ message: "Email already in use" });
+                }
+                else if (error.message === "Phone already in use") {
+                    res.status(httpStatusCode_1.default.Conflict).json({ message: "Phone number already in use" });
+                }
+                else if (error.message === "Otp not send") {
+                    res.status(httpStatusCode_1.default.InternalServerError).json({ message: "OTP not sent" });
+                }
+                else {
+                    res.status(httpStatusCode_1.default.InternalServerError).json({
+                        message: "Something went wrong, please try again later",
+                    });
+                }
             }
             else {
-                res
-                    .status(httpStatusCode_1.default.InternalServerError)
-                    .json({ message: "Something went wrong, please try again later" });
+                res.status(httpStatusCode_1.default.InternalServerError).json({
+                    message: "An unexpected error occurred",
+                });
             }
         }
     }
@@ -56,20 +55,27 @@ class AuthController {
             res.status(httpStatusCode_1.default.OK).json({ status: true, response });
         }
         catch (error) {
-            if (error.message === "Email not found") {
-                res
-                    .status(httpStatusCode_1.default.NotFound)
-                    .json({ message: "Email not found" });
-            }
-            else if (error.message === "Otp not send") {
-                res
-                    .status(httpStatusCode_1.default.InternalServerError)
-                    .json({ message: "OTP not sent" });
+            if (error instanceof Error) {
+                if (error.message === "Email not found") {
+                    res
+                        .status(httpStatusCode_1.default.NotFound)
+                        .json({ message: "Email not found" });
+                }
+                else if (error.message === "Otp not send") {
+                    res
+                        .status(httpStatusCode_1.default.InternalServerError)
+                        .json({ message: "OTP not sent" });
+                }
+                else {
+                    res
+                        .status(httpStatusCode_1.default.InternalServerError)
+                        .json({ message: "Something went wrong, please try again later" });
+                }
             }
             else {
                 res
                     .status(httpStatusCode_1.default.InternalServerError)
-                    .json({ message: "Something went wrong, please try again later" });
+                    .json({ message: "An unexpected error occurred" });
             }
         }
     }
@@ -103,7 +109,7 @@ class AuthController {
                 path: "/auth/refresh",
                 expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
             });
-            return res
+            res
                 .status(isNewDoctor ? httpStatusCode_1.default.Created : httpStatusCode_1.default.Accepted)
                 .json({
                 message: isNewDoctor
@@ -114,11 +120,17 @@ class AuthController {
             });
         }
         catch (error) {
-            console.error("Google Login Error:", error);
             if (!res.headersSent) {
-                return res
-                    .status(httpStatusCode_1.default.InternalServerError)
-                    .json({ message: "Authentication failed" });
+                if (error instanceof Error) {
+                    res
+                        .status(httpStatusCode_1.default.InternalServerError)
+                        .json({ message: error.message });
+                }
+                else {
+                    res
+                        .status(httpStatusCode_1.default.InternalServerError)
+                        .json({ message: "Authentication failed" });
+                }
             }
         }
     }
@@ -126,19 +138,26 @@ class AuthController {
         try {
             const { email } = req.body;
             const result = await this.authService.sendForgotPasswordOtp(email);
-            return res.status(200).json(result);
+            res.status(httpStatusCode_1.default.OK).json(result);
         }
         catch (error) {
-            if (error.message === "Email not found") {
-                return res.status(404).json({ message: "Email not found" });
-            }
-            else if (error.message === "OTP not sent") {
-                return res.status(500).json({ message: "OTP not sent" });
+            if (error instanceof Error) {
+                if (error.message === "Email not found") {
+                    res.status(httpStatusCode_1.default.NotFound).json({ message: "Email not found" });
+                }
+                else if (error.message === "OTP not sent") {
+                    res.status(httpStatusCode_1.default.InternalServerError).json({ message: "OTP not sent" });
+                }
+                else {
+                    res.status(httpStatusCode_1.default.InternalServerError).json({
+                        message: "Something went wrong, please try again later",
+                    });
+                }
             }
             else {
-                return res
-                    .status(500)
-                    .json({ message: "Something went wrong, please try again later" });
+                res.status(httpStatusCode_1.default.InternalServerError).json({
+                    message: "An unexpected error occurred",
+                });
             }
         }
     }
@@ -146,20 +165,27 @@ class AuthController {
         try {
             const { email, otp } = req.body;
             const result = await this.authService.verifyForgotPasswordOtp(email, otp);
-            return res.status(200).json(result);
+            res.status(httpStatusCode_1.default.OK).json(result);
         }
         catch (error) {
-            if (error.message === "Email not found") {
-                return res.status(404).json({ message: "Email not found" });
-            }
-            else if (error.message === "OTP expired or invalid" ||
-                error.message === "Incorrect OTP") {
-                return res.status(400).json({ message: error.message });
+            if (error instanceof Error) {
+                if (error.message === "Email not found") {
+                    res.status(httpStatusCode_1.default.NotFound).json({ message: "Email not found" });
+                }
+                else if (error.message === "OTP expired or invalid" ||
+                    error.message === "Incorrect OTP") {
+                    res.status(httpStatusCode_1.default.BadRequest).json({ message: error.message });
+                }
+                else {
+                    res.status(httpStatusCode_1.default.InternalServerError).json({
+                        message: "Something went wrong, please try again later",
+                    });
+                }
             }
             else {
-                return res
-                    .status(500)
-                    .json({ message: "Something went wrong, please try again later" });
+                res.status(httpStatusCode_1.default.InternalServerError).json({
+                    message: "An unexpected error occurred",
+                });
             }
         }
     }
@@ -167,22 +193,27 @@ class AuthController {
         try {
             const { email, values } = req.body;
             const newPassword = values.newPassword;
-            console.log(email, newPassword, "reset password");
             const result = await this.authService.resetPassword(email, newPassword);
-            console.log(result, "reset password");
-            return res.status(200).json(result);
+            res.status(httpStatusCode_1.default.OK).json(result);
         }
         catch (error) {
-            if (error.message === "Email not found") {
-                return res.status(404).json({ message: "Email not found" });
-            }
-            else if (error.message === "Password not updated") {
-                return res.status(500).json({ message: "Password not updated" });
+            if (error instanceof Error) {
+                if (error.message === "Email not found") {
+                    res.status(httpStatusCode_1.default.NotFound).json({ message: "Email not found" });
+                }
+                else if (error.message === "Password not updated") {
+                    res.status(httpStatusCode_1.default.InternalServerError).json({ message: "Password not updated" });
+                }
+                else {
+                    res.status(httpStatusCode_1.default.InternalServerError).json({
+                        message: "Something went wrong, please try again later",
+                    });
+                }
             }
             else {
-                return res
-                    .status(500)
-                    .json({ message: "Something went wrong, please try again later" });
+                res.status(httpStatusCode_1.default.InternalServerError).json({
+                    message: "An unexpected error occurred",
+                });
             }
         }
     }
@@ -191,17 +222,18 @@ class AuthController {
             const data = req.body;
             const loginResponse = await this.authService.login(data);
             if ("error" in loginResponse) {
-                return res.status(httpStatusCode_1.default.Unauthorized).json({
+                res.status(httpStatusCode_1.default.Unauthorized).json({
                     status: false,
                     message: loginResponse.error,
                 });
+                return;
             }
             const { accessToken, refreshToken, doctorId } = loginResponse;
             res.cookie("refreshToken", refreshToken, {
                 httpOnly: true,
-                secure: true, // Set to false for local testing
+                secure: true,
                 sameSite: "strict",
-                path: "/auth/refresh", // Refresh token endpoint
+                path: "/auth/refresh",
                 expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
             });
             res.status(httpStatusCode_1.default.OK).json({
@@ -212,11 +244,11 @@ class AuthController {
             });
         }
         catch (error) {
-            console.error(error);
+            const errorMessage = error instanceof Error ? error.message : "Authentication failed";
             if (!res.headersSent) {
-                return res
-                    .status(httpStatusCode_1.default.InternalServerError)
-                    .json({ message: "Authentication failed" });
+                res.status(httpStatusCode_1.default.InternalServerError).json({
+                    message: errorMessage,
+                });
             }
         }
     }
@@ -233,11 +265,13 @@ class AuthController {
             res.status(httpStatusCode_1.default.OK).json({ status: true, message: "Logout" });
         }
         catch (error) {
-            console.log("error in doctor logout", error);
-            return res.status(httpStatusCode_1.default.InternalServerError).json({
-                status: false,
-                message: "Something went wrong, please try again later.",
-            });
+            const errorMessage = error instanceof Error ? error.message : "Something went wrong";
+            if (!res.headersSent) {
+                res.status(httpStatusCode_1.default.InternalServerError).json({
+                    status: false,
+                    message: errorMessage || "Something went wrong, please try again later.",
+                });
+            }
         }
     }
 }

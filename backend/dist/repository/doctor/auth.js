@@ -8,7 +8,6 @@ const doctorModel_1 = __importDefault(require("../../model/doctorModel"));
 class AuthRepository {
     async existDoctor(email) {
         try {
-            console.log(".....");
             let existEmail = true;
             const emailExist = await doctorModel_1.default.findOne({ email: email });
             if (!emailExist) {
@@ -23,25 +22,30 @@ class AuthRepository {
     }
     async createDoctor(doctorData) {
         try {
-            console.log("doctor data", doctorData);
             doctorData.isVerified = true;
             const newDoctor = new doctorModel_1.default(doctorData);
-            return await newDoctor.save();
+            return (await newDoctor.save());
         }
         catch (error) {
-            console.log("Error in creating new doctor", error);
-            throw new Error(`Error creating user : ${error.message}`);
+            if (error instanceof Error) {
+                throw new Error(`Error creating doctor: ${error.message}`);
+            }
+            throw new Error("Error creating doctor");
         }
     }
     async updatePassword(email, hashedPassword) {
         try {
-            console.log("1", email, hashedPassword);
             return await doctorModel_1.default.updateOne({ email }, { $set: { password: hashedPassword } });
-            console.log("2");
         }
         catch (error) {
-            console.error("Error updating password:", error);
-            throw new Error("Error updating password");
+            if (error instanceof Error) {
+                console.error("Error updating password:", error.message);
+                throw new Error("Error updating password");
+            }
+            else {
+                console.error("Unexpected error updating password:", error);
+                throw new Error("Unknown error while updating password");
+            }
         }
     }
     async doctorCheck(email) {
@@ -64,7 +68,7 @@ class AuthRepository {
             };
         }
         catch (error) {
-            throw new Error(error.message);
+            throw new Error("Error checking doctor");
         }
     }
     async handleGoogleLogin(doctorData) {
@@ -92,11 +96,14 @@ class AuthRepository {
     }
     async logout(refreshToken) {
         try {
-            console.log(refreshToken, "refresh token");
-            return await doctorModel_1.default.updateOne({ refreshToken }, { $set: { refreshToken: "" } });
+            const result = await doctorModel_1.default.updateOne({ refreshToken }, { $set: { refreshToken: "" } });
+            return result.modifiedCount > 0;
         }
         catch (error) {
-            throw new Error(error.message);
+            if (error instanceof Error) {
+                throw new Error("Repository logout error: " + error.message);
+            }
+            throw new Error("Unexpected repository error");
         }
     }
 }

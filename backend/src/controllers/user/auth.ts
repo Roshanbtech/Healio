@@ -15,31 +15,31 @@ export class AuthController {
 
   async createUser(req: Request, res: Response): Promise<void> {
     try {
-      console.log("create user auth");
-
       const data = req.body;
-      console.log(data, "data");
-
       const response = await this.authService.signup(data);
 
       res.status(HTTP_statusCode.OK).json({ status: true, response });
-    } catch (error: any) {
-      if (error.message === "Email already in use") {
-        res
-          .status(HTTP_statusCode.Conflict)
-          .json({ message: "Email already in use" });
-      } else if (error.message === "Phone already in use") {
-        res
-          .status(HTTP_statusCode.Conflict)
-          .json({ message: "Phone number already in use" });
-      } else if (error.message === "Otp not send") {
-        res
-          .status(HTTP_statusCode.InternalServerError)
-          .json({ message: "OTP not sent" });
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        switch (error.message) {
+          case "Email already in use":
+            res.status(HTTP_statusCode.Conflict).json({ message: error.message });
+            break;
+          case "Phone already in use":
+            res.status(HTTP_statusCode.Conflict).json({ message: error.message });
+            break;
+          case "Otp not send":
+            res.status(HTTP_statusCode.InternalServerError).json({ message: error.message });
+            break;
+          default:
+            res.status(HTTP_statusCode.InternalServerError).json({
+              message: "Something went wrong, please try again later",
+            });
+        }
       } else {
-        res
-          .status(HTTP_statusCode.InternalServerError)
-          .json({ message: "Something went wrong, please try again later" });
+        res.status(HTTP_statusCode.InternalServerError).json({
+          message: "Unexpected error occurred",
+        });
       }
     }
   }
@@ -49,19 +49,24 @@ export class AuthController {
       const { email } = req.body;
       const response = await this.authService.sendOtp(email);
       res.status(HTTP_statusCode.OK).json({ status: true, response });
-    } catch (error: any) {
-      if (error.message === "Email not found") {
-        res
-          .status(HTTP_statusCode.NotFound)
-          .json({ message: "Email not found" });
-      } else if (error.message === "Otp not send") {
-        res
-          .status(HTTP_statusCode.InternalServerError)
-          .json({ message: "OTP not sent" });
+    }  catch (error: unknown) {
+      if (error instanceof Error) {
+        switch (error.message) {
+          case "Email not found":
+            res.status(HTTP_statusCode.NotFound).json({ message: error.message });
+            break;
+          case "Otp not send":
+            res.status(HTTP_statusCode.InternalServerError).json({ message: error.message });
+            break;
+          default:
+            res.status(HTTP_statusCode.InternalServerError).json({
+              message: "Something went wrong, please try again later",
+            });
+        }
       } else {
-        res
-          .status(HTTP_statusCode.InternalServerError)
-          .json({ message: "Something went wrong, please try again later" });
+        res.status(HTTP_statusCode.InternalServerError).json({
+          message: "Unexpected error occurred",
+        });
       }
     }
   }
@@ -85,10 +90,9 @@ export class AuthController {
     }
   }
 
-  async handleGoogleLogin(req: Request, res: Response): Promise<any> {
+  async handleGoogleLogin(req: Request, res: Response): Promise<void> {
     try {
       const { idToken } = req.body;
-      console.log("Received ID Token:", idToken);
 
       const { user, isNewUser, accessToken, refreshToken } =
         await this.authService.handleGoogleLogin(idToken);
@@ -101,7 +105,7 @@ export class AuthController {
         expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
       });
 
-      return res
+       res
         .status(isNewUser ? HttpStatusCode.Created : HttpStatusCode.Accepted)
         .json({
           message: isNewUser
@@ -113,14 +117,14 @@ export class AuthController {
     } catch (error) {
       console.error("Google Login Error:", error);
       if (!res.headersSent) {
-        return res
+        res
           .status(HttpStatusCode.InternalServerError)
           .json({ message: "Authentication failed" });
       }
     }
   }
 
-  async loginUser(req: Request, res: Response): Promise<any> {
+  async loginUser(req: Request, res: Response): Promise<void> {
     try {
       const data = req.body;
       const { accessToken, refreshToken, user } = await this.authService.login(
@@ -144,78 +148,102 @@ export class AuthController {
         });
         console.log("Login response sent to client");
       }
-    } catch (error: any) {
-      console.error(error);
-
-      if (!res.headersSent) {
-        return res
-          .status(HttpStatusCode.InternalServerError)
-          .json({ status: false, message: error.message });
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (!res.headersSent) {
+          res
+             .status(HttpStatusCode.InternalServerError)
+             .json({ status: false, message: error.message });
+         }
       }
     }
   }
 
-  async sendForgotPasswordOtp(req: Request, res: Response): Promise<any> {
+  async sendForgotPasswordOtp(req: Request, res: Response): Promise<void> {
     try {
       const { email } = req.body;
       const result = await this.authService.sendForgotPasswordOtp(email);
-      return res.status(200).json(result);
-    } catch (error: any) {
-      if (error.message === "Email not found") {
-        return res.status(404).json({ message: "Email not found" });
-      } else if (error.message === "OTP not sent") {
-        return res.status(500).json({ message: "OTP not sent" });
+       res.status(200).json(result);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        switch (error.message) {
+          case "Email not found":
+            res.status(404).json({ message: error.message });
+            break;
+  
+          case "OTP not sent":
+            res.status(500).json({ message: error.message });
+            break;
+  
+          default:
+            res.status(500).json({
+              message: "Something went wrong, please try again later",
+            });
+            break;
+        }
       } else {
-        return res
-          .status(500)
-          .json({ message: "Something went wrong, please try again later" });
+        res.status(500).json({
+          message: "Unexpected error occurred",
+        });
       }
     }
   }
 
-  async verifyForgotPasswordOtp(req: Request, res: Response): Promise<any> {
+  async verifyForgotPasswordOtp(req: Request, res: Response): Promise<void> {
     try {
       const { email, otp } = req.body;
       const result = await this.authService.verifyForgotPasswordOtp(email, otp);
-      return res.status(200).json(result);
-    } catch (error: any) {
-      if (error.message === "Email not found") {
-        return res.status(404).json({ message: "Email not found" });
-      } else if (
-        error.message === "OTP expired or invalid" ||
-        error.message === "Incorrect OTP"
-      ) {
-        return res.status(400).json({ message: error.message });
+      res.status(200).json(result);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (error.message === "Email not found") {
+          res.status(404).json({ message: "Email not found" });
+        } else if (
+          error.message === "OTP expired or invalid" ||
+          error.message === "Incorrect OTP"
+        ) {
+          res.status(400).json({ message: error.message });
+        } else {
+          res.status(500).json({
+            message: "Something went wrong, please try again later",
+          });
+        }
       } else {
-        return res
-          .status(500)
-          .json({ message: "Something went wrong, please try again later" });
+        res.status(500).json({
+          message: "Unexpected error occurred",
+        });
       }
     }
   }
+  
 
-  async resetPassword(req: Request, res: Response): Promise<any> {
+  async resetPassword(req: Request, res: Response): Promise<void> {
     try {
       const { email, values } = req.body;
       const newPassword = values.newPassword;
-      console.log(email, newPassword, "reset password");
       const result = await this.authService.resetPassword(email, newPassword);
-      console.log(result, "reset password");
-      return res.status(200).json(result);
-    } catch (error: any) {
-      if (error.message === "Email not found") {
-        return res.status(404).json({ message: "Email not found" });
-      } else if (error.message === "Password not updated") {
-        return res.status(500).json({ message: "Password not updated" });
+      res.status(200).json(result);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (error.message === "Email not found") {
+          res.status(404).json({ message: "Email not found" });
+        } else if (error.message === "Password not updated") {
+          res.status(500).json({ message: "Password not updated" });
+        } else {
+          res.status(500).json({
+            message: "Something went wrong, please try again later",
+          });
+        }
       } else {
-        return res
-          .status(500)
-          .json({ message: "Something went wrong, please try again later" });
+        res.status(500).json({
+          message: "Unexpected error occurred",
+        });
       }
     }
   }
+  
 
-  async logoutUser(req: Request, res: Response): Promise<any> {
+  async logoutUser(req: Request, res: Response): Promise<void> {
     try {
       const refreshToken = req.cookies.refreshToken;
       await this.authService.logout(refreshToken);

@@ -152,7 +152,7 @@ class UserService {
                     while ((0, date_fns_1.isBefore)(current, occEnd)) {
                         slots.push({
                             slot: (0, date_fns_1.format)(current, "h:mma"),
-                            datetime: new Date(current),
+                            datetime: new Date(current).toString()
                         });
                         current = (0, date_fns_1.addMinutes)(current, sched.defaultSlotDuration);
                     }
@@ -164,7 +164,7 @@ class UserService {
                 while ((0, date_fns_1.isBefore)(current, end)) {
                     slots.push({
                         slot: (0, date_fns_1.format)(current, "h:mma"),
-                        datetime: new Date(current),
+                        datetime: new Date(current).toISOString()
                     });
                     current = (0, date_fns_1.addMinutes)(current, sched.defaultSlotDuration);
                 }

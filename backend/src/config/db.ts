@@ -3,13 +3,16 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const connectDB = async () => {
+const connectDB = async (): Promise<void> => {
   try {
-    // console.log(process.env.MONGO_URL);
     await mongoose.connect(process.env.MONGO_URL as string);
     console.log("Hurray! Database connected");
-  } catch (error:any) {
-    console.log("Database betrayed us",error.message);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("Database betrayed us", error.message);
+    } else {
+      console.error("Database betrayed us: Unknown error");
+    }
   }
 };
 

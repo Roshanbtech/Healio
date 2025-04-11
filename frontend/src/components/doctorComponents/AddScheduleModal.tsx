@@ -120,15 +120,11 @@ const AddScheduleModal: React.FC<IAddScheduleModalProps> = ({
     //   }
     // }
 
-    // (Optional) Validate exceptions if needed.
-    // For example, you could check if exception dates are within the schedule period.
-
-    // Pre-check: fetch existing schedules to see if one is already active.
+   
     try {
       const checkRes = await axiosInstance.get(`/doctor/schedule/${doctor}`);
       const existingSchedules: ISchedule[] = checkRes.data.data.schedule;
       const now = new Date();
-      // Check if any active schedule exists (not expired).
       const activeSchedule = existingSchedules.find(
         (sched) => new Date(sched.endTime) > now
       );
@@ -162,7 +158,7 @@ const AddScheduleModal: React.FC<IAddScheduleModalProps> = ({
       const res = await axiosInstance.post("/doctor/schedule", scheduleData);
       console.log("API response:", res.data);
       // Assumes backend returns the saved schedule in res.data.data.result.data
-      const savedSchedule = res.data.data.result.data;
+      const savedSchedule = res.data.data.result;
       if (
         !savedSchedule ||
         !savedSchedule.startTime ||
@@ -173,7 +169,7 @@ const AddScheduleModal: React.FC<IAddScheduleModalProps> = ({
       onScheduleAdded(savedSchedule);
       onClose();
       toast.success("Schedule added successfully!");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error saving schedule:", error);
       toast.error("Failed to save schedule. Please try again.");
     }

@@ -12,9 +12,7 @@ export class AuthController {
 
   async createDoctor(req: Request, res: Response): Promise<void> {
     try {
-      console.log("create doctor auth");
       const data = req.body;
-      console.log(data, "docdata");
 
       const response = await this.authService.signup(data);
       if ("error" in response) {
@@ -25,23 +23,23 @@ export class AuthController {
         return;
       }
       res.status(HTTP_statusCode.OK).json({ status: true, response });
-    } catch (error: any) {
-      if (error.message === "Email already in use") {
-        res
-          .status(HTTP_statusCode.Conflict)
-          .json({ message: "Email already in use" });
-      } else if (error.message === "Phone already in use") {
-        res
-          .status(HTTP_statusCode.Conflict)
-          .json({ message: "Phone number already in use" });
-      } else if (error.message === "Otp not send") {
-        res
-          .status(HTTP_statusCode.InternalServerError)
-          .json({ message: "OTP not sent" });
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (error.message === "Email already in use") {
+          res.status(HTTP_statusCode.Conflict).json({ message: "Email already in use" });
+        } else if (error.message === "Phone already in use") {
+          res.status(HTTP_statusCode.Conflict).json({ message: "Phone number already in use" });
+        } else if (error.message === "Otp not send") {
+          res.status(HTTP_statusCode.InternalServerError).json({ message: "OTP not sent" });
+        } else {
+          res.status(HTTP_statusCode.InternalServerError).json({
+            message: "Something went wrong, please try again later",
+          });
+        }
       } else {
-        res
-          .status(HTTP_statusCode.InternalServerError)
-          .json({ message: "Something went wrong, please try again later" });
+        res.status(HTTP_statusCode.InternalServerError).json({
+          message: "An unexpected error occurred",
+        });
       }
     }
   }
@@ -50,7 +48,8 @@ export class AuthController {
       const { email } = req.body;
       const response = await this.authService.sendOtp(email);
       res.status(HTTP_statusCode.OK).json({ status: true, response });
-    } catch (error: any) {
+    } catch (error: unknown) {
+    if (error instanceof Error) {
       if (error.message === "Email not found") {
         res
           .status(HTTP_statusCode.NotFound)
@@ -64,7 +63,12 @@ export class AuthController {
           .status(HTTP_statusCode.InternalServerError)
           .json({ message: "Something went wrong, please try again later" });
       }
+    } else {
+      res
+        .status(HTTP_statusCode.InternalServerError)
+        .json({ message: "An unexpected error occurred" });
     }
+  }
   }
   async resendOtp(req: Request, res: Response): Promise<void> {
     try {
@@ -85,7 +89,7 @@ export class AuthController {
     }
   }
 
-  async handleGoogleLogin(req: Request, res: Response): Promise<any> {
+  async handleGoogleLogin(req: Request, res: Response): Promise<void> {
     try {
       const { idToken } = req.body;
       console.log("Received ID Token:", idToken);
@@ -101,7 +105,7 @@ export class AuthController {
         expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
       });
 
-      return res
+      res
         .status(
           isNewDoctor ? HTTP_statusCode.Created : HTTP_statusCode.Accepted
         )
@@ -112,93 +116,116 @@ export class AuthController {
           accessToken,
           doctor,
         });
-    } catch (error) {
-      console.error("Google Login Error:", error);
+    }catch (error: unknown) {    
       if (!res.headersSent) {
-        return res
-          .status(HTTP_statusCode.InternalServerError)
-          .json({ message: "Authentication failed" });
+        if (error instanceof Error) {
+          res
+            .status(HTTP_statusCode.InternalServerError)
+            .json({ message: error.message });
+        } else {
+          res
+            .status(HTTP_statusCode.InternalServerError)
+            .json({ message: "Authentication failed" });
+        }
       }
     }
+    
   }
-  async sendForgotPasswordOtp(req: Request, res: Response): Promise<any> {
+  async sendForgotPasswordOtp(req: Request, res: Response): Promise<void> {
     try {
       const { email } = req.body;
       const result = await this.authService.sendForgotPasswordOtp(email);
-      return res.status(200).json(result);
-    } catch (error: any) {
-      if (error.message === "Email not found") {
-        return res.status(404).json({ message: "Email not found" });
-      } else if (error.message === "OTP not sent") {
-        return res.status(500).json({ message: "OTP not sent" });
+      res.status(HTTP_statusCode.OK).json(result);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (error.message === "Email not found") {
+          res.status(HTTP_statusCode.NotFound).json({ message: "Email not found" });
+        } else if (error.message === "OTP not sent") {
+          res.status(HTTP_statusCode.InternalServerError).json({ message: "OTP not sent" });
+        } else {
+          res.status(HTTP_statusCode.InternalServerError).json({
+            message: "Something went wrong, please try again later",
+          });
+        }
       } else {
-        return res
-          .status(500)
-          .json({ message: "Something went wrong, please try again later" });
+        res.status(HTTP_statusCode.InternalServerError).json({
+          message: "An unexpected error occurred",
+        });
       }
     }
   }
 
-  async verifyForgotPasswordOtp(req: Request, res: Response): Promise<any> {
+  async verifyForgotPasswordOtp(req: Request, res: Response): Promise<void> {
     try {
       const { email, otp } = req.body;
       const result = await this.authService.verifyForgotPasswordOtp(email, otp);
-      return res.status(200).json(result);
-    } catch (error: any) {
-      if (error.message === "Email not found") {
-        return res.status(404).json({ message: "Email not found" });
-      } else if (
-        error.message === "OTP expired or invalid" ||
-        error.message === "Incorrect OTP"
-      ) {
-        return res.status(400).json({ message: error.message });
+      res.status(HTTP_statusCode.OK).json(result);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (error.message === "Email not found") {
+          res.status(HTTP_statusCode.NotFound).json({ message: "Email not found" });
+        } else if (
+          error.message === "OTP expired or invalid" ||
+          error.message === "Incorrect OTP"
+        ) {
+          res.status(HTTP_statusCode.BadRequest).json({ message: error.message });
+        } else {
+          res.status(HTTP_statusCode.InternalServerError).json({
+            message: "Something went wrong, please try again later",
+          });
+        }
       } else {
-        return res
-          .status(500)
-          .json({ message: "Something went wrong, please try again later" });
+        res.status(HTTP_statusCode.InternalServerError).json({
+          message: "An unexpected error occurred",
+        });
       }
     }
   }
 
-  async resetPassword(req: Request, res: Response): Promise<any> {
+  async resetPassword(req: Request, res: Response): Promise<void> {
     try {
       const { email, values } = req.body;
       const newPassword = values.newPassword;
-      console.log(email, newPassword, "reset password");
       const result = await this.authService.resetPassword(email, newPassword);
-      console.log(result, "reset password");
-      return res.status(200).json(result);
-    } catch (error: any) {
-      if (error.message === "Email not found") {
-        return res.status(404).json({ message: "Email not found" });
-      } else if (error.message === "Password not updated") {
-        return res.status(500).json({ message: "Password not updated" });
+      res.status(HTTP_statusCode.OK).json(result);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (error.message === "Email not found") {
+          res.status(HTTP_statusCode.NotFound).json({ message: "Email not found" });
+        } else if (error.message === "Password not updated") {
+          res.status(HTTP_statusCode.InternalServerError).json({ message: "Password not updated" });
+        } else {
+          res.status(HTTP_statusCode.InternalServerError).json({
+            message: "Something went wrong, please try again later",
+          });
+        }
       } else {
-        return res
-          .status(500)
-          .json({ message: "Something went wrong, please try again later" });
+        res.status(HTTP_statusCode.InternalServerError).json({
+          message: "An unexpected error occurred",
+        });
       }
-    }
+    }    
   }
 
-  async loginDoctor(req: Request, res: Response): Promise<any> {
+  async loginDoctor(req: Request, res: Response): Promise<void> {
     try {
       const data = req.body;
       const loginResponse = await this.authService.login(data);
       if ("error" in loginResponse) {
-        return res.status(HTTP_statusCode.Unauthorized).json({
+        res.status(HTTP_statusCode.Unauthorized).json({
           status: false,
           message: loginResponse.error,
         });
+        return;
       }
 
       const { accessToken, refreshToken, doctorId } = loginResponse;
 
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: true, // Set to false for local testing
+        secure: true, 
         sameSite: "strict",
-        path: "/auth/refresh", // Refresh token endpoint
+        path: "/auth/refresh", 
         expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
       });
 
@@ -208,34 +235,42 @@ export class AuthController {
         accessToken,
         doctorId,
       });
-    } catch (error) {
-      console.error(error);
-
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Authentication failed";
+    
       if (!res.headersSent) {
-        return res
-          .status(HTTP_statusCode.InternalServerError)
-          .json({ message: "Authentication failed" });
+        res.status(HTTP_statusCode.InternalServerError).json({
+          message: errorMessage,
+        });
       }
     }
+    
   }
 
-  async logoutDoctor(req: Request, res: Response): Promise<any> {
+  async logoutDoctor(req: Request, res: Response): Promise<void> {
     try {
       const refreshToken = req.cookies.refreshToken;
       await this.authService.logout(refreshToken);
+  
       res.clearCookie("refreshToken", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
         path: "/",
       });
+  
       res.status(HTTP_statusCode.OK).json({ status: true, message: "Logout" });
-    } catch (error: any) {
-      console.log("error in doctor logout", error);
-      return res.status(HTTP_statusCode.InternalServerError).json({
-        status: false,
-        message: "Something went wrong, please try again later.",
-      });
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Something went wrong";  
+      if (!res.headersSent) {
+        res.status(HTTP_statusCode.InternalServerError).json({
+          status: false,
+          message: errorMessage || "Something went wrong, please try again later.",
+        });
+      }
     }
   }
+  
 }

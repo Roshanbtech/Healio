@@ -50,7 +50,6 @@ const UserList: React.FC = () => {
         setPagination(response.data.pagination);
       }
     } catch (error) {
-      console.error("Error fetching users:", error);
       toast.error("Failed to fetch users");
     }
   };
@@ -63,19 +62,23 @@ const UserList: React.FC = () => {
   const handleToggleUser = async (id: string) => {
     try {
       const response = await axiosInstance.patch(`/admin/users/${id}/toggle`);
-      if (response.data?.status) {
+      if (response.data?.blockUser) {
         setUsers((prevUsers) =>
           prevUsers.map((user) =>
             user._id === id ? { ...user, isBlocked: !user.isBlocked } : user
           )
         );
         toast.success(response.data.blockUser.message);
+      } else {
+        toast.error(response.data?.message || "Failed to toggle user status");
       }
-    } catch (error) {
-      console.error("Error toggling user status:", error);
-      toast.error("Failed to toggle user status");
+    } catch (error: unknown) {
+      const errMsg =
+        error instanceof Error ? error.message : "Failed to toggle user status";
+      toast.error(errMsg);
     }
   };
+  
 
   return (
     <div className="flex min-h-screen">

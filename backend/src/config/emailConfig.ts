@@ -18,21 +18,30 @@ const sendMail = async (
       },
     });
 
-    const mailOptions: { from: string; to: string; subject: string; text: string; html?: string } = {
+    const mailOptions: {
+      from: string;
+      to: string;
+      subject: string;
+      text: string;
+      html?: string;
+    } = {
       from: process.env.EMAIL as string,
       to: email,
-      subject: subject,
-      text: text,
+      subject,
+      text,
     };
 
     if (html && !text.trim().startsWith("<html>")) {
       mailOptions.html = html;
     }
 
-
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
-        console.error(error);
+        if (error instanceof Error) {
+          console.error(error.message);
+        } else {
+          console.error("Unknown error while sending email");
+        }
         resolve(false);
       } else {
         console.log("Email sent: " + info.response);

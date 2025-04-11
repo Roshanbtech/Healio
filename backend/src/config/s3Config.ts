@@ -3,6 +3,9 @@ import { Upload } from "@aws-sdk/lib-storage";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import * as crypto from "crypto";
 import { Readable } from "stream";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export class AwsConfig {
   private bucketName: string;
@@ -26,21 +29,20 @@ export class AwsConfig {
       const sanitizedFolder = folder.endsWith("/")
         ? folder.slice(0, -1)
         : folder;
-
       const key = `${sanitizedFolder}/${fileName}`;
-
       const options = {
         Bucket: this.bucketName,
         Key: key,
       };
-
       const getCommand = new GetObjectCommand(options);
-      const url = await getSignedUrl(this.s3client, getCommand, {
-        expiresIn: 1 * 60
-      });
+      const url = await getSignedUrl(this.s3client, getCommand, { expiresIn: 60 });
       return url;
-    } catch (error) {
-      console.error("Error generating signed URL:", error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error generating signed URL:", error.message);
+      } else {
+        console.error("Error generating signed URL:", error);
+      }
       throw error;
     }
   }
@@ -51,11 +53,9 @@ export class AwsConfig {
   ): Promise<string> {
     try {
       console.log("Uploading file to S3 using @aws-sdk/lib-storage...");
-
       const uniqueName = crypto.randomBytes(16).toString("hex");
       const fileExtension = file.mimetype.split("/")[1];
       const fileName = `${folderPath}${uniqueName}.${fileExtension}`;
-
       const fileStream = Readable.from(file.buffer);
       const upload = new Upload({
         client: this.s3client,
@@ -66,13 +66,15 @@ export class AwsConfig {
           ContentType: file.mimetype,
         },
       });
-
       const result = await upload.done();
       console.log("File successfully uploaded to S3:", result);
-
       return fileName;
-    } catch (error: any) {
-      console.error("Error uploading file to S3:", error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error uploading file to S3:", error.message);
+      } else {
+        console.error("Error uploading file to S3:", error);
+      }
       throw new Error("File upload failed");
     }
   }

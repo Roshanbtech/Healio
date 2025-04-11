@@ -3,10 +3,41 @@ import { config } from "dotenv";
 import { IAuthService } from "../../interface/admin/Auth.service.interface";
 import { IAuthRepository } from "../../interface/admin/Auth.repository.interface";
 import { PaginationOptions } from "../../helper/pagination";
-import { IDashboardStats, ITopDoctor, ITopUser, IAppointmentAnalytics } from "../../interface/adminInterface/dashboard";
+import {
+  UserListResponse,
+  UserToggleStatus,
+} from "../../interface/adminInterface/userlist";
+import {
+  AdminLoginInput,
+  AdminLoginSuccess,
+  AdminLoginError,
+  AdminLogoutSuccess,
+  AdminLogoutError,
+} from "../../interface/adminInterface/adminAuth";
+import {
+  IDashboardStats,
+  ITopDoctor,
+  ITopUser,
+  IAppointmentAnalytics,
+} from "../../interface/adminInterface/dashboard";
 import { IAppointment } from "../../model/appointmentModel";
-import { UserListResponse } from "../../interface/adminInterface/userlist";
-import { getUrl } from "../../helper/getUrl";
+import {
+  ApproveRejectResponse,
+  DoctorListResponse,
+  DoctorToggleStatus,
+} from "../../interface/adminInterface/doctorlist";
+import {
+  ServiceListResponse,
+  ServiceSuccessResponse,
+  ServiceToggleStatus,
+} from "../../interface/adminInterface/serviceInterface";
+import sendMail from "../../config/emailConfig";
+import {
+  Coupon,
+  CouponListResponse,
+  CouponSuccessResponse,
+  CouponToggleStatus,
+} from "../../interface/adminInterface/couponlist";
 config();
 export interface PaginatedResult<T> {
   data: T[];
@@ -18,26 +49,20 @@ export interface PaginatedResult<T> {
   };
 }
 
-
 export class AuthService implements IAuthService {
   private AuthRepository: IAuthRepository;
 
   constructor(AuthRepository: IAuthRepository) {
     this.AuthRepository = AuthRepository;
   }
-  async login(AdminData: {
-    email: string;
-    password: string;
-  }): Promise<
-    { accessToken: string; refreshToken: string } | { error: string }
-  > {
+  async login(
+    adminData: AdminLoginInput
+  ): Promise<AdminLoginSuccess | AdminLoginError> {
     try {
       const adminEmail = process.env.ADMIN_EMAIL;
       const adminPassword = process.env.ADMIN_PASSWORD;
       const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET;
       const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
-
-      console.log(adminEmail, adminPassword, "env");
 
       if (
         !adminEmail ||
@@ -48,70 +73,80 @@ export class AuthService implements IAuthService {
         throw new Error("Server configuration missing.");
       }
 
-      console.log(AdminData.password, "body");
-
       if (
-        AdminData.email !== adminEmail ||
-        AdminData.password !== adminPassword
+        adminData.email !== adminEmail ||
+        adminData.password !== adminPassword
       ) {
         return { error: "Invalid email or password." };
       }
 
       const accessToken = jwt.sign(
-        { email: AdminData.email, role: "admin" },
+        { email: adminData.email, role: "admin" },
         accessTokenSecret,
         { expiresIn: "1d" }
       );
 
       const refreshToken = jwt.sign(
-        { email: AdminData.email, role: "admin" },
+        { email: adminData.email, role: "admin" },
         refreshTokenSecret,
         { expiresIn: "7d" }
       );
 
       return { accessToken, refreshToken };
-    } catch (error: any) {
-      console.error("Error during admin login:", error);
-      return { error: "Internal server error. Please try again later." };
+    } catch (error: unknown) {
+      return {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Internal server error. Please try again later.",
+      };
     }
   }
 
-  async logout(refreshToken: string): Promise<any> {
+  async logout(
+    refreshToken: string
+  ): Promise<AdminLogoutSuccess | AdminLogoutError> {
     try {
-      console.log("Logout process started...");
-      return await this.AuthRepository.logout(refreshToken);
-    } catch (error) {
-      console.error("Logout error:", error);
-      return { error: "Internal server error." };
+      return {
+        status: true,
+        message: "Logout successful.",
+      };
+    } catch (error: unknown) {
+      return {
+        error: error instanceof Error ? error.message : "Something went wrong.",
+      };
     }
   }
 
-  async getUser(options: PaginationOptions): Promise<any> {
+  async getUser(
+    options: PaginationOptions
+  ): Promise<Omit<UserListResponse, "status">> {
     try {
       const users = await this.AuthRepository.getAllUsers(options);
-      if (!users) {
-        return null;
+      return users ?? null;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
       }
-      return users;
-    } catch (error: any) {
-      throw new Error(error.message);
+      throw new Error("Unknown error occurred while fetching users");
     }
   }
-  
 
-  async getDoctor(options: PaginationOptions): Promise<any> {
+  async getDoctor(
+    options: PaginationOptions
+  ): Promise<Omit<DoctorListResponse, "status">> {
     try {
       const doctors = await this.AuthRepository.getAllDoctors(options);
-      if (!doctors) {
-        return null;
+      return doctors ?? null;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
       }
-      return doctors;
-    } catch (error: any) {
-      throw new Error(error.message);
+      throw new Error("Unknown error occurred while fetching doctors");
     }
   }
 
-  async toggleUser(id: string): Promise<any> {
+  async toggleUser(id: string): Promise<UserToggleStatus | null> {
     try {
       const user = await this.AuthRepository.toggleUser(id);
       if (!user) {
@@ -121,12 +156,15 @@ export class AuthService implements IAuthService {
         ? "User blocked successfully"
         : "User unblocked successfully";
       return { status: true, message };
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("Unknown error occurred while toggling user");
     }
   }
 
-  async toggleDoctor(id: string): Promise<any> {
+  async toggleDoctor(id: string): Promise<DoctorToggleStatus | null> {
     try {
       const doctor = await this.AuthRepository.toggleDoctor(id);
       if (!doctor) {
@@ -136,12 +174,18 @@ export class AuthService implements IAuthService {
         ? "Doctor blocked successfully"
         : "Doctor unblocked successfully";
       return { status: true, message };
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("Unknown error occurred while toggling doctor");
     }
   }
 
-  async addService(name: string, isActive: boolean): Promise<any> {
+  async addService(
+    name: string,
+    isActive: boolean
+  ): Promise<ServiceSuccessResponse> {
     try {
       if (!name || name.trim() === "") {
         throw new Error("Service name cannot be empty.");
@@ -162,27 +206,44 @@ export class AuthService implements IAuthService {
       }
 
       return { status: true, message: "Service added successfully", service };
-    } catch (error: any) {
-      console.error("Error in AuthService.addService:", error);
-      throw new Error(
-        error.message || "An error occurred while adding the service."
-      );
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("Unknown error occurred while adding service");
     }
   }
 
-  async editService(id: string, name: string, isActive: boolean): Promise<any> {
+  async editService(
+    id: string,
+    name: string,
+    isActive: boolean
+  ): Promise<ServiceSuccessResponse> {
     try {
+      if (!name || name.trim() === "") {
+        throw new Error("Service name cannot be empty.");
+      }
+      if (name.length > 20) {
+        throw new Error("Service name cannot exceed 20 characters.");
+      }
+      const existingService = await this.AuthRepository.findServiceByName(name);
+      if (existingService) {
+        throw new Error("Service name already exists.");
+      }
       const service = await this.AuthRepository.editService(id, name, isActive);
       if (!service) {
         throw new Error("Service not updated");
       }
       return { status: true, message: "Service updated successfully", service };
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("Unknown error occurred while updating service");
     }
   }
 
-  async toggleService(id: string): Promise<any> {
+  async toggleService(id: string): Promise<ServiceToggleStatus | null> {
     try {
       const service = await this.AuthRepository.toggleService(id);
       if (!service) {
@@ -192,12 +253,15 @@ export class AuthService implements IAuthService {
         ? "Service enabled successfully"
         : "Service disabled successfully";
       return { status: true, message };
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("Unknown error occurred while toggling service");
     }
   }
 
-  async toggleCoupon(id: string): Promise<any> {
+  async toggleCoupon(id: string): Promise<CouponToggleStatus | null> {
     try {
       const coupon = await this.AuthRepository.toggleCoupon(id);
       if (!coupon) {
@@ -207,94 +271,156 @@ export class AuthService implements IAuthService {
         ? "Coupon enabled successfully"
         : "Coupon disabled successfully";
       return { status: true, message };
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("Unknown error occurred while toggling coupon");
     }
   }
 
-  async getService(options: PaginationOptions): Promise<any> {
+  async getService(
+    options: PaginationOptions
+  ): Promise<Omit<ServiceListResponse, "status">> {
     try {
       const services = await this.AuthRepository.getAllServices(options);
-      if (!services) {
-        return null;
+      return services ?? null;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
       }
-      return services;
-    } catch (error: any) {
-      throw new Error(error.message);
+      throw new Error("Unknown error occurred while fetching services");
     }
   }
 
-  async getCertificates(id: string): Promise<any> {
+  async getCertificates(id: string): Promise<string[]> {
     try {
       const certificates = await this.AuthRepository.getCertificates(id);
-      return certificates;
-    } catch (error: any) {
-      throw new Error(error.message);
+      return certificates ?? [];
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      return [];
     }
   }
 
-  async approveDoctor(id: string): Promise<any> {
+  async approveDoctor(id: string): Promise<ApproveRejectResponse> {
     try {
       const doctor = await this.AuthRepository.approveDoctor(id);
-      if (!doctor) {
-        throw new Error("Doctor not approved");
-      }
+      if (!doctor) throw new Error("Doctor not found for approval.");
+
+      const emailContent = `Hello Dr. ${doctor.name},
+
+Congratulations! Your account has been approved as a doctor in the Healio team.
+
+Thank you,
+Team Healio`;
+
+      await sendMail(doctor.email, "Account Approved", emailContent);
       return { status: true, message: "Doctor approved successfully", doctor };
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      const errMsg =
+        error instanceof Error
+          ? error.message
+          : "Unexpected error during approval.";
+      throw new Error(errMsg);
     }
   }
 
-  async rejectDoctor(id: string, reason: string): Promise<any> {
+  async rejectDoctor(
+    id: string,
+    reason: string
+  ): Promise<ApproveRejectResponse> {
     try {
       const doctor = await this.AuthRepository.rejectDoctor(id, reason);
-      if (!doctor) {
-        throw new Error("Doctor not rejected");
-      }
+      if (!doctor) throw new Error("Doctor not found for rejection.");
+
+      const emailContent = `Hello Dr. ${doctor.name},
+
+We regret to inform you that your account has been rejected as a doctor in the Healio team.
+Because, ${reason}.
+
+Thank you,
+Team Healio`;
+
+      await sendMail(doctor.email, "Account Rejected", emailContent);
       return { status: true, message: "Doctor rejected successfully", doctor };
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      const errMsg =
+        error instanceof Error
+          ? error.message
+          : "Unexpected error during rejection.";
+      throw new Error(errMsg);
     }
   }
 
-  async createCoupon(couponData: any): Promise<any> {
+  async createCoupon(couponData: Coupon): Promise<CouponSuccessResponse> {
     try {
       const { code } = couponData;
-      let existingCode = await this.AuthRepository.existCoupon(code);
+
+      const existingCode = await this.AuthRepository.existCoupon(code);
       if (existingCode) {
-        throw new Error("Coupon code already exists");
+        throw new Error("Coupon code already exists.");
       }
+
       const coupon = await this.AuthRepository.createCoupon(couponData);
       if (!coupon) {
-        return { status: false, message: "Coupon not created" };
+        throw new Error("Coupon not created.");
       }
-      return { status: true, message: "Coupon created successfully", coupon };
-    } catch (error: any) {
-      throw new Error(error.message);
+
+      return {
+        status: true,
+        message: "Coupon created successfully",
+        coupon,
+      };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("Unknown error occurred while creating coupon.");
     }
   }
 
-  async editCoupon(id: string, couponData: any): Promise<any> {
+  async editCoupon(
+    id: string,
+    couponData: Coupon
+  ): Promise<CouponSuccessResponse> {
     try {
+      const existingCoupon = await this.AuthRepository.existCoupon(
+        couponData.code
+      );
+      if (existingCoupon) {
+        throw new Error("Coupon code already exists.");
+      }
       const coupon = await this.AuthRepository.editCoupon(id, couponData);
       if (!coupon) {
-        throw new Error("Coupon not updated");
+        throw new Error("Coupon not updated.");
       }
-      return { status: true, message: "Coupon updated successfully", coupon };
-    } catch (error: any) {
-      throw new Error(error.message);
+      return {
+        status: true,
+        message: "Coupon updated successfully",
+        coupon,
+      };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("Unknown error occurred while updating coupon.");
     }
   }
 
-  async getCoupons(options: PaginationOptions): Promise<any> {
+  async getCoupons(
+    options: PaginationOptions
+  ): Promise<Omit<CouponListResponse, "status">> {
     try {
       const coupons = await this.AuthRepository.getAllCoupons(options);
-      if (!coupons) {
-        return null;
+      return coupons ?? null;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
       }
-      return coupons;
-    } catch (error: any) {
-      throw new Error(error.message);
+      throw new Error("Unknown error occurred while fetching coupons");
     }
   }
 
@@ -302,48 +428,71 @@ export class AuthService implements IAuthService {
     try {
       const stats = await this.AuthRepository.fetchDashboardStats();
       return stats;
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("Unknown error occurred while fetching dashboard stats");
     }
   }
-  async getTopDoctors(): Promise<ITopDoctor[]>{
+  async getTopDoctors(): Promise<ITopDoctor[]> {
     try {
       const topDoctors = await this.AuthRepository.fetchTopDoctors();
       return topDoctors;
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("Unknown error occurred while fetching top doctors");
     }
   }
-   async getTopUsers(): Promise<ITopUser[]>{
+  async getTopUsers(): Promise<ITopUser[]> {
     try {
       const topUsers = await this.AuthRepository.fetchTopUsers();
       return topUsers;
-    } catch (error: any) {
-      throw new Error(error.message);
-    } 
-   }
-   async getAppointmentAnalytics(timeFrame: string): Promise<IAppointmentAnalytics[]>{
-    try {
-      const analytics = await this.AuthRepository.fetchAppointmentAnalytics(timeFrame);
-      return analytics;
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("Unknown error occurred while fetching top users");
     }
-   }
+  }
+  async getAppointmentAnalytics(
+    timeFrame: string
+  ): Promise<IAppointmentAnalytics[]> {
+    try {
+      const analytics = await this.AuthRepository.fetchAppointmentAnalytics(
+        timeFrame
+      );
+      return analytics;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error(
+        "Unknown error occurred while fetching appointment analytics"
+      );
+    }
+  }
 
-   async getReports(
+  async getReports(
     startDate: Date,
     endDate: Date,
     status: string,
     options: PaginationOptions
   ): Promise<PaginatedResult<IAppointment>> {
     try {
-      return await this.AuthRepository.fetchReports(startDate, endDate, status, options);
-    } catch (error: any) {
-      throw new Error(error.message);
+      return await this.AuthRepository.fetchReports(
+        startDate,
+        endDate,
+        status,
+        options
+      );
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("Unknown error occurred while fetching reports");
     }
   }
-  
-   
-  
 }

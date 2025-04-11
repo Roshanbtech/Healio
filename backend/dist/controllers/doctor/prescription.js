@@ -13,39 +13,41 @@ class PrescriptionController {
         try {
             const appointmentId = req.params.appointmentId;
             const { patientId, doctorId, diagnosis, advice, followUpDate, doctorNotes, } = req.body;
-            // Parse JSON strings if necessary
             let medicines = req.body.medicines;
             let labTests = req.body.labTests;
             if (typeof medicines === "string") {
                 try {
                     medicines = JSON.parse(medicines);
                 }
-                catch (err) {
-                    return res.status(httpStatusCode_1.default.BadRequest).json({
+                catch {
+                    res.status(httpStatusCode_1.default.BadRequest).json({
                         status: false,
                         data: null,
                         message: "Invalid medicines format",
                     });
+                    return;
                 }
             }
             if (typeof labTests === "string") {
                 try {
                     labTests = JSON.parse(labTests);
                 }
-                catch (err) {
-                    return res.status(httpStatusCode_1.default.BadRequest).json({
+                catch {
+                    res.status(httpStatusCode_1.default.BadRequest).json({
                         status: false,
                         data: null,
                         message: "Invalid labTests format",
                     });
+                    return;
                 }
             }
             if (!req.file) {
-                return res.status(httpStatusCode_1.default.BadRequest).json({
+                res.status(httpStatusCode_1.default.BadRequest).json({
                     status: false,
                     data: null,
                     message: "Prescription image is required",
                 });
+                return;
             }
             const signatureFile = req.file;
             const prescriptionData = {
@@ -61,7 +63,7 @@ class PrescriptionController {
                 signature: signatureFile,
             };
             const prescription = await this.prescriptionService.addPrescription(prescriptionData);
-            return res.status(httpStatusCode_1.default.OK).json({
+            res.status(httpStatusCode_1.default.OK).json({
                 status: true,
                 data: { prescription },
                 message: "Prescription added successfully",

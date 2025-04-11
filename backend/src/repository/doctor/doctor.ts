@@ -6,6 +6,7 @@ import {
   Service,
   Schedule,
   UserProfile,
+  DoctorQualificationInput,
 } from "../../interface/doctorInterface/Interface";
 import bcrypt from "bcrypt";
 import userModel from "../../model/userModel";
@@ -37,59 +38,69 @@ export class DoctorRepository implements IDoctorRepository {
     try {
       const services = await serviceModel.find({ isActive: true }).lean();
       return services;
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error in repository";
+      throw new Error(errorMessage);
     }
   }
 
-  async addQualification(data: any, doctorId: string): Promise<any> {
+  async addQualification(data: DoctorQualificationInput, doctorId: string): Promise<IDoctor | null> {
     try {
-      const updatedDoctor = await doctorModel.findByIdAndUpdate(
-        doctorId,
-        { $set: data },
-        { new: true }
-      );
+      const updatedDoctor = await doctorModel
+      .findByIdAndUpdate(doctorId,{ $set: data },{ new: true })
+      .select("-password -wallet -__v -averageRating -reviewCount")
       return updatedDoctor;
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error while updating doctor";
+      throw new Error(errorMessage);
     }
   }
 
-  async getQualifications(id: string): Promise<any> {
+  async getQualifications(id: string): Promise<IDoctor | null> {
     try {
       const doctor = await doctorModel
-        .findOne({ _id: id, docStatus: "approved" })
-        .populate({ path: "speciality", model: "Service", select: "name" })
-        .lean();
+      .findOne({ _id: id, docStatus: "approved" })
+      .populate({ path: "speciality", model: "Service", select: "name" })
+      .select("-password -wallet -__v -averageRating -reviewCount")
+      .lean<IDoctor | null>();
       if (!doctor) return null;
       return doctor;
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error in getQualifications";
+      throw new Error(errorMessage);
     }
   }
 
-  async getDoctorProfile(id: string): Promise<any> {
+  async getDoctorProfile(id: string): Promise<Partial<IDoctor>|null> {
     try {
       const doctor = await doctorModel
         .findById(id)
+        .select("-password -__v")
         .populate({ path: "speciality", model: "Service", select: "name" })
         .lean();
       return doctor;
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Unknown error in repository";
+      throw new Error(message);
     }
   }
 
-  async editDoctorProfile(id: string, data: any): Promise<any> {
+  async editDoctorProfile(id: string, data: Partial<IDoctor>): Promise<Partial<IDoctor>| null> {
     try {
       const updatedDoctor = await doctorModel.findByIdAndUpdate(
         id,
         { $set: data },
         { new: true }
-      );
+      )
+      .select("-password -wallet -__v ")
+      .lean();
       return updatedDoctor;
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Unknown error in repository";
+      throw new Error(message);
     }
   }
 
@@ -97,7 +108,7 @@ export class DoctorRepository implements IDoctorRepository {
     id: string,
     oldPassword: string,
     newPassword: string
-  ): Promise<any> {
+  ): Promise<{ status: boolean; message: string }> {
     try {
       const doctor = await doctorModel.findById(id);
       if (!doctor) throw new Error("Doctor not found");
@@ -112,42 +123,62 @@ export class DoctorRepository implements IDoctorRepository {
         $set: { password: hashedPassword },
       });
       return { status: true, message: "Password changed successfully" };
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Unknown error in repository";
+      throw new Error(message);
     }
   }
 
-  async addSchedule(scheduleData: Schedule): Promise<any> {
+  async addSchedule(scheduleData: Partial<ISchedule>): Promise<ISchedule> {
     try {
-      const schedule = await slotModel.create(scheduleData);
-      return {
-        status: true,
-        message: "Schedule added successfully",
-        data: schedule,
-      };
-    } catch (error: any) {
-      throw new Error(error.message);
+      const scheduleDoc = await slotModel.create(scheduleData);
+      return scheduleDoc;
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Failed to create schedule";
+      throw new Error(message);
     }
   }
 
-  async getSchedule(id: string): Promise<any> {
+  async findRecurringScheduleByDoctor(doctorId: string): Promise<ISchedule | null> {
+    try {
+      const recurring = await slotModel.findOne({
+        doctor: doctorId,
+        isRecurring: true,
+      });
+      return recurring;
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Failed to check existing recurring schedule";
+      throw new Error(message);
+    }
+  }
+  
+
+  async getSchedule(id: string): Promise<ISchedule[]> {
     try {
       const doctor = await doctorModel.findById(id);
       if (!doctor) {
-        return { status: false, message: "Doctor not found" };
+        throw new Error("Doctor not found");
       }
+  
       const schedules = await slotModel
         .find({ doctor: id })
         .populate({ path: "doctor", select: "name" })
         .lean();
+  
       const activeSchedules = schedules.filter(
         (schedule: ISchedule) => !isScheduleExpired(schedule)
       );
+  
       return activeSchedules;
-    } catch (error: any) {
-      throw new Error(error.message);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Repository error in getSchedule";
+      throw new Error(errorMessage);
     }
   }
+  
 
   async getUsers(): Promise<any> {
     try {

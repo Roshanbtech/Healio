@@ -16,7 +16,7 @@ import { isScheduleExpired } from "../../helper/schedule";
 import { getUrl } from "../../helper/getUrl";
 interface Slot {
   slot: string;
-  datetime: Date;
+  datetime: string;
 }
 export class UserService implements IUserService {
   private UserRepository: IUserRepository;
@@ -200,7 +200,7 @@ export class UserService implements IUserService {
           while (isBefore(current, occEnd)) {
             slots.push({
               slot: format(current, "h:mma"),
-              datetime: new Date(current),
+              datetime: new Date(current).toString()
             });
             current = addMinutes(current, sched.defaultSlotDuration);
           }
@@ -211,7 +211,7 @@ export class UserService implements IUserService {
         while (isBefore(current, end)) {
           slots.push({
             slot: format(current, "h:mma"),
-            datetime: new Date(current),
+            datetime: new Date(current).toISOString()
           });
           current = addMinutes(current, sched.defaultSlotDuration);
         }

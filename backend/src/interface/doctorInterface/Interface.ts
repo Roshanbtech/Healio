@@ -97,3 +97,18 @@ export interface Schedule {
     overrideSlotDuration?: number;
   }[];
 }
+
+export interface ResetPasswordResponse {
+  status: boolean;
+  message: string;
+}
+
+export interface DoctorQualificationInput {
+  hospital?: string;
+  degree?: string;
+  speciality?: string; 
+  experience?: string;
+  country?: string;
+  achievements?: string;
+  certificate?: string[];
+}

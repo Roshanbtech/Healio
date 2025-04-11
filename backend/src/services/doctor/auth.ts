@@ -27,14 +27,10 @@ export class AuthService implements IAuthService {
     phone: string;
     password: string;
     otp: string;
-  }): Promise<any> {
+  }): Promise<{ status: boolean; message: string; token?: string }> {
     try {
-      console.log(" Signup process started...");
       const { email, otp } = doctorData;
-
       const storedOtp = await getOtpByEmail(email);
-      console.log(`Retrieved OTP for ${email}:`, storedOtp);
-
       if (!storedOtp) {
         return {
           status: false,
@@ -62,9 +58,11 @@ export class AuthService implements IAuthService {
       await otpSetData(email, "");
 
       return { status: true, message: "Doctor verified successfully" };
-    } catch (error) {
-      console.log(" Error in creating new Doctor", error);
-      return { status: false, message: "Error while creating doctor" };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(`Error creating doctor: ${error.message}`);
+      }
+      throw new Error("Error creating doctor");
     }
   }
 
@@ -170,27 +168,31 @@ export class AuthService implements IAuthService {
     return { status: true, message: "OTP verified successfully" };
   }
 
-  async resetPassword(email: string, password: string): Promise<any> {
-    const doctorExist = await this.AuthRepository.existDoctor(email);
-    console.log("User exist:", doctorExist);
-    if (!doctorExist.existEmail) {
-      throw new Error("Email not found");
+  async resetPassword(email: string, password: string): Promise<{ status: boolean; message: string }> {
+    try {
+      const doctorExist = await this.AuthRepository.existDoctor(email);
+      if (!doctorExist.existEmail) {
+        throw new Error("Email not found");
+      }
+  
+      const saltRounds: number = 10;
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
+  
+      const response = await this.AuthRepository.updatePassword(email, hashedPassword);
+  
+      if (!response || response.modifiedCount === 0) {
+        throw new Error("Password not updated");
+      }
+  
+      return { status: true, message: "Password updated successfully" };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      } else {
+        throw new Error("Unexpected error occurred while resetting password");
+      }
     }
-    console.log("Password:", password, email);
-    const saltRounds: number = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-    console.log("Hashed password:", hashedPassword, password);
-
-    const response = await this.AuthRepository.updatePassword(
-      email,
-      hashedPassword
-    );
-    console.log("Response:", response);
-    if (!response || response.modifiedCount === 0) {
-      throw new Error("Password not updated");
-    }
-    return { status: true, message: "Password updated successfully" };
-  }
+  }  
 
   async login(doctorData: {
     email: string;
@@ -295,13 +297,20 @@ export class AuthService implements IAuthService {
     }
   }
 
-  async logout(refreshToken: string): Promise<any> {
+  async logout(refreshToken: string): Promise<{ status: boolean; message: string }> {
     try {
-      console.log("Logout process started...");
-      return await this.AuthRepository.logout(refreshToken);
-    } catch (error) {
-      console.error("Logout error:", error);
-      return { error: "Internal server error." };
+      const isLoggedOut = await this.AuthRepository.logout(refreshToken);
+      if (!isLoggedOut) {
+        return { status: false, message: "Logout failed or token not found" };
+      }
+      return { status: true, message: "Logout successful" };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error("Service logout error: " + error.message);
+      }
+      throw new Error("Unexpected service error");
     }
   }
+  
+
 }

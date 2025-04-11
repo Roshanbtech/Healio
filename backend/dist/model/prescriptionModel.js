@@ -78,7 +78,7 @@ const PrescriptionSchema = new mongoose_1.Schema({
         default: "",
     },
     signature: {
-        type: String
+        type: String,
     },
 }, { timestamps: true });
 const PrescriptionModel = (0, mongoose_1.model)("Prescription", PrescriptionSchema);
