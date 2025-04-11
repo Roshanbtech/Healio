@@ -144,8 +144,8 @@ const AddScheduleModal: React.FC<IAddScheduleModalProps> = ({
       doctor,
       isRecurring,
       recurrenceRule: null, // backend will generate if recurring
-      startTime: startTime ? start.toISOString() : "",
-      endTime: endTime ? end.toISOString() : "",
+      startTime: startTime,
+      endTime: endTime,
       defaultSlotDuration,
       // breaks,
       // exceptions,
