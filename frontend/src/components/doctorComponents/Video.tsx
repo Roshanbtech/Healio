@@ -652,3 +652,377 @@ const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
 };
 
 export default DoctorVideoCall;
+
+// "use client";
+
+// import React, { useEffect, useRef, useState } from "react";
+// import SimplePeer from "simple-peer";
+// import { useSocket } from "../../context/SocketContext";
+// import {
+//   PhoneCall,
+//   PhoneOff,
+//   Mic,
+//   MicOff,
+//   Camera,
+//   CameraOff,
+//   X,
+//   Maximize2,
+//   Minimize2,
+//   User,
+//   Clock,
+//   Shield,
+// } from "lucide-react";
+
+// interface DoctorVideoCallProps {
+//   chatId: string;
+//   doctorId: string;
+//   userId: string;
+//   onClose: () => void;
+//   logo?: string;
+//   patientName?: string;
+// }
+
+// const DoctorVideoCall: React.FC<DoctorVideoCallProps> = ({
+//   chatId,
+//   doctorId,
+//   userId,
+//   onClose,
+//   logo,
+//   patientName = "Patient",
+// }) => {
+//   const socket = useSocket();
+//   const [callActive, setCallActive] = useState(false);
+//   const [peer, setPeer] = useState<SimplePeer.Instance | null>(null);
+//   const [isMuted, setIsMuted] = useState(false);
+//   const [isVideoOff, setIsVideoOff] = useState(false);
+//   const [isFullscreen, setIsFullscreen] = useState(false);
+//   const [isConnecting, setIsConnecting] = useState(false);
+//   const [callDuration, setCallDuration] = useState(0);
+//   const [callTimerInterval, setCallTimerInterval] = useState<NodeJS.Timeout | null>(null);
+//   const [connectionStatus, setConnectionStatus] = useState<"idle" | "connecting" | "connected" | "failed">("idle");
+
+//   const localVideoRef = useRef<HTMLVideoElement>(null);
+//   const remoteVideoRef = useRef<HTMLVideoElement>(null);
+//   const localStreamRef = useRef<MediaStream | null>(null);
+//   const containerRef = useRef<HTMLDivElement>(null);
+
+//   const formatCallDuration = (seconds: number) => {
+//     const mins = Math.floor(seconds / 60);
+//     const secs = seconds % 60;
+//     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+//   };
+
+//   useEffect(() => {
+//     if (callActive && !callTimerInterval) {
+//       const interval = setInterval(() => setCallDuration((prev) => prev + 1), 1000);
+//       setCallTimerInterval(interval);
+//     } else if (!callActive && callTimerInterval) {
+//       clearInterval(callTimerInterval);
+//       setCallTimerInterval(null);
+//       setCallDuration(0);
+//     }
+//     return () => {
+//       if (callTimerInterval) clearInterval(callTimerInterval);
+//     };
+//   }, [callActive, callTimerInterval]);
+
+//   useEffect(() => {
+//     if (socket && doctorId) {
+//       socket.emit("register", { type: "doctor", id: doctorId });
+//       console.log("Doctor registered:", doctorId);
+//     }
+//   }, [socket, doctorId]);
+
+//   useEffect(() => {
+//     const initializeMedia = async () => {
+//       try {
+//         setConnectionStatus("connecting");
+//         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+//         localStreamRef.current = stream;
+//         if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+//         console.log("Doctor: Local stream obtained.");
+//         setConnectionStatus("idle");
+//       } catch (err) {
+//         console.error("Doctor: Error accessing media:", err);
+//         setConnectionStatus("failed");
+//       }
+//     };
+//     initializeMedia();
+//     return () => endCallCleanup();
+//   }, []);
+
+//   useEffect(() => {
+//     if (!socket) return;
+
+//     socket.on("video:accepted", (data) => {
+//       if (data.chatId === chatId && data.recipientId === userId) {
+//         console.log("Doctor: User accepted call.");
+//         setIsConnecting(false);
+//         setConnectionStatus("connected");
+//         if (!peer) startPeer(true);
+//       }
+//     });
+
+//     socket.on("video:rejected", (data) => {
+//       if (data.chatId === chatId && data.recipientId === userId) {
+//         console.log("Doctor: User rejected call.");
+//         setIsConnecting(false);
+//         setConnectionStatus("failed");
+//         endCallCleanup();
+//       }
+//     });
+
+//     socket.on("video:ended", (data) => {
+//       if (data.chatId === chatId) {
+//         console.log("Doctor: Call ended by user.");
+//         endCallCleanup();
+//       }
+//     });
+
+//     socket.on("video-signal", (data) => {
+//       if (data.chatId === chatId && peer) {
+//         console.log("Doctor: Received answer from user");
+//         peer.signal(data.signal); // Process the user’s answer
+//       }
+//     });
+
+//     return () => {
+//       socket.off("video:accepted");
+//       socket.off("video:rejected");
+//       socket.off("video:ended");
+//       socket.off("video-signal");
+//     };
+//   }, [socket, chatId, userId, peer]);
+
+//   const startCall = () => {
+//     if (!socket || isConnecting || !localStreamRef.current) return;
+//     setIsConnecting(true);
+//     setConnectionStatus("connecting");
+//     socket.emit("video:call", {
+//       chatId,
+//       callerType: "doctor",
+//       callerId: doctorId,
+//       recipientType: "user",
+//       recipientId: userId,
+//     });
+//     console.log("Doctor: Call initiated.");
+//   };
+
+//   const endCall = () => {
+//     if (!socket) return;
+//     if (callActive) {
+//       socket.emit("video:end", { chatId, callerType: "doctor", callerId: doctorId, recipientType: "user", recipientId: userId });
+//     }
+//     endCallCleanup();
+//   };
+
+//   const endCallCleanup = () => {
+//     setCallActive(false);
+//     setIsConnecting(false);
+//     setConnectionStatus("idle");
+//     if (peer) {
+//       peer.destroy();
+//       setPeer(null);
+//     }
+//     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+//     if (localStreamRef.current) {
+//       localStreamRef.current.getTracks().forEach((track) => track.stop());
+//       if (localVideoRef.current) localVideoRef.current.srcObject = null;
+//       localStreamRef.current = null;
+//     }
+//     if (callTimerInterval) {
+//       clearInterval(callTimerInterval);
+//       setCallTimerInterval(null);
+//       setCallDuration(0);
+//     }
+//   };
+
+//   const startPeer = (initiator: boolean) => {
+//     if (!localStreamRef.current) {
+//       console.error("Doctor: No local stream available.");
+//       return;
+//     }
+//     const newPeer = new SimplePeer({
+//       initiator,
+//       trickle: false,
+//       stream: localStreamRef.current,
+//       config: {
+//         iceServers: [
+//           { urls: "stun:stun.l.google.com:19302" },
+//           // Replace with your TURN server details if available
+//           { urls: "turn:your.turn.server:3478", username: "user", credential: "pass" },
+//         ],
+//       },
+//     });
+
+//     newPeer.on("signal", (signalData) => {
+//       console.log("Doctor: Generated signal:", signalData);
+//       socket?.emit("video-signal", {
+//         chatId,
+//         callerType: "doctor",
+//         callerId: doctorId,
+//         recipientType: "user",
+//         recipientId: userId,
+//         signal: signalData,
+//       });
+//     });
+
+//     newPeer.on("iceStateChange", (state) => {
+//       console.log("Doctor: ICE state changed:", state);
+//     });
+
+//     newPeer.on("stream", (remoteStream) => {
+//       console.log("Doctor: Remote stream received.");
+//       if (remoteVideoRef.current) remoteVideoRef.current.srcObject = remoteStream;
+//       setCallActive(true);
+//     });
+
+//     newPeer.on("error", (err) => {
+//       console.error("Doctor: Peer error:", err);
+//     });
+
+//     setPeer(newPeer);
+//   };
+
+//   const toggleMute = () => {
+//     if (localStreamRef.current) {
+//       const newMuteState = !isMuted;
+//       localStreamRef.current.getAudioTracks().forEach((track) => (track.enabled = !newMuteState));
+//       setIsMuted(newMuteState);
+//     }
+//   };
+
+//   const toggleVideo = () => {
+//     if (localStreamRef.current) {
+//       const newVideoState = !isVideoOff;
+//       localStreamRef.current.getVideoTracks().forEach((track) => (track.enabled = !newVideoState));
+//       setIsVideoOff(newVideoState);
+//     }
+//   };
+
+//   const toggleFullscreen = () => {
+//     if (!containerRef.current) return;
+//     if (!document.fullscreenElement) {
+//       containerRef.current.requestFullscreen();
+//       setIsFullscreen(true);
+//     } else {
+//       document.exitFullscreen();
+//       setIsFullscreen(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+//     document.addEventListener("fullscreenchange", handleFullscreenChange);
+//     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+//   }, []);
+
+//   const ConnectionIndicator = () => {
+//     const statusMap = {
+//       connected: { color: "green-600", text: "Connected" },
+//       connecting: { color: "yellow-500", text: "Connecting..." },
+//       failed: { color: "red-600", text: "Connection Failed" },
+//       idle: { color: "gray-400", text: "Ready" },
+//     };
+//     const status = statusMap[connectionStatus];
+//     if (!status) return null;
+//     return (
+//       <div className={`flex items-center text-${status.color}`}>
+//         <div className={`h-2 w-2 rounded-full bg-${status.color} mr-2 animate-pulse`}></div>
+//         <span className="text-xs font-medium">{status.text}</span>
+//       </div>
+//     );
+//   };
+
+//   return (
+//     <div className="fixed inset-0 bg-black bg-opacity-85 flex items-center justify-center z-50">
+//       <div ref={containerRef} className="bg-white rounded-2xl w-full max-w-4xl h-[90vh] flex flex-col">
+//         <div className="flex justify-between items-center p-4 bg-gradient-to-r from-red-600 to-red-700 rounded-t-2xl">
+//           <div className="flex items-center space-x-3">
+//             {logo && <img src={logo} alt="Logo" className="h-8" />}
+//             <div>
+//               <h2 className="text-xl font-bold text-white">Video Consultation</h2>
+//               <div className="flex items-center mt-1">
+//                 <ConnectionIndicator />
+//                 {callActive && (
+//                   <div className="flex items-center text-white text-xs ml-3">
+//                     <Clock size={12} className="mr-1" />
+//                     {formatCallDuration(callDuration)}
+//                   </div>
+//                 )}
+//               </div>
+//             </div>
+//           </div>
+//           <div className="flex space-x-2">
+//             <button onClick={toggleFullscreen} className="bg-red-700 hover:bg-red-800 text-white p-2 rounded-full">
+//               {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+//             </button>
+//             <button onClick={() => { endCall(); onClose(); }} className="bg-red-700 hover:bg-red-800 text-white p-2 rounded-full">
+//               <X size={18} />
+//             </button>
+//           </div>
+//         </div>
+//         <div className="flex-1 p-6 bg-gradient-to-br from-green-50 to-white">
+//           <div className="relative w-full h-full rounded-xl overflow-hidden bg-gray-900">
+//             {callActive ? (
+//               <>
+//                 <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
+//                 <div className="absolute top-4 left-4 bg-black bg-opacity-60 px-3 py-1 rounded-lg text-white text-sm">
+//                   <User size={14} className="mr-2 inline" /> {patientName}
+//                 </div>
+//                 <div className="absolute top-4 right-4 bg-green-600 bg-opacity-80 px-2 py-1 rounded-lg text-white text-xs">
+//                   <Shield size={12} className="mr-1 inline" /> Secure
+//                 </div>
+//               </>
+//             ) : (
+//               <div className="w-full h-full flex items-center justify-center">
+//                 {isConnecting ? (
+//                   <div className="text-center text-white">
+//                     <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-green-100 mb-6"></div>
+//                     <p>Connecting...</p>
+//                   </div>
+//                 ) : (
+//                   <button onClick={startCall} className="bg-green-200 hover:bg-green-300 text-gray-800 px-10 py-4 rounded-full">
+//                     <PhoneCall className="mr-3 inline" size={22} /> Call Patient
+//                   </button>
+//                 )}
+//               </div>
+//             )}
+//             <div className={`absolute bottom-4 right-4 w-1/4 h-1/4 rounded-lg overflow-hidden ${isVideoOff ? "bg-gray-900" : ""}`}>
+//               <video ref={localVideoRef} muted autoPlay playsInline className="w-full h-full object-cover" />
+//               {isVideoOff && (
+//                 <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+//                   <CameraOff size={24} className="text-red-500" />
+//                 </div>
+//               )}
+//               {isMuted && (
+//                 <div className="absolute top-1 right-1 bg-red-600 rounded-full p-1">
+//                   <MicOff size={12} className="text-white" />
+//                 </div>
+//               )}
+//             </div>
+//           </div>
+//         </div>
+//         <div className="p-5 bg-gray-50 flex justify-center space-x-6 rounded-b-2xl">
+//           <button onClick={toggleMute} className={`p-4 rounded-full ${isMuted ? "bg-red-600" : "bg-gray-200"}`}>
+//             {isMuted ? <MicOff size={24} className="text-white" /> : <Mic size={24} className="text-gray-700" />}
+//           </button>
+//           {callActive ? (
+//             <button onClick={endCall} className="p-5 bg-red-600 hover:bg-red-700 rounded-full">
+//               <PhoneOff size={30} className="text-white" />
+//             </button>
+//           ) : (
+//             <button onClick={startCall} disabled={isConnecting} className={`p-5 rounded-full ${isConnecting ? "bg-gray-400" : "bg-green-200"}`}>
+//               <PhoneCall size={30} className="text-gray-800" />
+//             </button>
+//           )}
+//           <button onClick={toggleVideo} className={`p-4 rounded-full ${isVideoOff ? "bg-red-600" : "bg-gray-200"}`}>
+//             {isVideoOff ? <CameraOff size={24} className="text-white" /> : <Camera size={24} className="text-gray-700" />}
+//           </button>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default DoctorVideoCall;

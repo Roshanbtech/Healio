@@ -553,5 +553,249 @@ const stopLocalStream = () => {
 export default UserVideoCall;
 
 
+// "use client";
 
+// import React, { useEffect, useRef, useState } from "react";
+// import SimplePeer from "simple-peer";
+// import { useSocket } from "../../context/SocketContext";
+// import { PhoneOff, Mic, MicOff, Camera, CameraOff, X } from "lucide-react";
 
+// interface UserVideoCallProps {
+//   chatId: string;
+//   userId: string;
+//   doctorId: string;
+//   onClose: () => void;
+//   doctorName?: string;
+// }
+
+// const UserVideoCall: React.FC<UserVideoCallProps> = ({
+//   chatId,
+//   userId,
+//   doctorId,
+//   onClose,
+//   doctorName = "Doctor",
+// }) => {
+//   const socket = useSocket();
+//   const [callActive, setCallActive] = useState(false);
+//   const [peer, setPeer] = useState<SimplePeer.Instance | null>(null);
+//   const [isMuted, setIsMuted] = useState(false);
+//   const [isVideoOff, setIsVideoOff] = useState(false);
+//   const [incomingCall, setIncomingCall] = useState(false);
+
+//   const localVideoRef = useRef<HTMLVideoElement>(null);
+//   const remoteVideoRef = useRef<HTMLVideoElement>(null);
+//   const localStreamRef = useRef<MediaStream | null>(null);
+
+//   useEffect(() => {
+//     console.log("UserVideoCall rendered with chatId:", chatId); // Log to verify prop
+//     if (socket && userId) {
+//       socket.emit("register", { type: "user", id: userId });
+//       console.log("User registered with socket:", userId);
+//     }
+//   }, [socket, userId, chatId]);
+
+//   useEffect(() => {
+//     const initializeMedia = async () => {
+//       try {
+//         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+//         localStreamRef.current = stream;
+//         if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+//         console.log("User: Local stream obtained successfully.");
+//       } catch (err) {
+//         console.error("User: Error accessing media:", err);
+//       }
+//     };
+//     initializeMedia();
+//     return () => endCallCleanup();
+//   }, []);
+
+//   useEffect(() => {
+//     if (!socket) return;
+
+//     socket.on("connect", () => {
+//       console.log("User: Socket connected, ID:", socket.id);
+//     });
+
+//     socket.on("video:incoming", (data) => {
+//       console.log("User: Received video:incoming with data:", data);
+//       if (data.chatId === chatId && data.callerId === doctorId) {
+//         setIncomingCall(true);
+//         console.log("User: Incoming call confirmed from doctor:", doctorId);
+//       } else {
+//         console.log("User: Incoming call data mismatch:", data);
+//       }
+//     });
+
+//     socket.on("video-signal", (data) => {
+//       console.log("Received video-signal with chatId:", data.chatId, "component chatId:", chatId);
+//       if (data.chatId === chatId) {
+//         console.log("User: Processing signal");
+//         peer?.signal(data.signal);
+//       } else {
+//         console.log("User: Received signal for different chatId");
+//       }
+//     });
+
+//     socket.on("video:ended", (data) => {
+//       if (data.chatId === chatId) {
+//         console.log("User: Call ended by doctor.");
+//         endCallCleanup();
+//         onClose();
+//       }
+//     });
+
+//     return () => {
+//       socket.off("connect");
+//       socket.off("video:incoming");
+//       socket.off("video-signal");
+//       socket.off("video:ended");
+//     };
+//   }, [socket, chatId, userId, doctorId, peer, onClose]);
+
+//   const acceptCall = () => {
+//     setIncomingCall(false);
+//     socket?.emit("video:accept", {
+//       chatId,
+//       callerType: "user",
+//       callerId: userId,
+//       recipientType: "doctor",
+//       recipientId: doctorId,
+//     });
+//     console.log("User: Emitted video:accept");
+//     startPeer(false);
+//   };
+
+//   const endCall = () => {
+//     if (!socket) return;
+//     socket.emit("video:end", {
+//       chatId,
+//       callerType: "user",
+//       callerId: userId,
+//       recipientType: "doctor",
+//       recipientId: doctorId,
+//     });
+//     console.log("User: Emitted video:end.");
+//     endCallCleanup();
+//     onClose();
+//   };
+
+//   const endCallCleanup = () => {
+//     setCallActive(false);
+//     if (peer) {
+//       peer.destroy();
+//       setPeer(null);
+//     }
+//     if (localStreamRef.current) {
+//       localStreamRef.current.getTracks().forEach((track) => track.stop());
+//       localStreamRef.current = null;
+//     }
+//     if (localVideoRef.current) localVideoRef.current.srcObject = null;
+//     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+//   };
+
+//   const startPeer = (initiator: boolean) => {
+//     if (!localStreamRef.current) return;
+
+//     const newPeer = new SimplePeer({
+//       initiator,
+//       trickle: false,
+//       stream: localStreamRef.current,
+//       config: {
+//         iceServers: [
+//           { urls: "stun:stun.l.google.com:19302" },
+//           // Replace with your TURN server details if available
+//           { urls: "turn:your.turn.server:3478", username: "user", credential: "pass" },
+//         ],
+//       },
+//     });
+
+//     newPeer.on("signal", (signalData) => {
+//       console.log("User: Generated signal (answer)", signalData);
+//       socket?.emit("video-signal", {
+//         chatId,
+//         callerType: "user",
+//         callerId: userId,
+//         recipientType: "doctor",
+//         recipientId: doctorId,
+//         signal: signalData,
+//       });
+//     });
+
+//     newPeer.on("iceStateChange", (state) => {
+//       console.log("User: ICE state changed:", state);
+//     });
+
+//     newPeer.on("stream", (remoteStream) => {
+//       console.log("User: Received remote stream");
+//       if (remoteVideoRef.current) remoteVideoRef.current.srcObject = remoteStream;
+//       setCallActive(true);
+//     });
+
+//     newPeer.on("error", (err) => {
+//       console.error("User: Peer error", err);
+//     });
+
+//     setPeer(newPeer);
+//   };
+
+//   const toggleMute = () => {
+//     if (localStreamRef.current) {
+//       const newMuteState = !isMuted;
+//       localStreamRef.current.getAudioTracks().forEach((track) => (track.enabled = !newMuteState));
+//       setIsMuted(newMuteState);
+//     }
+//   };
+
+//   const toggleVideo = () => {
+//     if (localStreamRef.current) {
+//       const newVideoState = !isVideoOff;
+//       localStreamRef.current.getVideoTracks().forEach((track) => (track.enabled = !newVideoState));
+//       setIsVideoOff(newVideoState);
+//     }
+//   };
+
+//   return (
+//     <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+//       <div className="bg-white rounded-lg w-full max-w-4xl h-[90vh] flex flex-col">
+//         <div className="flex justify-between p-4 bg-red-600 text-white">
+//           <h2>Video Call with {doctorName}</h2>
+//           <button onClick={endCall}>
+//             <X size={18} />
+//           </button>
+//         </div>
+//         <div className="flex-1 p-4">
+//           <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full bg-black" />
+//           <video
+//             ref={localVideoRef}
+//             muted
+//             autoPlay
+//             playsInline
+//             className="absolute bottom-4 right-4 w-1/4 h-1/4 bg-black"
+//           />
+//         </div>
+//         <div className="p-4 flex justify-center space-x-4">
+//           <button onClick={toggleMute}>{isMuted ? <MicOff /> : <Mic />}</button>
+//           <button onClick={endCall}>
+//             <PhoneOff />
+//           </button>
+//           <button onClick={toggleVideo}>{isVideoOff ? <CameraOff /> : <Camera />}</button>
+//         </div>
+//         {incomingCall && (
+//           <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+//             <div className="bg-white p-6 rounded-lg">
+//               <p>Incoming call from {doctorName}</p>
+//               <button onClick={acceptCall} className="bg-green-500 text-white p-2 m-2">
+//                 Accept
+//               </button>
+//               <button onClick={endCall} className="bg-red-500 text-white p-2 m-2">
+//                 Reject
+//               </button>
+//             </div>
+//           </div>
+//         )}
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default UserVideoCall;
