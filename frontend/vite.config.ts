@@ -10,6 +10,7 @@ export default defineConfig({
       stream: 'stream-browserify',
       buffer: 'buffer',
       events: 'events',
+      process: 'process/browser',
     },
   },
   optimizeDeps: {
