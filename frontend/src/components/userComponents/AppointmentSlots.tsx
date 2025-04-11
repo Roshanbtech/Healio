@@ -295,6 +295,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { format, startOfDay } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import axiosInstance from "../../utils/axiosInterceptors";
 import { Clock, CheckCircle } from "lucide-react";
 import Slider from "react-slick";
@@ -558,7 +559,7 @@ const Appointment: React.FC = () => {
                       : "bg-green-100 text-gray-800"
                   }`}
                 >
-                  <span>{format(new Date(slot.datetime), "hh:mm a")}</span>
+                  <span>{formatInTimeZone(new Date(slot.datetime), 'UTC', 'hh:mm a')}</span>
                   {isBooked && (
                     <span className="ml-2 text-xs text-red-500 bg-red-100 rounded-full px-2">
                       Booked
