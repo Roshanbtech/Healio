@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { format, addMinutes, isBefore } from "date-fns";
+import { formatInTimeZone } from 'date-fns-tz';
 import {
   Calendar,
   Clock,
@@ -282,7 +283,7 @@ const DoctorScheduleManagement: React.FC = () => {
                               key={time}
                               className="bg-red-600 text-white px-4 py-1 rounded-full text-sm font-medium shadow-sm hover:bg-red-700 transition-colors"
                             >
-                              {time}
+                              {formatInTimeZone(new Date(time), "UTC", "h:mma")}
                             </div>
                           ))}
                         </div>
