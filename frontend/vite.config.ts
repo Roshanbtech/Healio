@@ -8,8 +8,8 @@ export default defineConfig({
   resolve: {
     alias: {
       stream: 'stream-browserify',
-      buffer: 'buffer'
-    }
+      buffer: 'buffer',
+    },
   },
   optimizeDeps: {
     esbuildOptions: {
@@ -19,21 +19,26 @@ export default defineConfig({
           buffer: true,
           process: true,
         }),
-        NodeModulesPolyfillPlugin()
-      ]
-    }
+        NodeModulesPolyfillPlugin(),
+      ],
+    },
   },
   build: {
+    minify: 'terser', 
+    terserOptions: {
+      keep_classnames: true,
+      keep_fnames: true, 
+    },
     rollupOptions: {
       plugins: [
         NodeGlobalsPolyfillPlugin({
           buffer: true,
           process: true,
-        })
-      ]
+        }),
+      ],
     },
     commonjsOptions: {
-      transformMixedEsModules: true
-    }
-  }
+      transformMixedEsModules: true,
+    },
+  },
 });
