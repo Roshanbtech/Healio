@@ -9,6 +9,7 @@ export default defineConfig({
     alias: {
       stream: 'stream-browserify',
       buffer: 'buffer',
+      events: 'events',
     },
   },
   optimizeDeps: {
