@@ -4,7 +4,7 @@ import { Sidebar } from "../common/userCommon/Sidebar";
 import { Camera, Eye, EyeOff } from "lucide-react";
 import { toast } from "react-toastify";
 import { assets } from "../../assets/assets";
-import { signedUrltoNormalUrl } from "../../utils/getUrl";
+// import { signedUrltoNormalUrl } from "../../utils/getUrl";
 
 interface UserProfile {
   id: string;
@@ -66,10 +66,6 @@ const Profile: React.FC = () => {
         setEditProfile(fetchedProfile);
         if (fetchedProfile.image) {
           setPreviewUrl(fetchedProfile.image);
-        }
-        if (fetchedProfile.image) {
-          let profile = signedUrltoNormalUrl(fetchedProfile.image);
-          fetchedProfile.image = profile;
         }
       } catch (err) {
         setError("Failed to load profile");
@@ -148,9 +144,9 @@ const Profile: React.FC = () => {
       
       // Update the image URL using signedUrltoNormalUrl
       const editedProfile = response.data?.data?.result;
-      if (editedProfile?.image) {
-        editedProfile.image = signedUrltoNormalUrl(editedProfile.image);
-      }
+      // if (editedProfile?.image) {
+      //   editedProfile.image = signedUrltoNormalUrl(editedProfile.image);
+      // }
       
       setEditProfile(editedProfile);
       setProfile(editedProfile);

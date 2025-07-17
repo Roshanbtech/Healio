@@ -75,6 +75,7 @@ export class AuthRepository implements IAuthRepository {
           googleId,
           isVerified,
           image,
+        userId: userData.userId,
         });
         await user.save();
         isNewUser = true;

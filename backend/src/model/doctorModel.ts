@@ -33,6 +33,7 @@ export interface IDoctor extends Document {
     balance: number;
     transactions: ITransaction[];
   };
+  // isUpdated?: boolean;
   averageRating?: number;
   reviewCount?: number;
 }
@@ -74,6 +75,7 @@ const doctorSchema = new Schema<IDoctor>(
       balance: { type: Number, default: 0 },
       transactions: [transactionSchema],
     },
+    // isUpdated: { type: Boolean, default: false },
     averageRating: { type: Number, default: 0 },
     reviewCount: { type: Number, default: 0 },
   },

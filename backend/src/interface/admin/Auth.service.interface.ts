@@ -1,6 +1,7 @@
 import { PaginationOptions } from "../../helper/pagination";
 import { IAppointment } from "../../model/appointmentModel";
 import { PaginatedResult } from "../../services/admin/auth";
+import { IDoctor } from "../../model/doctorModel";
 import {
   AdminLoginInput,
   AdminLoginSuccess,
@@ -56,6 +57,7 @@ export interface IAuthService {
   ): Promise<ServiceSuccessResponse>;
   toggleService(id: string): Promise<ServiceToggleStatus | null>;
   getCertificates(id: string): Promise<string[]>;
+  // doctorProfile(id:string): Promise<Partial<IDoctor>|null>;
   approveDoctor(id: string): Promise<ApproveRejectResponse>;
   rejectDoctor(id: string, reason: string): Promise<ApproveRejectResponse>;
   createCoupon(couponData: Coupon): Promise<CouponSuccessResponse>;

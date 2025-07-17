@@ -31,7 +31,7 @@ import {
 } from "../../helper/date";
 import { startOfYesterday } from "date-fns/startOfYesterday";
 import { endOfYesterday } from "date-fns/endOfYesterday";
-import { getUrl } from "../../helper/getUrl";
+// import { getUrl } from "../../helper/getUrl";
 
 export class DoctorRepository implements IDoctorRepository {
   async getServices(): Promise<Service[]> {
@@ -206,13 +206,13 @@ export class DoctorRepository implements IDoctorRepository {
       const userDetails = await userModel
         .find({ _id: { $in: userIds } })
         .select("-wallet -password");
-        await Promise.all(
-          userDetails.map(async (user) => {
-            if (user.image) {
-              user.image = await getUrl(user.image);
-            }
-          })
-        );
+        // await Promise.all(
+        //   userDetails.map(async (user) => {
+        //     // if (user.image) {
+        //     //   user.image = await getUrl(user.image);
+        //     // }
+        //   })
+        // );
       return userDetails;
     } catch (error: any) {
       throw new Error(error.message);
@@ -288,18 +288,18 @@ export class DoctorRepository implements IDoctorRepository {
         )
         .sort({ date: -1 })
         .exec();
-        await Promise.all(
-          appointments.map(async (appointment) => {
-            if (
-              appointment.prescription &&
-              (appointment.prescription as any).signature
-            ) {
-              (appointment.prescription as any).signature = await getUrl(
-                (appointment.prescription as any).signature
-              );
-            }
-          })
-        );
+        // await Promise.all(
+        //   appointments.map(async (appointment) => {
+        //     if (
+        //       appointment.prescription &&
+        //       (appointment.prescription as any).signature
+        //     ) {
+        //       (appointment.prescription as any).signature = await getUrl(
+        //         (appointment.prescription as any).signature
+        //       );
+        //     }
+        //   })
+        // );
       return appointments;
     } catch (error: any) {
       console.error("Error in getAppointments:", error);
@@ -497,10 +497,10 @@ export class DoctorRepository implements IDoctorRepository {
         throw new Error("Doctor not found");
       }
 
-      let imageUrl = "";
-      if (doctorData.image) {
-        imageUrl = await getUrl(doctorData.image);
-      }
+      // let imageUrl = "";
+      // if (doctorData.image) {
+      //   imageUrl = await getUrl(doctorData.image);
+      // }
 
       // Convert Mongoose document to DoctorProfile interface
       const doctorProfile: DoctorProfile = {
@@ -510,7 +510,7 @@ export class DoctorRepository implements IDoctorRepository {
           typeof doctorData.speciality === "object"
             ? (doctorData.speciality as any).name
             : doctorData.speciality,
-        image: imageUrl
+        image: doctorData.image || "",
       };
 
       const monthlyTarget = (doctorData as any)?.monthlyTarget || 50; // Default Target
@@ -739,9 +739,9 @@ export class DoctorRepository implements IDoctorRepository {
         .populate("speciality", "name")
         .lean();
 
-      if (doctorProfile && doctorProfile.image) {
-        doctorProfile.image = await getUrl(doctorProfile.image);
-      }
+      // if (doctorProfile && doctorProfile.image) {
+      //   doctorProfile.image = await getUrl(doctorProfile.image);
+      // }
 
       const visitsToday = await AppointmentModel.countDocuments({
         doctorId: doctorObjectId,

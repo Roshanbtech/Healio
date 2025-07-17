@@ -79,6 +79,11 @@ route.patch(
   AuthControllerInstance.toggleService.bind(AuthControllerInstance)
 );
 
+// route.patch(
+//   "/verify/:id/doctor",
+//   AuthControllerInstance.doctorProfileUpdate.bind(AuthControllerInstance)
+// )
+
 // ___________ Coupon management ____________ //
 route.get(
   "/coupons",

@@ -66,29 +66,51 @@ const Profile: React.FC = () => {
   const doctor = localStorage.getItem("doctorId");
 
   // Fetch doctor profile
-  useEffect(() => {
-    const getProfile = async () => {
-      try {
-        const response = await axiosInstance.get(`/doctor/profile/${doctor}`);
-        const fetchedProfile = response.data.data.profile;
-        setProfile(fetchedProfile);
-        setEditProfile(fetchedProfile);
-        if (fetchedProfile.image) {
-          setPreviewUrl(fetchedProfile.image);
-        }
-        if (fetchedProfile.image) {
-          let profile = signedUrltoNormalUrl(fetchedProfile.image);
-          fetchedProfile.image = profile;
-        }
-      } catch (err) {
-        setError("Failed to load profile");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // useEffect(() => {
+  //   const getProfile = async () => {
+  //     try {
+  //       const response = await axiosInstance.get(`/doctor/profile/${doctor}`);
+  //       const fetchedProfile = response.data.data.profile;
+  //       setProfile(fetchedProfile);
+  //       setEditProfile(fetchedProfile);
+  //       if (fetchedProfile.image) {
+  //         setPreviewUrl(fetchedProfile.image);
+  //       }
+  //       if (fetchedProfile.image) {
+  //         let profile = signedUrltoNormalUrl(fetchedProfile.image);
+  //         fetchedProfile.image = profile;
+  //       }
+  //     } catch (err) {
+  //       setError("Failed to load profile");
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
 
-    getProfile();
-  }, [doctor]);
+  //   getProfile();
+  // }, [doctor]);
+
+  // Remove all signedUrltoNormalUrl and getUrl
+useEffect(() => {
+  const getProfile = async () => {
+    try {
+      const response = await axiosInstance.get(`/doctor/profile/${doctor}`);
+      const fetchedProfile = response.data.data.profile;
+      setProfile(fetchedProfile);
+      setEditProfile(fetchedProfile);
+      if (fetchedProfile.image) {
+        setPreviewUrl(fetchedProfile.image); // Just use the URL directly
+      }
+    } catch (err) {
+      setError("Failed to load profile");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  getProfile();
+}, [doctor]);
+
 
   // Fetch services list
   // useEffect(() => {

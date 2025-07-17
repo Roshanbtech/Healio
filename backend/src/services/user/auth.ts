@@ -12,7 +12,7 @@ import {
   resendOtpUtil,
   resendOtp,
 } from "../../config/redisClient";
-import { getUrl } from "../../helper/getUrl";
+// import { getUrl } from "../../helper/getUrl";
 
 export class AuthService implements IAuthService {
   private AuthRepository: IAuthRepository;
@@ -215,9 +215,9 @@ export class AuthService implements IAuthService {
         throw new Error("User is blocked. Ask admin for access.");
       }
 
-      if(user?.image){
-        user.image = await getUrl(user.image);
-      }
+      // if(user?.image){
+      //   user.image = await getUrl(user.image);
+      // }
 
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
@@ -258,17 +258,20 @@ export class AuthService implements IAuthService {
       console.log("Decoded Token:", decodedToken);
 
       const { email, name, uid, picture } = decodedToken;
+      const userId =  uuidv4();
       const userData: {
         name: string;
         email: string | undefined;
         googleId: string;
         isVerified: boolean;
         image?: string;
+        userId: string
       } = {
         name,
         email,
         googleId: uid,
         isVerified: true,
+        userId: userId,
       };
       if (picture) {
         userData.image = picture;

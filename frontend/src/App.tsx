@@ -13,8 +13,8 @@ import "react-toastify/dist/ReactToastify.css";
 const App = () => {
   return (
     <ErrorBoundary>
-      <Router>
       <ToastContainer />
+      <Router>
       <GlobalNotifications />
         <Routes>
           <Route path="/*" element={<UserRoutes />} />

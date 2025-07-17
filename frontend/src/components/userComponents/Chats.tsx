@@ -1293,7 +1293,7 @@ export default function Chat() {
                           {!message.deleted && message.sender === "user" && (
                             <div
                               className="absolute right-2 top-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                              onClick={() => showDeleteModal(message._id)}
+                              onClick={() =>  showDeleteModal(message._id)}
                             >
                               <button className="p-1.5 bg-red-100 hover:bg-red-200 rounded-full text-red-600 transition-colors">
                                 <Trash2 size={14} />

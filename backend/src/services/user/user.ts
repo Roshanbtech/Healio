@@ -4,8 +4,10 @@ import {
 } from "../../interface/userInterface/interface";
 import { IUserService } from "../../interface/user/User.service.interface";
 import { IUserRepository } from "../../interface/user/User.repository.interface";
-import { awsFileUpload } from "../../helper/uploadFiles";
-import { AwsConfig } from "../../config/s3Config";
+// import { awsFileUpload } from "../../helper/uploadFiles";
+// import { AwsConfig } from "../../config/s3Config";
+import { CloudinaryFileUpload } from "../../helper/uploadFile"; 
+import { CloudinaryConfig } from "../../config/cloudinaryConfig";
 import { PaginationOptions } from "../../helper/pagination";
 import { RRule } from "rrule";
 import { format, addMinutes, isBefore } from "date-fns";
@@ -13,7 +15,7 @@ import { Schedule } from "../../interface/doctorInterface/Interface";
 import { IDoctor } from "../../model/doctorModel";
 import { ISchedule } from "../../model/slotModel";
 import { isScheduleExpired } from "../../helper/schedule";
-import { getUrl } from "../../helper/getUrl";
+// import { getUrl } from "../../helper/getUrl";
 interface Slot {
   slot: string;
   datetime: string;
@@ -22,11 +24,12 @@ export class UserService implements IUserService {
   private UserRepository: IUserRepository;
 
   private userData: userType | null = null;
-  private fileUploadService: awsFileUpload;
-
+  // private fileUploadService: awsFileUpload;
+  private fileUploadService: CloudinaryFileUpload;
   constructor(AuthRepository: IUserRepository) {
     this.UserRepository = AuthRepository;
-    this.fileUploadService = new awsFileUpload(new AwsConfig());
+    // this.fileUploadService = new awsFileUpload(new AwsConfig());
+    this.fileUploadService = new CloudinaryFileUpload(new CloudinaryConfig());
   }
 
   async getDoctors(options: PaginationOptions): Promise<any> {
@@ -95,9 +98,9 @@ export class UserService implements IUserService {
         updatedData
       );
 
-      if (updatedUser.image) {
-        updatedUser.image = await getUrl(updatedUser.image);
-      }
+      // if (updatedUser.image) {
+      //   updatedUser.image = await getUrl(updatedUser.image);
+      // }
 
       return updatedUser;
     } catch (error: any) {

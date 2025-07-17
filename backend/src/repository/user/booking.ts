@@ -3,7 +3,7 @@ import CouponModel, { ICoupon } from "../../model/couponModel";
 import AppointmentModel, { IAppointment } from "../../model/appointmentModel";
 import UserModel, { Iuser } from "../../model/userModel";
 import { IBookingRepository } from "../../interface/user/Booking.repository.interface";
-import { getUrl } from "../../helper/getUrl";
+// import { getUrl } from "../../helper/getUrl";
 import { emailSend } from "../../helper/emailSend";
 
 export class BookingRepository implements IBookingRepository {
@@ -153,17 +153,17 @@ export class BookingRepository implements IBookingRepository {
       .populate("prescription", "_id diagnosis medicines labTests advice followUpDate doctorNotes signature createdAt updatedAt")
       .exec();
   
-    await Promise.all(
-      appointments.map(async (appointment) => {
-        const doctor = appointment.doctorId as { image?: string };
-        if (doctor && doctor.image) {
-          (appointment.doctorId as any).image = await getUrl(doctor.image);
-        }
-        if (appointment.prescription && (appointment.prescription as any).signature) {
-          (appointment.prescription as any).signature = await getUrl((appointment.prescription as any).signature);
-        }
-      })
-    );  
+    // await Promise.all(
+    //   appointments.map(async (appointment) => {
+    //     const doctor = appointment.doctorId as { image?: string };
+    //     if (doctor && doctor.image) {
+    //       (appointment.doctorId as any).image = await getUrl(doctor.image);
+    //     }
+    //     if (appointment.prescription && (appointment.prescription as any).signature) {
+    //       (appointment.prescription as any).signature = await getUrl((appointment.prescription as any).signature);
+    //     }
+    //   })
+    // );  
     return appointments;
   }
 

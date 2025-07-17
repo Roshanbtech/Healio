@@ -195,6 +195,16 @@ export class AuthController {
     }
   }
 
+  // async doctorProfileUpdate(req:Request,res:Response): Promise<void>{
+  //   try{
+  //    const { id } = req.params;
+  //    const doctorProfile = await this.authService.doctorProfile(id)
+  //    res.status(HTTP_statusCode.OK).json({ status: true, doctorProfile });
+  //   }catch(error:unknown){
+  //     throw new Error(error instanceof Error ? error.message : "Something went wrong, please try again later.");
+  //   }
+  // }
+
   async getServices(req: Request, res: Response): Promise<void> {
     try {
       const options = {

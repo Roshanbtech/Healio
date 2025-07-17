@@ -6,8 +6,10 @@ import {
 import { IDoctorService } from "../../interface/doctor/Auth.service.interface";
 import { IDoctorRepository } from "../../interface/doctor/Auth.repository.interface";
 import { Service } from "../../interface/doctorInterface/Interface";
-import { awsFileUpload } from "../../helper/uploadFiles";
-import { AwsConfig } from "../../config/s3Config";
+// import { awsFileUpload } from "../../helper/uploadFiles";
+// import { AwsConfig } from "../../config/s3Config";
+import { CloudinaryFileUpload } from "../../helper/uploadFile"; 
+import { CloudinaryConfig } from "../../config/cloudinaryConfig";
 import { RRule, Weekday } from "rrule";
 import { IAppointment } from "../../model/appointmentModel";
 import { Iuser } from "../../model/userModel";
@@ -19,7 +21,7 @@ import {
   DashboardHomeData,
   DashboardStatsResponse,
 } from "../../interface/doctorInterface/dashboardInterface";
-import { getUrl } from "../../helper/getUrl";
+// import { getUrl } from "../../helper/getUrl";
 import { IDoctor } from "../../model/doctorModel";
 import { ISchedule } from "../../model/slotModel";
 import { Types } from "mongoose";
@@ -33,11 +35,13 @@ export class DoctorService implements IDoctorService {
   private DoctorRepository: IDoctorRepository;
 
   private doctorData: doctorType | null = null;
-  private fileUploadService: awsFileUpload;
+  // private fileUploadService: awsFileUpload;
+  private fileUploadService: CloudinaryFileUpload;
 
   constructor(DoctorRepository: IDoctorRepository) {
     this.DoctorRepository = DoctorRepository;
-    this.fileUploadService = new awsFileUpload(new AwsConfig());
+    // this.fileUploadService = new awsFileUpload(new AwsConfig());
+    this.fileUploadService = new CloudinaryFileUpload(new CloudinaryConfig());
   }
 
   async getServices(): Promise<Service[]> {
@@ -107,9 +111,9 @@ export class DoctorService implements IDoctorService {
     try {
       const doctor = await this.DoctorRepository.getDoctorProfile(id);
 
-      if (doctor?.image) {
-        doctor.image = await getUrl(doctor.image);
-      }
+      // if (doctor?.image) {
+      //   doctor.image = await getUrl(doctor.image);
+      // }
 
       return doctor;
     } catch (error: unknown) {
@@ -121,37 +125,72 @@ export class DoctorService implements IDoctorService {
     }
   }
 
-  async editDoctorProfile(
-    id: string,
-    data: Partial<IDoctor>,
-    file: Express.Multer.File
-  ): Promise<Partial<IDoctor> | null> {
-    try {
-      let image: string | undefined = undefined;
-      console.log("Service - Received file:", file);
+  // async editDoctorProfile(
+  //   id: string,
+  //   data: Partial<IDoctor>,
+  //   file: Express.Multer.File
+  // ): Promise<Partial<IDoctor> | null> {
+  //   try {
+  //     let image: string | undefined = undefined;
+  //     console.log("Service - Received file:", file);
 
-      if (file) {
-        image = await this.fileUploadService.uploadDoctorProfileImage(id, file);
+  //     if (file) {
+  //       image = await this.fileUploadService.uploadDoctorProfileImage(id, file);
+  //     }
+
+  //     const updatedData = { ...data, image };
+  //     const updatedDoctor = await this.DoctorRepository.editDoctorProfile(
+  //       id,
+  //       updatedData
+  //     );
+  //     // if (updatedDoctor?.image) {
+  //     //   updatedDoctor.image = await getUrl(updatedDoctor.image);
+  //     // }
+
+  //     return updatedDoctor;
+  //   } catch (error: unknown) {
+  //     const errorMessage =
+  //       error instanceof Error
+  //         ? error.message
+  //         : "Unknown error in editDoctorProfile";
+  //     throw new Error(errorMessage);
+  //   }
+  // }
+
+async editDoctorProfile(
+  id: string,
+  data: Partial<IDoctor>,
+  file: Express.Multer.File
+): Promise<Partial<IDoctor> | null> {
+  try {
+    const updatedData = { ...data };
+
+    if (file) {
+      const image = await this.fileUploadService.uploadDoctorProfileImage(id, file);
+      console.log("Cloudinary URL received:", image);
+
+      if (!image) {
+        throw new Error("Image URL was not received from Cloudinary.");
       }
 
-      const updatedData = { ...data, image };
-      const updatedDoctor = await this.DoctorRepository.editDoctorProfile(
-        id,
-        updatedData
-      );
-      if (updatedDoctor?.image) {
-        updatedDoctor.image = await getUrl(updatedDoctor.image);
-      }
-
-      return updatedDoctor;
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Unknown error in editDoctorProfile";
-      throw new Error(errorMessage);
+      updatedData.image = image;
     }
+
+    const updatedDoctor = await this.DoctorRepository.editDoctorProfile(id, updatedData);
+    console.log("Doctor profile updated successfully:", updatedDoctor);
+
+    return updatedDoctor;
+  } catch (error: unknown) {
+    console.error("Full error object:", error);
+
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error in editDoctorProfile";
+
+    console.error("Error in service layer:", errorMessage);
+    throw new Error(errorMessage);
   }
+}
+
 
   async changePassword(
     id: string,

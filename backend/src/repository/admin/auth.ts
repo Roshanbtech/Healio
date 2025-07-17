@@ -12,7 +12,7 @@ import {
   ITopUser,
   IAppointmentAnalytics,
 } from "../../interface/adminInterface/dashboard";
-import { getUrl } from "../../helper/getUrl";
+// import { getUrl } from "../../helper/getUrl";
 import { DoctorListResponse } from "../../interface/adminInterface/doctorlist";
 import {
   ServiceListResponse,
@@ -31,11 +31,11 @@ export class AuthRepository implements IAuthRepository {
       const projection = "-password -__v -wallet -userId -createdAt -updatedAt";
       const updatedOptions = { ...options, select: projection };
       const users = await paginate(userModel, updatedOptions, {});
-      for (const user of users.data) {
-        if (user.image) {
-          user.image = await getUrl(user.image);
-        }
-      }
+      // for (const user of users.data) {
+      //   if (user.image) {
+      //     user.image = await getUrl(user.image);
+      //   }
+      // }
       return users;
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -57,11 +57,11 @@ export class AuthRepository implements IAuthRepository {
       };
 
       const doctors = await paginate(doctorModel, paginationOptions, {});
-      for (const doctor of doctors.data) {
-        if (doctor.image) {
-          doctor.image = await getUrl(doctor.image);
-        }
-      }
+      // for (const doctor of doctors.data) {
+      //   if (doctor.image) {
+      //     doctor.image = await getUrl(doctor.image);
+      //   }
+      // }
       return doctors;
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -281,6 +281,21 @@ export class AuthRepository implements IAuthRepository {
     }
   }
 
+  // async doctorProfile(id: string): Promise<Partial<IDoctor>|null>{
+  //   try{
+  //     const doctor = await doctorModel.findById(id);
+  //     if(!doctor){
+  //       return null;
+  //     }
+  //     const isProfileUpdated = doctor.isUpdated;
+  //     return {isProfileUpdated};
+  //   }catch(error:unknown){
+  //     if(error instanceof Error){
+  //       throw new Error(error.message)
+  //     }
+  //   }
+  // }
+
   async rejectDoctor(id: string, reason: string): Promise<IDoctor | null> {
     try {
       const doctor = await doctorModel.findById(id);
@@ -360,11 +375,11 @@ export class AuthRepository implements IAuthRepository {
         { $limit: 5 },
       ]);
 
-      for (const doctor of topDoctors) {
-        if (doctor.doctorDetails.image) {
-          doctor.doctorDetails.image = await getUrl(doctor.doctorDetails.image);
-        }
-      }
+      // for (const doctor of topDoctors) {
+      //   if (doctor.doctorDetails.image) {
+      //     doctor.doctorDetails.image = await getUrl(doctor.doctorDetails.image);
+      //   }
+      // }
       return topDoctors;
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -409,11 +424,11 @@ export class AuthRepository implements IAuthRepository {
         },
         { $limit: 5 },
       ]);
-      for (const user of topUsers) {
-        if (user.userDetails.image) {
-          user.userDetails.image = await getUrl(user.userDetails.image);
-        }
-      }
+      // for (const user of topUsers) {
+      //   if (user.userDetails.image) {
+      //     user.userDetails.image = await getUrl(user.userDetails.image);
+      //   }
+      // }
       return topUsers;
     } catch (error: unknown) {
       if (error instanceof Error) {

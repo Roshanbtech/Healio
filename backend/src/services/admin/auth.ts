@@ -38,6 +38,7 @@ import {
   CouponSuccessResponse,
   CouponToggleStatus,
 } from "../../interface/adminInterface/couponlist";
+import { IDoctor } from "../../model/doctorModel";
 config();
 export interface PaginatedResult<T> {
   data: T[];
@@ -354,6 +355,18 @@ Team Healio`;
       throw new Error(errMsg);
     }
   }
+
+  // async doctorProfile(id:string): Promise<Partial<IDoctor>|null>{
+  //   try{
+  //     const doctor = await this.AuthRepository.doctorProfile(id);
+  //     return doctor ?? null;
+  //   }catch(error: unknown){
+  //     if(error instanceof Error){
+  //       throw new Error(error.message);
+  //     }
+  //   }
+  // }
+  
 
   async createCoupon(couponData: Coupon): Promise<CouponSuccessResponse> {
     try {

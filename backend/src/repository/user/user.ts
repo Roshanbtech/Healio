@@ -12,7 +12,7 @@ import { IUserRepository } from "../../interface/user/User.repository.interface"
 import { paginate, PaginationOptions } from "../../helper/pagination";
 import bcrypt from "bcrypt";
 import ChatModel from "../../model/chatModel";
-import { getUrl } from "../../helper/getUrl";
+// import { getUrl } from "../../helper/getUrl";
 
 export class UserRepository implements IUserRepository {
   async getDoctors(options: PaginationOptions): Promise<any> {
@@ -25,11 +25,11 @@ export class UserRepository implements IUserRepository {
         },
         { isDoctor: true, isBlocked: false }
       );
-      for (const doctor of doctors.data) {
-        if (doctor.image) {
-          doctor.image = await getUrl(doctor.image);
-        }
-      }
+      // for (const doctor of doctors.data) {
+      //   if (doctor.image) {
+      //     doctor.image = await getUrl(doctor.image);
+      //   }
+      // }
       return doctors;
     } catch (error: any) {
       throw new Error(error.message);
@@ -42,9 +42,9 @@ export class UserRepository implements IUserRepository {
         .findById(id)
         .populate({ path: "speciality", select: "name" })
         .lean();
-        if(doctor && doctor.image){
-          doctor.image = await getUrl(doctor.image);
-        }
+        // if(doctor && doctor.image){
+        //   doctor.image = await getUrl(doctor.image);
+        // }
       return doctor;
     } catch (error: any) {
       throw new Error(error.message);
@@ -63,9 +63,9 @@ export class UserRepository implements IUserRepository {
     try {
       const user = await userModel.findById(id);
       if (!user) return null;
-      if(user.image){
-        user.image = await getUrl(user.image);
-      }
+      // if(user.image){
+      //   user.image = await getUrl(user.image);
+      // }
       return user;
     } catch (error: any) {
       throw new Error(error.message);
@@ -134,11 +134,11 @@ export class UserRepository implements IUserRepository {
         .find({ _id: { $in: doctorIds } })
         .select("-wallet -password -certificate")
         .populate({ path: "speciality", select: "name" });
-        for(const doctor of doctorDetails){
-          if(doctor.image){
-            doctor.image = await getUrl(doctor.image);
-          }
-        }
+        // for(const doctor of doctorDetails){
+        //   if(doctor.image){
+        //     doctor.image = await getUrl(doctor.image);
+        //   }
+        // }
       return doctorDetails;
     } catch (error: any) {
       throw new Error(error.message);
