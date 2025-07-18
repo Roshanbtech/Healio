@@ -35,7 +35,7 @@ const sendMail = async (
       mailOptions.html = html;
     }
 
-    transporter.sendMail(mailOptions, (error, info) => {
+    transporter.sendMail(mailOptions, (error: Error|null, info: any) => {
       if (error) {
         if (error instanceof Error) {
           console.error(error.message);
