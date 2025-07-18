@@ -3,7 +3,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { assets } from "../../assets/assets";
 import axiosInstance from "../../utils/axiosInterceptors";
@@ -60,7 +60,7 @@ const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
-          <ToastContainer />
+          {/* <ToastContainer /> */}
       <header className="bg-white py-4 px-6 shadow-md fixed top-0 left-0 right-0 z-10">
         <div className="max-w-[1200px] mx-auto flex items-center justify-between">
           <div className="flex items-center">

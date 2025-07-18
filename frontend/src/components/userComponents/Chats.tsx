@@ -761,7 +761,7 @@ import {
 } from "lucide-react";
 import axiosInstance from "../../utils/axiosInterceptors";
 import { Sidebar } from "../common/userCommon/Sidebar";
-import { ToastContainer, toast } from "react-toastify";
+import {  toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import UserVideoCall from "./Video";
 import { useSocket } from "../../context/SocketContext";
@@ -1078,7 +1078,7 @@ export default function Chat() {
   return (
     <div className="flex h-screen">
       <Sidebar onCollapse={setSidebarCollapsed} />
-      <ToastContainer position="top-right" autoClose={3000} />
+      {/* <ToastContainer position="top-right" autoClose={3000} /> */}
 
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
