@@ -1,3 +1,4 @@
+import {Express} from "express";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 

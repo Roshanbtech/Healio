@@ -1,3 +1,4 @@
+import { Express } from "express";
 import doctorModel, { IDoctor } from "../../model/doctorModel";
 import serviceModel from "../../model/serviceModel";
 import slotModel, { ISchedule } from "../../model/slotModel";

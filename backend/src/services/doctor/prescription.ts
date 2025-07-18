@@ -1,3 +1,4 @@
+import { Express } from "express";
 import { IPrescription } from "../../model/prescriptionModel";
 import { IPrescriptionRepository } from "../../interface/doctor/Prescription.repository.interface";
 import { IPrescriptionService } from "../../interface/doctor/Prescription.service.interface";

@@ -1,5 +1,6 @@
 import { PaginationOptions } from "../../helper/pagination";
 import { IDoctor} from "../../model/doctorModel";
+import { Express } from "express";
 
 export interface IUserService {
   getDoctors(options: PaginationOptions): Promise<any>;

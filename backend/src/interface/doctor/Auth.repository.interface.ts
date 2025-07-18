@@ -1,4 +1,5 @@
 import { DoctorQualificationInput, DoctorResult, doctorType, Schedule } from "../doctorInterface/Interface";
+import {Express} from "express";
 import { Service } from "../doctorInterface/Interface";
 import { UserProfile } from "../userInterface/interface";
 import { IAppointment } from "../../model/appointmentModel";

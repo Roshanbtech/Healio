@@ -1,3 +1,4 @@
+import { Express } from "express";
 import userModel, { Iuser } from "../../model/userModel";
 import doctorModel, { IDoctor } from "../../model/doctorModel";
 import serviceModel from "../../model/serviceModel";

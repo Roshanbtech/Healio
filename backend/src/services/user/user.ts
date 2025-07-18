@@ -1,3 +1,4 @@
+import { Express } from "express";
 import {
   userType,
   DoctorDetails,

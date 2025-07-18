@@ -1,4 +1,6 @@
 import { AwsConfig } from "../config/s3Config";
+import {Express} from "express";
+
 export class awsFileUpload {
   constructor(private awsConfig: AwsConfig) {}
 

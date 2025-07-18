@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction,Express } from "express";
 import HTTP_statusCode from "../../enums/httpStatusCode";
 import { IPrescriptionService } from "../../interface/doctor/Prescription.service.interface";
 

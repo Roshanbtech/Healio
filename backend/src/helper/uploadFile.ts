@@ -1,4 +1,6 @@
 import { CloudinaryConfig } from "../config/cloudinaryConfig";
+import {Express} from "express";
+
 
 export class CloudinaryFileUpload {
   constructor(private cloudinaryConfig: CloudinaryConfig) {}

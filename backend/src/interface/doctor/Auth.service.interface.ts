@@ -1,3 +1,5 @@
+import {Express} from "express";
+
 export interface IAuthService {
   signup(doctorData: {
     name: string;

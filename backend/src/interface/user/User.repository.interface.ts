@@ -1,3 +1,4 @@
+import {Express} from "express";
 import { PaginationOptions } from "../../helper/pagination";
 import { DoctorDetails } from "../userInterface/interface";
 import { UserProfile } from "../userInterface/interface";

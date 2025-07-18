@@ -1,4 +1,5 @@
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import {Express} from "express";
 import { Upload } from "@aws-sdk/lib-storage";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import * as crypto from "crypto";

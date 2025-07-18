@@ -1,6 +1,6 @@
 import HTTP_statusCode from "../../enums/httpStatusCode";
 import { IUserService } from "../../interface/user/User.service.interface";
-import { Request, Response } from "express";
+import { Request, Response,Express } from "express";
 
 export class UserController {
   private userService: IUserService;

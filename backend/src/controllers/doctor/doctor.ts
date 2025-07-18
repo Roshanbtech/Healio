@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response,Express } from "express";
 import HTTP_statusCode from "../../enums/httpStatusCode";
 import { IDoctorService } from "../../interface/doctor/Auth.service.interface";
 
