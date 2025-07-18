@@ -59,7 +59,7 @@ export class PrescriptionController {
       }
 
 
-      const signatureFile = req.file;
+      const signatureFile = req.file as Express.Multer.File;
 
       const prescriptionData = {
         appointmentId,
